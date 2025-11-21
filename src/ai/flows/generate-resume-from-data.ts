@@ -118,7 +118,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
   async input => {
     const {text} = await ai.generate({
       prompt: prompt(input),
-      model: 'deepseek-ai/deepseek-chat',
+      model: 'googleai/gemini-2.5-flash',
     });
     return text;
   }
