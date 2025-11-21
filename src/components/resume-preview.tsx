@@ -93,6 +93,7 @@ export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewPr
             srcDoc={result.resume}
             className="w-full h-full border-0"
             title="Resume Preview"
+            sandbox="allow-scripts"
           />
         </Card>
       </TabsContent>
