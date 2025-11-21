@@ -67,6 +67,7 @@ export async function generateResumeFromData(input: GenerateResumeFromDataInput)
 const prompt = ai.definePrompt({
   name: 'generateResumeFromDataPrompt',
   input: {schema: GenerateResumeFromDataInputSchema},
+  output: { format: 'text' },
   prompt: `You are an expert resume writer AI. Your task is to generate a professional, ATS-optimized HTML resume based on the data and preferences provided.
 
 You MUST generate a single, complete HTML document. Include <html>, <head> with a <style> tag for professional formatting, and <body> tags.
@@ -116,10 +117,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: GenerateResumeFromDataOutputSchema,
   },
   async (input) => {
-    const { text } = await ai.generate({
-      prompt: prompt.render({input}).prompt!,
-      model: 'googleai/gemini-1.5-flash',
-    });
-    return text;
+    const response = await prompt(input);
+    return response.text;
   }
 );
