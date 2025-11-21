@@ -10,9 +10,14 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema } from '@/lib/schema';
 
 // Updated schema based on Day 2 Blueprint
 const GenerateResumeFromDataInputSchema = z.object({
+  target_job_title: z.string(),
+  resume_intent: resumeIntentSchema,
+  experience_level: experienceLevelSchema,
+  resume_style: resumeStyleSchema,
   personal_info: z.object({
     full_name: z.string(),
     email: z.string(),
@@ -62,14 +67,20 @@ export async function generateResumeFromData(input: GenerateResumeFromDataInput)
 const prompt = ai.definePrompt({
   name: 'generateResumeFromDataPrompt',
   input: {schema: GenerateResumeFromDataInputSchema},
-  prompt: `You are an expert resume writer AI. Your task is to generate a professional, ATS-optimized HTML resume based on the data provided.
+  prompt: `You are an expert resume writer AI. Your task is to generate a professional, ATS-optimized HTML resume based on the data and preferences provided.
 
 You MUST generate a single, complete HTML document. Include <html>, <head> with a <style> tag for professional formatting, and <body> tags.
 NEVER add any commentary or text outside of the HTML document itself.
 
+Resume Metadata:
+- Target Job Title: {{{target_job_title}}}
+- Resume Intent: {{{resume_intent}}}
+- Experience Level: {{{experience_level}}}
+- Desired Style: {{{resume_style}}}
+
 Resume Data:
 - Name: {{{personal_info.full_name}}}
-- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}, {{{personal_info.location}}}
+- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}{{#if personal_info.location}}, {{{personal_info.location}}}{{/if}}
 - Summary: {{{personal_info.summary}}}
 
 - Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
@@ -105,10 +116,10 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: GenerateResumeFromDataOutputSchema,
   },
   async (input) => {
-    const response = await ai.generate({
+    const { text } = await ai.generate({
       prompt: prompt.render({input}).prompt!,
       model: 'googleai/gemini-1.5-flash',
     });
-    return response.text;
+    return text;
   }
 );

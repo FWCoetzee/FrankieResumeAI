@@ -31,9 +31,38 @@ export const projectSchema = z.object({
   technologies: z.array(z.object({ value: z.string().min(1, "Technology cannot be empty") })),
 });
 
+export const resumeIntentSchema = z.enum([
+  "Professional Corporate",
+  "Creative",
+  "Tech (ATS-Optimized)",
+  "Student / No Experience",
+  "Career Switch",
+]);
+
+export const experienceLevelSchema = z.enum([
+  "Entry-level",
+  "Mid-level",
+  "Senior",
+  "Lead",
+  "Executive",
+]);
+
+export const resumeStyleSchema = z.enum([
+  "Modern",
+  "Minimalist",
+  "Corporate",
+  "Creative",
+  "Clean ATS-Friendly",
+]);
+
+
 // Main resume schema based on Day 2 Blueprint
 export const resumeSchema = z.object({
-  jobDescription: z.string().optional(), // For AI suggestions later
+  jobDescription: z.string().optional(),
+  target_job_title: z.string().min(1, "Target job title is required"),
+  resume_intent: resumeIntentSchema,
+  experience_level: experienceLevelSchema,
+  resume_style: resumeStyleSchema,
   personal_info: personalInfoSchema,
   work_experience: z.array(workExperienceSchema),
   education: z.array(educationSchema),

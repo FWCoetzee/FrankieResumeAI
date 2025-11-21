@@ -4,9 +4,6 @@ import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/f
 import { provideResumeSuggestions } from "@/ai/flows/provide-resume-suggestions";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
 
-// This action is temporarily simplified for Day 2.
-// It validates the data and returns a "mock" successful response.
-// The actual AI call is disabled to focus on the input system.
 export async function generateResumeAction(data: ResumeData): Promise<{
   error?: string;
   resume?: string;
@@ -19,40 +16,12 @@ export async function generateResumeAction(data: ResumeData): Promise<{
     return { error: "Invalid data provided. Check the form for errors." };
   }
   
-  console.log("Data successfully validated. Ready for AI generation (currently disabled).");
-
-  // For Day 2, we are focusing on input collection. 
-  // We will return a mock response and re-enable the AI calls on Day 3.
-  const mockResume = `
-    <html>
-      <head><style>body {font-family: sans-serif;}</style></head>
-      <body>
-        <h1>${validation.data.personal_info.full_name}</h1>
-        <p>This is a placeholder resume. AI generation is currently disabled while we focus on building the input system.</p>
-        <h2>Review Data:</h2>
-        <pre>${JSON.stringify(validation.data, null, 2)}</pre>
-      </body>
-    </html>
-  `;
+  // For Day 2, we can re-enable the AI calls now that the input system is robust.
+  // The mock data is no longer needed.
   
-  const mockSuggestions = `
-    <h3 class='font-bold text-lg mb-2'>AI Suggestions (Placeholder)</h3>
-    <p>The AI suggestion engine is currently disabled.</p>
-    <ul>
-      <li>On Day 3, we will re-enable this to provide suggestions based on your target job description.</li>
-    </ul>
-  `;
-
-  return {
-    resume: mockResume,
-    suggestions: mockSuggestions,
-  };
-
-  /*
-  // DAY 3 - We will re-enable this section.
-
   const { jobDescription, ...resumeCoreData } = validation.data;
 
+  // This payload is now shared between both flows.
   const aiPayload = {
     ...resumeCoreData,
     skills: resumeCoreData.skills.map((s) => s.value),
@@ -68,10 +37,12 @@ export async function generateResumeAction(data: ResumeData): Promise<{
       generateResumeFromData(aiPayload),
       provideResumeSuggestions({
         ...aiPayload,
-        jobDescription: jobDescription || "A generic software developer role.",
+        jobDescription: jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`,
       }),
     ]);
     
+    // The AI might sometimes wrap the HTML in markdown backticks.
+    // This removes them to ensure clean rendering.
     const cleanedResume = resumeResult.replace(/^```html\n|```$/g, '');
 
     return {
@@ -79,8 +50,7 @@ export async function generateResumeAction(data: ResumeData): Promise<{
       suggestions: suggestionsResult.suggestions,
     };
   } catch (error) {
-    console.error(error);
-    return { error: "Failed to generate resume. Please try again." };
+    console.error("AI Generation Error:", error);
+    return { error: "Failed to generate resume. The AI model may be temporarily unavailable. Please try again." };
   }
-  */
 }

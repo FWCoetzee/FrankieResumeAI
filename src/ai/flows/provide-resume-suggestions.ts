@@ -10,10 +10,15 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema } from '@/lib/schema';
 
 // Input schema now matches the new data model
 const ProvideResumeSuggestionsInputSchema = z.object({
   jobDescription: z.string().describe('The job description for the target job.'),
+  target_job_title: z.string(),
+  resume_intent: resumeIntentSchema,
+  experience_level: experienceLevelSchema,
+  resume_style: resumeStyleSchema,
   personal_info: z.object({
     full_name: z.string(),
     email: z.string(),
@@ -66,7 +71,7 @@ const prompt = ai.definePrompt({
   name: 'provideResumeSuggestionsPrompt',
   input: {schema: ProvideResumeSuggestionsInputSchema},
   output: {schema: ProvideResumeSuggestionsOutputSchema},
-  prompt: `You are an AI resume optimization expert. Your task is to provide actionable suggestions to improve a resume based on a target job description.
+  prompt: `You are an AI resume optimization expert. Your task is to provide actionable suggestions to improve a resume based on a target job description and other metadata.
 
 Analyze the provided Job Description and Resume Data.
 
@@ -74,6 +79,9 @@ Job Description:
 {{{jobDescription}}}
 
 Resume Data:
+- Target Role: {{{target_job_title}}}
+- Experience Level: {{{experience_level}}}
+- Resume Intent: {{{resume_intent}}}
 - Name: {{{personal_info.full_name}}}
 - Summary: {{{personal_info.summary}}}
 - Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}

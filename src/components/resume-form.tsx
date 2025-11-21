@@ -2,7 +2,7 @@
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resumeSchema, type ResumeData } from "@/lib/schema";
+import { resumeSchema, type ResumeData, resumeIntentSchema, experienceLevelSchema, resumeStyleSchema } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,56 +21,95 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { PlusCircle, Trash2, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser } from "lucide-react";
 
 interface ResumeFormProps {
   onGenerate: (data: ResumeData) => void;
   isLoading: boolean;
 }
 
-const defaultValues: ResumeData = {
+const emptyValues: ResumeData = {
   jobDescription: "",
+  target_job_title: "",
+  resume_intent: "Tech (ATS-Optimized)",
+  experience_level: "Mid-level",
+  resume_style: "Modern",
   personal_info: {
-    full_name: "John Doe",
-    email: "john.doe@example.com",
+    full_name: "",
+    email: "",
+    phone: "",
+    location: "",
+    summary: ""
+  },
+  work_experience: [],
+  education: [],
+  skills: [],
+  projects: [],
+  certifications: [],
+};
+
+
+const sampleValues: ResumeData = {
+  jobDescription: "We are seeking a highly motivated Senior Frontend Engineer with over 5 years of experience in building modern, responsive, and performant web applications. The ideal candidate will have a strong command of React, TypeScript, and the Next.js framework. You will be responsible for leading the development of our customer-facing dashboard, mentoring junior engineers, and working closely with our design and product teams to implement new features. Experience with data visualization libraries and a passion for beautiful UI/UX are major pluses.",
+  target_job_title: "Senior Frontend Engineer",
+  resume_intent: "Tech (ATS-Optimized)",
+  experience_level: "Senior",
+  resume_style: "Modern",
+  personal_info: {
+    full_name: "Jane Doe",
+    email: "jane.doe@example.com",
     phone: "123-456-7890",
     location: "San Francisco, CA",
-    summary: "A passionate software developer with expertise in building modern web applications."
+    summary: "A passionate and experienced Senior Frontend Engineer with a proven track record of building and launching successful web applications. Expert in React, TypeScript, and Next.js, with a keen eye for detail and a dedication to creating exceptional user experiences. Seeking to leverage my skills to contribute to a mission-driven team."
   },
   work_experience: [
     {
-      job_title: "Senior Software Engineer",
-      company: "FutureTech Inc.",
+      job_title: "Senior Frontend Engineer",
+      company: "Innovate Inc.",
       start_date: "2020-01",
       end_date: "Present",
-      responsibilities: "Leading the development of the main user-facing platform, mentoring junior developers, and collaborating with product managers to define new features.",
-      achievements: "Increased application performance by 30% by optimizing database queries and refactoring critical components."
+      responsibilities: "Led the architecture and development of a new customer-facing analytics dashboard. Mentored a team of 3 junior engineers, providing code reviews and technical guidance. Collaborated with product managers to translate requirements into technical specifications.",
+      achievements: "Improved application load times by 40% by implementing code splitting and lazy loading. Redesigned the state management system using Zustand, reducing boilerplate code by 60%. Received the 'Engineer of the Quarter' award for performance and leadership."
+    },
+    {
+      job_title: "Software Engineer",
+      company: "Tech Solutions LLC",
+      start_date: "2018-06",
+      end_date: "2020-01",
+      responsibilities: "Developed and maintained components for a large-scale e-commerce platform using React and Redux. Wrote unit and integration tests to ensure code quality and reliability.",
+      achievements: "Successfully migrated legacy class components to modern functional components with Hooks, improving code readability and maintainability. Contributed to a 20% increase in conversion rates by optimizing the checkout flow."
     }
   ],
   education: [
     {
       degree: "Bachelor of Science in Computer Science",
-      institution: "State University",
-      start_year: "2016",
-      end_year: "2020",
+      institution: "University of Technology",
+      start_year: "2014",
+      end_year: "2018",
     }
   ],
-  skills: [{ value: "React" }, { value: "TypeScript" }, { value: "Node.js" }, { value: "GraphQL" }],
+  skills: [{ value: "React" }, { value: "TypeScript" }, { value: "Next.js" }, { value: "JavaScript (ES6+)" }, { value: "HTML5 & CSS3" }, { value: "Tailwind CSS" }, { value: "State Management (Zustand, Redux)" }, { value: "Testing (Jest, React Testing Library)" }],
   projects: [
     {
-      title: "E-commerce Platform",
-      description: "A full-stack e-commerce site with features like product search, shopping cart, and Stripe integration.",
-      technologies: [{ value: "Next.js" }, { value: "Tailwind CSS" }, { value: "Firebase" }],
+      title: "Personal Portfolio Website",
+      description: "A fully responsive personal portfolio built with Next.js and deployed on Vercel. Features a blog, project gallery, and contact form.",
+      technologies: [{ value: "Next.js" }, { value: "Tailwind CSS" }, { value: "MDX" }],
     }
   ],
-  certifications: [{ value: "AWS Certified Developer - Associate" }],
+  certifications: [{ value: "Certified React Developer" }, { value: "AWS Certified Cloud Practitioner" }],
 };
-
 
 export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   const form = useForm<ResumeData>({
     resolver: zodResolver(resumeSchema),
-    defaultValues,
+    defaultValues: emptyValues,
     mode: "onBlur",
   });
 
@@ -79,6 +118,14 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   const { fields: skillFields, append: appendSkill, remove: removeSkill } = useFieldArray({ control: form.control, name: "skills" });
   const { fields: projFields, append: appendProj, remove: removeProj } = useFieldArray({ control: form.control, name: "projects" });
   const { fields: certFields, append: appendCert, remove: removeCert } = useFieldArray({ control: form.control, name: "certifications" });
+
+  const handleFillSampleData = () => {
+    form.reset(sampleValues);
+  }
+  
+  const handleClearForm = () => {
+    form.reset(emptyValues);
+  }
 
   const SectionHeader = ({ title, onAdd }: { title: string; onAdd: () => void }) => (
     <div className="flex justify-between items-center mb-4">
@@ -92,12 +139,61 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onGenerate)} className="space-y-8">
-        <Accordion type="multiple" defaultValue={['personal_info', 'job']} className="w-full">
+
+        <Card>
+            <CardContent className="pt-6">
+                <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="sm" onClick={handleFillSampleData}><FilePlus2 className="mr-2 h-4 w-4" /> Fill with Sample Data</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full">
           
-          <AccordionItem value="job">
-            <AccordionTrigger className="text-xl font-bold">Target Job Description</AccordionTrigger>
+          <AccordionItem value="customization">
+            <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-               <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Paste the job description (for tailored suggestions)</FormLabel><FormControl><Textarea placeholder="e.g., Seeking a software engineer with 5+ years of experience in..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
+              <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
+              <div className="grid md:grid-cols-3 gap-4">
+                <FormField control={form.control} name="resume_intent" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resume Intent</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select intent..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {resumeIntentSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                 <FormField control={form.control} name="experience_level" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Experience Level</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {experienceLevelSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                 <FormField control={form.control} name="resume_style" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resume Style</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {resumeStyleSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Paste the job description (for tailored suggestions)</FormLabel><FormControl><Textarea placeholder="e.g., Seeking a software engineer with 5+ years of experience in..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
             </AccordionContent>
           </AccordionItem>
 
