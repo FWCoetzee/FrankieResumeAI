@@ -13,13 +13,49 @@ import {z} from 'genkit';
 import {type GenerateResumeFromDataInput} from './generate-resume-from-data';
 
 const ProvideResumeSuggestionsInputSchema = z.object({
-  resumeData: z.custom<GenerateResumeFromDataInput>(),
   jobDescription: z.string().describe('The job description for the target job.'),
+  name: z.string().describe('The full name of the resume owner.'),
+  email: z.string().email().describe('The email address of the resume owner.'),
+  phone: z.string().describe('The phone number of the resume owner.'),
+  linkedin: z.string().describe('The LinkedIn profile URL of the resume owner.'),
+  github: z.string().describe('The GitHub profile URL of the resume owner.'),
+  skills: z.array(z.string()).describe('A list of skills the resume owner possesses.'),
+  experience: z.array(
+    z.object({
+      title: z.string().describe('The job title.'),
+      company: z.string().describe('The company name.'),
+      startDate: z.string().describe('The start date of the job.'),
+      endDate: z.string().describe('The end date of the job.'),
+      description: z.string().describe('A description of the job responsibilities.'),
+    })
+  ).describe('A list of work experiences.'),
+  education: z.array(
+    z.object({
+      institution: z.string().describe('The name of the educational institution.'),
+      degree: z.string().describe('The degree obtained.'),
+      startDate: z.string().describe('The start date of the education.'),
+      endDate: z.string().describe('The end date of the education.'),
+      description: z.string().describe('A description of the education details.'),
+    })
+  ).describe('A list of education experiences.'),
+  projects: z.array(
+    z.object({
+      name: z.string().describe('The name of the project.'),
+      description: z.string().describe('A description of the project.'),
+    })
+  ).describe('A list of personal projects.'),
+  additionalSections: z.array(
+    z.object({
+      title: z.string().describe('Title of the additional section'),
+      content: z.string().describe('Content of the additional section'),
+    })
+  ).describe('Additional sections to be added in the resume'),
 });
+
 export type ProvideResumeSuggestionsInput = z.infer<typeof ProvideResumeSuggestionsInputSchema>;
 
 const ProvideResumeSuggestionsOutputSchema = z.object({
-  suggestions: z.string().describe('Suggestions for improving the resume content.'),
+  suggestions: z.string().describe('A block of HTML content with actionable suggestions, formatted with tailwind classes for styling.'),
 });
 export type ProvideResumeSuggestionsOutput = z.infer<typeof ProvideResumeSuggestionsOutputSchema>;
 
@@ -29,83 +65,45 @@ export async function provideResumeSuggestions(input: ProvideResumeSuggestionsIn
 
 const prompt = ai.definePrompt({
   name: 'provideResumeSuggestionsPrompt',
-  input: {
-    schema: z.object({
-      jobDescription: z.string(),
-      name: z.string(),
-      email: z.string(),
-      phone: z.string(),
-      linkedin: z.string(),
-      github: z.string(),
-      skills: z.array(z.string()),
-      experience: z.array(
-        z.object({
-          title: z.string(),
-          company: z.string(),
-          startDate: z.string(),
-          endDate: z.string(),
-          description: z.string(),
-        })
-      ),
-      education: z.array(
-        z.object({
-          institution: z.string(),
-          degree: z.string(),
-          startDate: z.string(),
-          endDate: z.string(),
-          description: z.string(),
-        })
-      ),
-      projects: z.array(
-        z.object({
-          name: z.string(),
-          description: z.string(),
-        })
-      ),
-      additionalSections: z.array(
-        z.object({
-          title: z.string(),
-          content: z.string(),
-        })
-      ),
-    }),
-  },
+  input: {schema: ProvideResumeSuggestionsInputSchema},
   output: {schema: ProvideResumeSuggestionsOutputSchema},
-  prompt: `You are a resume expert. Provide suggestions for improving the resume content based on the following resume data and job description.
+  prompt: `You are an AI resume optimization expert. Your task is to provide actionable suggestions to improve a resume based on a target job description.
 
-  Job Description: {{{jobDescription}}}
+Analyze the provided Job Description and Resume Data.
 
-  Resume Data:
-  Name: {{{name}}}
-  Email: {{{email}}}
-  Phone: {{{phone}}}
-  LinkedIn: {{{linkedin}}}
-  GitHub: {{{github}}}
-  Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Job Description:
+{{{jobDescription}}}
 
-  Experience:
-  {{#each experience}}
+Resume Data:
+- Name: {{{name}}}
+- Contact: {{{email}}}, {{{phone}}}
+- Profiles: {{{linkedin}}}, {{{github}}}
+- Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+- Experience:
+{{#each experience}}
   - {{{title}}} at {{{company}}} ({{{startDate}}} - {{{endDate}}})
     {{{description}}}
-  {{/each}}
-
-  Education:
-  {{#each education}}
+{{/each}}
+- Education:
+{{#each education}}
   - {{{degree}}} from {{{institution}}} ({{{startDate}}} - {{{endDate}}})
-  {{/each}}
-
-  Projects:
-  {{#each projects}}
+{{/each}}
+- Projects:
+{{#each projects}}
   - {{{name}}}: {{{description}}}
-  {{/each}}
-
-  Additional Sections:
-  {{#each additionalSections}}
+{{/each}}
+- Additional Sections:
+{{#each additionalSections}}
   - {{{title}}}: {{{content}}}
-  {{/each}}
+{{/each}}
 
-  Provide actionable suggestions to tailor the resume to the job description.
-  `,
+You MUST provide your output as a single, valid JSON object that adheres to the following Zod schema. Do NOT add any commentary or text outside of the JSON structure.
+
+ALWAYS respond in this exact format:
+{
+  "suggestions": "Your HTML content with suggestions here. Use <p>, <ul>, <li> and <strong> tags. Format with TailwindCSS classes."
+}
+`,
 });
 
 const provideResumeSuggestionsFlow = ai.defineFlow(
@@ -114,8 +112,8 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
     inputSchema: ProvideResumeSuggestionsInputSchema,
     outputSchema: ProvideResumeSuggestionsOutputSchema,
   },
-  async ({resumeData, jobDescription}) => {
-    const {output} = await prompt({...resumeData, jobDescription});
+  async input => {
+    const {output} = await prompt(input);
     if (!output) {
       throw new Error('No suggestions generated by AI.');
     }

@@ -63,50 +63,48 @@ export async function generateResumeFromData(input: GenerateResumeFromDataInput)
 const prompt = ai.definePrompt({
   name: 'generateResumeFromDataPrompt',
   input: {schema: GenerateResumeFromDataInputSchema},
-  output: {schema: GenerateResumeFromDataOutputSchema},
-  prompt: `You are an expert resume writer.
+  prompt: `You are an expert resume writer AI. Your task is to generate a professional, ATS-optimized HTML resume based on the data provided.
 
-  Given the following data, generate a professional-looking HTML resume.
+Generate a single, complete HTML document. Include <html>, <head> with a <style> tag for formatting, and <body> tags.
+Do not add any commentary or text outside of the HTML document itself.
 
-  Name: {{{name}}}
-  Email: {{{email}}}
-  Phone: {{{phone}}}
-  LinkedIn: {{{linkedin}}}
-  GitHub: {{{github}}}
-  Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+Resume Data:
+Name: {{{name}}}
+Email: {{{email}}}
+Phone: {{{phone}}}
+LinkedIn: {{{linkedin}}}
+GitHub: {{{github}}}
 
-  Experience:
-  {{#each experience}}
-  Title: {{{title}}}
+Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+
+Experience:
+{{#each experience}}
+- Title: {{{title}}}
   Company: {{{company}}}
-  Start Date: {{{startDate}}}
-  End Date: {{{endDate}}}
+  Dates: {{{startDate}}} - {{{endDate}}}
   Description: {{{description}}}
-  {{/each}}
+{{/each}}
 
-  Education:
-  {{#each education}}
-  Institution: {{{institution}}}
+Education:
+{{#each education}}
+- Institution: {{{institution}}}
   Degree: {{{degree}}}
-  Start Date: {{{startDate}}}
-  End Date: {{{endDate}}}
+  Dates: {{{startDate}}} - {{{endDate}}}
   Description: {{{description}}}
-  {{/each}}
+{{/each}}
 
-  Projects:
-  {{#each projects}}
-  Name: {{{name}}}
+Projects:
+{{#each projects}}
+- Name: {{{name}}}
   Description: {{{description}}}
-  {{/each}}
+{{/each}}
 
-  Additional Sections:
-  {{#each additionalSections}}
-  Title: {{{title}}}
+Additional Sections:
+{{#each additionalSections}}
+- Title: {{{title}}}
   Content: {{{content}}}
-  {{/each}}
-
-  Please generate the resume as a single, complete HTML document, including the <html>, <head>, and <body> tags, and inline CSS styles for formatting. The HTML should be well-formed and valid.
-  `,
+{{/each}}
+`,
 });
 
 const generateResumeFromDataFlow = ai.defineFlow(
@@ -116,10 +114,10 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: GenerateResumeFromDataOutputSchema,
   },
   async input => {
-    const {text} = await ai.generate({
+    const response = await ai.generate({
       prompt: prompt.render({input}).prompt!,
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-1.5-flash',
     });
-    return text;
+    return response.text;
   }
 );
