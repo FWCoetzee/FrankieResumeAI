@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {type GenerateResumeFromDataInput, generateResumeFromData} from './generate-resume-from-data';
 
 const ProvideResumeSuggestionsInputSchema = z.object({
   resumeData: z.string().describe('The resume data in JSON format.'),
@@ -40,7 +41,10 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
     outputSchema: ProvideResumeSuggestionsOutputSchema,
   },
   async input => {
-    const { output } = await prompt(input);
+    const {output} = await ai.generate({
+      prompt: prompt.render({input}).prompt!,
+      model: 'googleai/gemini-2.5-flash',
+    });
     if (!output) {
       throw new Error('No output from AI');
     }
