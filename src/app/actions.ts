@@ -27,7 +27,7 @@ export async function generateResumeAction(data: ResumeData): Promise<{
     const [resumeResult, suggestionsResult] = await Promise.all([
       generateResumeFromData(aiPayload),
       provideResumeSuggestions({
-        resumeData: JSON.stringify(validation.data), // Pass the original validated data as JSON
+        ...aiPayload,
         jobDescription: jobDescription || "A generic software developer role.",
       }),
     ]);
