@@ -40,15 +40,7 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
     outputSchema: ProvideResumeSuggestionsOutputSchema,
   },
   async input => {
-    const llmResponse = await ai.generate({
-      prompt: prompt.render({input}).prompt!,
-      model: 'googleai/gemini-2.5-flash',
-      output: {
-        schema: ProvideResumeSuggestionsOutputSchema,
-      }
-    });
-
-    const output = llmResponse.output;
+    const { output } = await prompt(input);
     if (!output) {
       throw new Error('No output from AI');
     }
