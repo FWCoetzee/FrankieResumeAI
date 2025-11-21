@@ -1,7 +1,7 @@
 "use server";
 
 import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
-import { provideResumeSuggestions } from "@/ai/flows/provide-resume-suggestions";
+import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
 
 export async function generateResumeAction(data: ResumeData): Promise<{
@@ -15,9 +15,6 @@ export async function generateResumeAction(data: ResumeData): Promise<{
     console.error("Zod validation failed:", validation.error.flatten());
     return { error: "Invalid data provided. Check the form for errors." };
   }
-  
-  // For Day 2, we can re-enable the AI calls now that the input system is robust.
-  // The mock data is no longer needed.
   
   const { jobDescription, ...resumeCoreData } = validation.data;
 
