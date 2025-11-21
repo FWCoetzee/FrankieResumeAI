@@ -10,47 +10,46 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {type GenerateResumeFromDataInput} from './generate-resume-from-data';
 
+// Input schema now matches the new data model
 const ProvideResumeSuggestionsInputSchema = z.object({
   jobDescription: z.string().describe('The job description for the target job.'),
-  name: z.string().describe('The full name of the resume owner.'),
-  email: z.string().email().describe('The email address of the resume owner.'),
-  phone: z.string().describe('The phone number of the resume owner.'),
-  linkedin: z.string().describe('The LinkedIn profile URL of the resume owner.'),
-  github: z.string().describe('The GitHub profile URL of the resume owner.'),
-  skills: z.array(z.string()).describe('A list of skills the resume owner possesses.'),
-  experience: z.array(
+  personal_info: z.object({
+    full_name: z.string(),
+    email: z.string(),
+    phone: z.string(),
+    location: z.string().optional(),
+    summary: z.string().optional(),
+  }),
+  work_experience: z.array(
     z.object({
-      title: z.string().describe('The job title.'),
-      company: z.string().describe('The company name.'),
-      startDate: z.string().describe('The start date of the job.'),
-      endDate: z.string().describe('The end date of the job.'),
-      description: z.string().describe('A description of the job responsibilities.'),
+      job_title: z.string(),
+      company: z.string(),
+      start_date: z.string().optional(),
+      end_date: z.string().optional(),
+      responsibilities: z.string().optional(),
+      achievements: z.string().optional(),
     })
-  ).describe('A list of work experiences.'),
+  ),
   education: z.array(
     z.object({
-      institution: z.string().describe('The name of the educational institution.'),
-      degree: z.string().describe('The degree obtained.'),
-      startDate: z.string().describe('The start date of the education.'),
-      endDate: z.string().describe('The end date of the education.'),
-      description: z.string().describe('A description of the education details.'),
+      degree: z.string(),
+      institution: z.string(),
+      start_year: z.string().optional(),
+      end_year: z.string().optional(),
     })
-  ).describe('A list of education experiences.'),
+  ),
+  skills: z.array(z.string()),
   projects: z.array(
     z.object({
-      name: z.string().describe('The name of the project.'),
-      description: z.string().describe('A description of the project.'),
+      title: z.string(),
+      description: z.string().optional(),
+      technologies: z.array(z.string()),
     })
-  ).describe('A list of personal projects.'),
-  additionalSections: z.array(
-    z.object({
-      title: z.string().describe('Title of the additional section'),
-      content: z.string().describe('Content of the additional section'),
-    })
-  ).describe('Additional sections to be added in the resume'),
+  ),
+  certifications: z.array(z.string()),
 });
+
 
 export type ProvideResumeSuggestionsInput = z.infer<typeof ProvideResumeSuggestionsInputSchema>;
 
@@ -75,33 +74,27 @@ Job Description:
 {{{jobDescription}}}
 
 Resume Data:
-- Name: {{{name}}}
-- Contact: {{{email}}}, {{{phone}}}
-- Profiles: {{{linkedin}}}, {{{github}}}
+- Name: {{{personal_info.full_name}}}
+- Summary: {{{personal_info.summary}}}
 - Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 - Experience:
-{{#each experience}}
-  - {{{title}}} at {{{company}}} ({{{startDate}}} - {{{endDate}}})
-    {{{description}}}
+{{#each work_experience}}
+  - {{{job_title}}} at {{{company}}}: Achievements - {{{achievements}}}
 {{/each}}
 - Education:
 {{#each education}}
-  - {{{degree}}} from {{{institution}}} ({{{startDate}}} - {{{endDate}}})
+  - {{{degree}}} from {{{institution}}}
 {{/each}}
 - Projects:
 {{#each projects}}
-  - {{{name}}}: {{{description}}}
-{{/each}}
-- Additional Sections:
-{{#each additionalSections}}
-  - {{{title}}}: {{{content}}}
+  - {{{title}}}
 {{/each}}
 
 You MUST provide your output as a single, valid JSON object that adheres to the following Zod schema. Do NOT add any commentary or text outside of the JSON structure.
 
 ALWAYS respond in this exact format:
 {
-  "suggestions": "Your HTML content with suggestions here. Use <p>, <ul>, <li> and <strong> tags. Format with TailwindCSS classes."
+  "suggestions": "Your HTML content with suggestions here. Use <p>, <ul>, <li> and <strong> tags. Format with TailwindCSS classes like 'mb-2', 'font-bold', 'list-disc', 'ml-4'."
 }
 `,
 });

@@ -15,16 +15,35 @@ type GenerationResult = {
 export function ResumeBuilder() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   const { toast } = useToast();
 
+  const handleDataForReview = (data: ResumeData) => {
+    // This is the new "Review" step.
+    // We save the data to state and show the preview component.
+    setResumeData(data);
+    setResult(null); // Clear previous results
+    
+    // For now, let's also trigger the generation immediately.
+    // In a future step, we can add a second button on the review screen.
+    handleGenerate(data);
+  };
+  
   const handleGenerate = async (data: ResumeData) => {
     setIsLoading(true);
+    setResumeData(data); // Also update data on final generation
     setResult(null);
+    toast({
+      title: "Generating your resume...",
+      description: "The AI is working its magic. This may take a moment.",
+    });
+
     const response = await generateResumeAction(data);
+
     if (response.error || !response.resume || !response.suggestions) {
       toast({
         title: "Generation Failed",
-        description: response.error || "An unknown error occurred.",
+        description: response.error || "An unknown error occurred. Please check your input and try again.",
         variant: "destructive",
       });
     } else {
@@ -43,10 +62,10 @@ export function ResumeBuilder() {
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="w-full">
-        <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
+        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
       </div>
       <div className="w-full lg:sticky top-8">
-        <ResumePreview result={result} isLoading={isLoading} />
+        <ResumePreview result={result} isLoading={isLoading} resumeData={resumeData} />
       </div>
     </div>
   );

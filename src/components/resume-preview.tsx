@@ -1,13 +1,15 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2 } from "lucide-react";
+import { FileText, Wand2, RefreshCw, Download } from "lucide-react";
+import type { ResumeData } from "@/lib/schema";
 
 interface ResumePreviewProps {
   result: { resume: string; suggestions: string } | null;
   isLoading: boolean;
+  resumeData: ResumeData | null;
 }
 
 const LoadingSkeleton = () => (
@@ -47,13 +49,32 @@ const Placeholder = () => (
   </Card>
 );
 
-export function ResumePreview({ result, isLoading }: ResumePreviewProps) {
+const ReviewScreen = ({ resumeData }: { resumeData: ResumeData | null }) => {
+  if (!resumeData) return <Placeholder />;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Review Your Information</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        <p className="text-muted-foreground">This is a preview of the JSON data that will be sent to the AI. Once you're ready, the AI will generate your resume.</p>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{JSON.stringify(resumeData, null, 2)}</code>
+        </pre>
+      </CardContent>
+    </Card>
+  )
+}
+
+export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewProps) {
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
+  // Show review screen if no result yet but we have data
   if (!result) {
-    return <Placeholder />;
+    return <ReviewScreen resumeData={resumeData} />;
   }
 
   return (
@@ -80,7 +101,7 @@ export function ResumePreview({ result, isLoading }: ResumePreviewProps) {
           <CardContent className="p-6">
             <div
               className="prose prose-sm dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: result.suggestions.replace(/\n/g, '<br />') }}
+              dangerouslySetInnerHTML={{ __html: result.suggestions.replace(/\\n/g, '<br />') }}
             />
           </CardContent>
         </Card>
