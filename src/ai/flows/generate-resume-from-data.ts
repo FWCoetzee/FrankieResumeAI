@@ -116,10 +116,10 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: GenerateResumeFromDataOutputSchema,
   },
   async input => {
-    const llmResponse = await ai.generate({
+    const {text} = await ai.generate({
       prompt: prompt.render({input}).prompt!,
       model: 'googleai/gemini-2.5-flash',
     });
-    return llmResponse.text;
+    return text;
   }
 );
