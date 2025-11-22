@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -345,3 +346,5 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
+
+    
