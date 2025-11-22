@@ -163,10 +163,10 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
 
         <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full space-y-4">
           
-          <AccordionItem value="customization">
-            <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <Card>
+          <AccordionItem value="customization" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Resume Customization</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg">
+              <Card className="border-0 shadow-none rounded-t-none">
                 <CardContent className="pt-6 space-y-4">
                   <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid md:grid-cols-3 gap-4">
@@ -213,10 +213,10 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="personal_info">
-            <AccordionTrigger className="text-xl font-bold">Personal Info</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <Card>
+          <AccordionItem value="personal_info" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Personal Info</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg">
+              <Card className="border-0 shadow-none rounded-t-none">
                 <CardContent className="pt-6 space-y-4">
                   <FormField name="personal_info.full_name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid md:grid-cols-2 gap-4">
@@ -230,9 +230,9 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
           
-          <AccordionItem value="work_experience">
-            <AccordionTrigger className="text-xl font-bold">Work Experience</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
+          <AccordionItem value="work_experience" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Work Experience</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
               <SectionHeader title="Your Experience" onAdd={() => appendExp({ job_title: "", company: "", start_date: "", end_date: "", responsibilities: "", achievements: "" })} />
               {expFields.map((field, index) => (
                 <Card key={field.id} className="relative">
@@ -252,9 +252,9 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="education">
-            <AccordionTrigger className="text-xl font-bold">Education</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
+          <AccordionItem value="education" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Education</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
               <SectionHeader title="Your Education" onAdd={() => appendEdu({ degree: "", institution: "", start_year: "", end_year: "" })} />
               {eduFields.map((field, index) => (
                 <Card key={field.id} className="relative">
@@ -272,10 +272,10 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
           
-          <AccordionItem value="skills">
-            <AccordionTrigger className="text-xl font-bold">Skills</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <Card>
+          <AccordionItem value="skills" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Skills</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg">
+               <Card className="border-0 shadow-none rounded-t-none">
                 <CardContent className="pt-6">
                   <FormField
                     name="skills"
@@ -304,9 +304,9 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="projects">
-            <AccordionTrigger className="text-xl font-bold">Projects</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
+          <AccordionItem value="projects" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Projects</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
               <SectionHeader title="Your Projects" onAdd={() => appendProj({ title: "", description: "", technologies: [] })} />
               {projFields.map((field, index) => (
                  <Card key={field.id} className="relative">
@@ -342,10 +342,10 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </AccordionContent>
           </AccordionItem>
           
-          <AccordionItem value="certifications">
-            <AccordionTrigger className="text-xl font-bold">Certifications</AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <Card>
+          <AccordionItem value="certifications" className="border-b-0">
+            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Certifications</AccordionTrigger>
+            <AccordionContent className="border border-t-0 rounded-b-lg">
+              <Card className="border-0 shadow-none rounded-t-none">
                 <CardContent className="pt-6">
                   <FormField
                     name="certifications"
@@ -389,3 +389,5 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
+
+    
