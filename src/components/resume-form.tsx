@@ -166,59 +166,67 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
           <AccordionItem value="customization">
             <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <div className="grid md:grid-cols-3 gap-4">
-                <FormField control={form.control} name="resume_intent" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume Intent</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select intent..." /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {resumeIntentSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                 <FormField control={form.control} name="experience_level" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Experience Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {experienceLevelSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                 <FormField control={form.control} name="resume_style" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resume Style</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {resumeStyleSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Paste the job description (for tailored suggestions)</FormLabel><FormControl><Textarea placeholder="e.g., Seeking a software engineer with 5+ years of experience in..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <FormField control={form.control} name="resume_intent" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Resume Intent</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select intent..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {resumeIntentSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="experience_level" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Experience Level</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {experienceLevelSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="resume_style" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Resume Style</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {resumeStyleSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Paste the job description (for tailored suggestions)</FormLabel><FormControl><Textarea placeholder="e.g., Seeking a software engineer with 5+ years of experience in..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
+                </CardContent>
+              </Card>
             </AccordionContent>
           </AccordionItem>
 
           <AccordionItem value="personal_info">
             <AccordionTrigger className="text-xl font-bold">Personal Info</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <FormField name="personal_info.full_name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField name="personal_info.email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="john.doe@email.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                <FormField name="personal_info.phone" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="(123) 456-7890" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              </div>
-              <FormField name="personal_info.location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location (e.g. City, State)</FormLabel><FormControl><Input placeholder="San Francisco, CA" {...field} /></FormControl><FormMessage /></FormItem> )} />
-              <FormField name="personal_info.summary" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Professional Summary</FormLabel><FormControl><Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={4} /></FormControl><FormMessage /></FormItem> )} />
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <FormField name="personal_info.full_name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField name="personal_info.email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="john.doe@email.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField name="personal_info.phone" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="(123) 456-7890" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  </div>
+                  <FormField name="personal_info.location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location (e.g. City, State)</FormLabel><FormControl><Input placeholder="San Francisco, CA" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField name="personal_info.summary" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Professional Summary</FormLabel><FormControl><Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={4} /></FormControl><FormMessage /></FormItem> )} />
+                </CardContent>
+              </Card>
             </AccordionContent>
           </AccordionItem>
           
@@ -267,28 +275,32 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
           <AccordionItem value="skills">
             <AccordionTrigger className="text-xl font-bold">Skills</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <FormField
-                name="skills"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Skills</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter skills separated by commas"
-                        {...field}
-                        onChange={e => {
-                          const value = e.target.value;
-                          field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
-                        }}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
-                      />
-                    </FormControl>
-                    <FormDescription>Separate each skill with a comma.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Card>
+                <CardContent className="pt-6">
+                  <FormField
+                    name="skills"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Skills</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter skills separated by commas"
+                            {...field}
+                            onChange={e => {
+                              const value = e.target.value;
+                              field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
+                            }}
+                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                          />
+                        </FormControl>
+                        <FormDescription>Separate each skill with a comma.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </AccordionContent>
           </AccordionItem>
 
@@ -333,28 +345,32 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
           <AccordionItem value="certifications">
             <AccordionTrigger className="text-xl font-bold">Certifications</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-               <FormField
-                name="certifications"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Certifications</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter certifications separated by commas"
-                        {...field}
-                        onChange={e => {
-                          const value = e.target.value;
-                          field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
-                        }}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
-                      />
-                    </FormControl>
-                    <FormDescription>Separate each certification with a comma.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Card>
+                <CardContent className="pt-6">
+                  <FormField
+                    name="certifications"
+                    control={form.control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Your Certifications</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter certifications separated by commas"
+                            {...field}
+                            onChange={e => {
+                              const value = e.target.value;
+                              field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
+                            }}
+                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                          />
+                        </FormControl>
+                        <FormDescription>Separate each certification with a comma.</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </AccordionContent>
           </AccordionItem>
 
@@ -373,5 +389,3 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
-
-    
