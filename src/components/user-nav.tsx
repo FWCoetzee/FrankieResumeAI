@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser, useAuth } from "@/firebase";
-import { signOut } from "firebase/auth";
-import { LogOut, User } from "lucide-react";
+import { signOut, signInAnonymously } from "firebase/auth";
+import { LogIn, LogOut, User } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 
 export function UserNav() {
@@ -24,21 +24,45 @@ export function UserNav() {
   const handleSignOut = () => {
     signOut(auth);
   };
+  
+  const handleAnonymousSignIn = () => {
+    signInAnonymously(auth);
+  }
 
   if (isUserLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />;
   }
 
   if (!user) {
-    // In the future, this could trigger a login modal
     return (
-      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-        <Avatar className="h-9 w-9">
-          <AvatarFallback>
-            <User className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
-      </Button>
+      <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback>
+              <User className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">Not Logged In</p>
+             <p className="text-xs leading-none text-muted-foreground">
+              Log in to save your work
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleAnonymousSignIn}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Log in anonymously
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
     );
   }
 
@@ -65,13 +89,13 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             Billing
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem disabled>
             Settings
           </DropdownMenuItem>
         </DropdownMenuGroup>
