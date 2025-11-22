@@ -66,7 +66,7 @@ export const resumeSchema = z.object({
   personal_info: personalInfoSchema,
   work_experience: z.array(workExperienceSchema),
   education: z.array(educationSchema),
-  skills: z.array(z.object({ value: z.string().min(1, "Skill cannot be empty") })).min(1, "At least one skill is required"),
+  skills: z.array(z.object({ value: z.string().min(1, "Skill cannot be empty") })),
   projects: z.array(projectSchema),
   certifications: z.array(z.object({ value: z.string().min(1, "Certification cannot be empty") })),
 });
