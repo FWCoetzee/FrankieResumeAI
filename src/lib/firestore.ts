@@ -5,24 +5,30 @@ import * as admin from 'firebase-admin';
 import type { ResumeData } from '@/lib/schema';
 import { randomUUID } from 'crypto';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
-
+// This is a one-time operation.
+// We check if `admin.apps` has any apps already initialized.
 if (!admin.apps.length) {
-    if (serviceAccount) {
+  // We are on the server, so we can use environment variables.
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (serviceAccountKey) {
+    try {
+      const serviceAccount = JSON.parse(serviceAccountKey);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-    } else {
-      // Fallback for local development
-      console.warn("Firebase service account key not found. Initializing with default credentials. This is intended for local development only.");
-      admin.initializeApp();
+    } catch (error) {
+      console.error('Error parsing Firebase service account key:', error);
     }
+  } else {
+    console.warn(
+      'FIREBASE_SERVICE_ACCOUNT_KEY not found. Firebase Admin SDK will not be initialized. This is expected for local client-side development but will fail for server-side operations.'
+    );
+  }
 }
 
-
-const db = admin.firestore();
+// We only get the firestore instance if the app was initialized.
+const db = admin.apps.length ? admin.firestore() : null;
 
 /**
  * Saves resume data to Firestore for a specific user.
@@ -31,6 +37,11 @@ const db = admin.firestore();
  * @returns The ID of the saved resume document.
  */
 export async function saveResumeData(userId: string, data: ResumeData): Promise<string> {
+  if (!db) {
+    console.error('Firestore is not initialized. Cannot save resume data.');
+    throw new Error('Firestore is not initialized.');
+  }
+
   const resumeId = randomUUID();
   const docRef = db.collection('users').doc(userId).collection('resumeData').doc(resumeId);
 
