@@ -73,6 +73,7 @@ export function ResumeBuilder() {
           result={result} 
           isLoading={isLoading} 
           resumeData={resumeData} 
+          isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
         />

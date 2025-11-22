@@ -13,6 +13,7 @@ interface ResumePreviewProps {
   result: { resume: string; suggestions: string } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
+  isReviewing: boolean;
   onEdit: () => void;
   onGenerate: (data: ResumeData) => void;
 }
@@ -155,7 +156,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
-export function ResumePreview({ result, isLoading, resumeData, onEdit, onGenerate }: ResumePreviewProps) {
+export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
   const handlePrint = () => {
     if (!result?.resume) return;
@@ -172,7 +173,7 @@ export function ResumePreview({ result, isLoading, resumeData, onEdit, onGenerat
     return <LoadingSkeleton />;
   }
 
-  if (!result && resumeData) {
+  if (isReviewing && resumeData) {
     return <ReviewScreen resumeData={resumeData} onEdit={onEdit} onGenerate={onGenerate} isLoading={isLoading} />;
   }
   
@@ -193,7 +194,7 @@ export function ResumePreview({ result, isLoading, resumeData, onEdit, onGenerat
       </TabsList>
       <TabsContent value="preview" className="mt-4">
         <Card className="overflow-hidden">
-          <div className="aspect-[8.5/11]">
+          <div className="aspect-[8.5/11] bg-white">
             <iframe
               srcDoc={result.resume}
               className="w-full h-full border-0"
@@ -201,10 +202,13 @@ export function ResumePreview({ result, isLoading, resumeData, onEdit, onGenerat
               sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
             />
           </div>
-          <CardFooter className="p-2 justify-end">
+          <CardFooter className="p-4 flex-row-reverse">
             <Button onClick={handlePrint} size="sm">
               <Download className="mr-2 h-4 w-4" />
               Download PDF
+            </Button>
+            <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
+                <Pencil className="mr-2 h-4 w-4" /> Edit
             </Button>
           </CardFooter>
         </Card>
