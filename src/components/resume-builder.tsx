@@ -16,22 +16,19 @@ export function ResumeBuilder() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
 
   const handleDataForReview = (data: ResumeData) => {
-    // This is the new "Review" step.
-    // We save the data to state and show the preview component.
     setResumeData(data);
     setResult(null); // Clear previous results
-    
-    // For now, let's also trigger the generation immediately.
-    // In a future step, we can add a second button on the review screen.
-    handleGenerate(data);
+    setIsReviewing(true);
   };
   
   const handleGenerate = async (data: ResumeData) => {
     setIsLoading(true);
     setResumeData(data); // Also update data on final generation
+    setIsReviewing(false); // Move away from review screen to show loading state
     setResult(null);
     toast({
       title: "Generating your resume...",
@@ -59,13 +56,26 @@ export function ResumeBuilder() {
     setIsLoading(false);
   };
 
+  const handleEdit = () => {
+    setIsReviewing(false);
+    setResult(null);
+  };
+
+  const showForm = !isReviewing && !result;
+
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
-      <div className="w-full">
-        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
+      <div className={showForm ? "w-full" : "hidden lg:block w-full"}>
+        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
       </div>
-      <div className="w-full lg:sticky top-8">
-        <ResumePreview result={result} isLoading={isLoading} resumeData={resumeData} />
+      <div className={showForm ? "hidden lg:block w-full lg:sticky top-8" : "w-full lg:sticky top-8"}>
+        <ResumePreview 
+          result={result} 
+          isLoading={isLoading} 
+          resumeData={resumeData} 
+          onEdit={handleEdit}
+          onGenerate={handleGenerate}
+        />
       </div>
     </div>
   );

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award } from "lucide-react";
+import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -13,6 +13,8 @@ interface ResumePreviewProps {
   result: { resume: string; suggestions: string } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
+  onEdit: () => void;
+  onGenerate: (data: ResumeData) => void;
 }
 
 const LoadingSkeleton = () => (
@@ -68,17 +70,16 @@ const ReviewSection = ({ icon, title, children }: { icon: React.ReactNode, title
   </div>
 )
 
-const ReviewScreen = ({ resumeData }: { resumeData: ResumeData | null }) => {
-  if (!resumeData) return <Placeholder />;
+const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeData) => void, isLoading: boolean }) => {
   const { personal_info, work_experience, education, skills, projects, certifications, target_job_title } = resumeData;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Review Your Information</CardTitle>
-        <CardDescription>This is a preview of the data that will be sent to the AI. The AI will use this to generate your resume and suggestions.</CardDescription>
+        <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your resume.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 text-sm max-h-[70vh] overflow-y-auto pr-6">
+      <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto pr-6">
         
         <ReviewSection icon={<User className="h-5 w-5 text-primary" />} title="Personal Info">
             <p><strong>Name:</strong> {personal_info.full_name}</p>
@@ -143,11 +144,18 @@ const ReviewScreen = ({ resumeData }: { resumeData: ResumeData | null }) => {
         )}
 
       </CardContent>
+       <CardFooter className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onEdit}><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
+          <Button onClick={() => onGenerate(resumeData)} disabled={isLoading}>
+            <Bot className="mr-2 h-4 w-4" />
+            Generate with AI
+          </Button>
+      </CardFooter>
     </Card>
   )
 }
 
-export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewProps) {
+export function ResumePreview({ result, isLoading, resumeData, onEdit, onGenerate }: ResumePreviewProps) {
 
   const handlePrint = () => {
     if (!result?.resume) return;
@@ -164,10 +172,14 @@ export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewPr
     return <LoadingSkeleton />;
   }
 
-  // Show review screen if no result yet but we have data from the form
-  if (!result) {
-    return <ReviewScreen resumeData={resumeData} />;
+  if (!result && resumeData) {
+    return <ReviewScreen resumeData={resumeData} onEdit={onEdit} onGenerate={onGenerate} isLoading={isLoading} />;
   }
+  
+  if (!result) {
+    return <Placeholder />;
+  }
+
 
   return (
     <Tabs defaultValue="preview" className="w-full">

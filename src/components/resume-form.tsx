@@ -30,10 +30,12 @@ import {
 } from "@/components/ui/select";
 import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser } from "lucide-react";
 import { useAutosave } from "@/hooks/use-autosave";
+import { useEffect } from "react";
 
 interface ResumeFormProps {
   onGenerate: (data: ResumeData) => void;
   isLoading: boolean;
+  initialData: ResumeData | null;
 }
 
 const emptyValues: ResumeData = {
@@ -107,14 +109,20 @@ const sampleValues: ResumeData = {
   certifications: [{ value: "Certified React Developer" }, { value: "AWS Certified Cloud Practitioner" }],
 };
 
-export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
+export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormProps) {
   const form = useForm<ResumeData>({
     resolver: zodResolver(resumeSchema),
-    defaultValues: emptyValues,
+    defaultValues: initialData || emptyValues,
     mode: "onBlur",
   });
   
   useAutosave(form, "deep-resume-form", emptyValues);
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData, form]);
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "work_experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "education" });
