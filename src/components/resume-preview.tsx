@@ -1,11 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download } from "lucide-react";
+import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Separator } from "./ui/separator";
 
 interface ResumePreviewProps {
   result: { resume: string; suggestions: string } | null;
@@ -53,21 +55,93 @@ const Placeholder = () => (
   </Card>
 );
 
+const ReviewSection = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
+  <div className="space-y-3">
+    <div className="flex items-center gap-2">
+      {icon}
+      <h4 className="font-semibold text-md">{title}</h4>
+    </div>
+    <div className="pl-8 space-y-4 text-sm text-muted-foreground">
+      {children}
+    </div>
+    <Separator />
+  </div>
+)
+
 const ReviewScreen = ({ resumeData }: { resumeData: ResumeData | null }) => {
   if (!resumeData) return <Placeholder />;
+  const { personal_info, work_experience, education, skills, projects, certifications, target_job_title } = resumeData;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Review Your Information</CardTitle>
+        <CardDescription>This is a preview of the data that will be sent to the AI. The AI will use this to generate your resume and suggestions.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 text-sm">
-        <p className="text-muted-foreground">This is a preview of the data that will be sent to the AI. Once you're ready, the AI will generate your resume and suggestions.</p>
-        <div className="max-h-[600px] overflow-auto rounded-lg bg-muted p-4">
-          <pre>
-            <code>{JSON.stringify(resumeData, null, 2)}</code>
-          </pre>
-        </div>
+      <CardContent className="space-y-6 text-sm max-h-[70vh] overflow-y-auto pr-6">
+        
+        <ReviewSection icon={<User className="h-5 w-5 text-primary" />} title="Personal Info">
+            <p><strong>Name:</strong> {personal_info.full_name}</p>
+            <p><strong>Target Role:</strong> {target_job_title}</p>
+            <p><strong>Contact:</strong> {personal_info.email} | {personal_info.phone}</p>
+            {personal_info.location && <p><strong>Location:</strong> {personal_info.location}</p>}
+            {personal_info.summary && <p className="text-pretty"><strong>Summary:</strong> {personal_info.summary}</p>}
+        </ReviewSection>
+        
+        {work_experience.length > 0 && (
+          <ReviewSection icon={<Briefcase className="h-5 w-5 text-primary" />} title="Work Experience">
+            {work_experience.map((job, index) => (
+              <div key={index} className="space-y-1">
+                <p className="font-semibold">{job.job_title} at {job.company}</p>
+                <p className="text-xs">{job.start_date} - {job.end_date}</p>
+                {job.responsibilities && <p className="text-pretty"><em>Responsibilities:</em> {job.responsibilities}</p>}
+                {job.achievements && <p className="text-pretty"><em>Achievements:</em> {job.achievements}</p>}
+              </div>
+            ))}
+          </ReviewSection>
+        )}
+        
+        {education.length > 0 && (
+           <ReviewSection icon={<GraduationCap className="h-5 w-5 text-primary" />} title="Education">
+              {education.map((edu, index) => (
+                <div key={index} className="space-y-1">
+                  <p className="font-semibold">{edu.degree}</p>
+                  <p>{edu.institution} ({edu.start_year} - {edu.end_year})</p>
+                </div>
+              ))}
+            </ReviewSection>
+        )}
+        
+        {skills.length > 0 && (
+           <ReviewSection icon={<Star className="h-5 w-5 text-primary" />} title="Skills">
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill.value}</Badge>)}
+              </div>
+            </ReviewSection>
+        )}
+
+        {projects.length > 0 && (
+          <ReviewSection icon={<FolderGit className="h-5 w-5 text-primary" />} title="Projects">
+            {projects.map((proj, index) => (
+              <div key={index} className="space-y-1">
+                <p className="font-semibold">{proj.title}</p>
+                {proj.description && <p className="text-pretty">{proj.description}</p>}
+                <div className="flex flex-wrap gap-1">
+                  {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech.value}</Badge>)}
+                </div>
+              </div>
+            ))}
+          </ReviewSection>
+        )}
+
+        {certifications.length > 0 && (
+           <ReviewSection icon={<Award className="h-5 w-5 text-primary" />} title="Certifications">
+              <div className="flex flex-wrap gap-2">
+                {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert.value}</Badge>)}
+              </div>
+            </ReviewSection>
+        )}
+
       </CardContent>
     </Card>
   )
