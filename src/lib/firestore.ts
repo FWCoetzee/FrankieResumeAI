@@ -38,8 +38,8 @@ const db = admin.apps.length ? admin.firestore() : null;
  */
 export async function saveResumeData(userId: string, data: ResumeData): Promise<string> {
   if (!db) {
-    console.error('Firestore is not initialized. Cannot save resume data.');
-    throw new Error('Firestore is not initialized.');
+    console.error('Firestore is not initialized. Cannot save resume data. Make sure the FIREBASE_SERVICE_ACCOUNT_KEY is set in your environment variables.');
+    throw new Error('Firestore is not initialized. Server-side configuration is missing.');
   }
 
   const resumeId = randomUUID();
