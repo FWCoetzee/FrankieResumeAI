@@ -8,6 +8,7 @@ import { ResumeForm } from "./resume-form";
 import { ResumePreview } from "./resume-preview";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUser } from "@/firebase";
 
 type GenerationResult = {
   resume: string;
@@ -21,6 +22,7 @@ export function ResumeBuilder() {
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { user } = useUser();
 
   const handleDataForReview = (data: ResumeData) => {
     setResumeData(data);
@@ -29,6 +31,15 @@ export function ResumeBuilder() {
   };
   
   const handleGenerate = async (data: ResumeData) => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Not Logged In',
+            description: 'Please log in to generate and save your resume.',
+        });
+        return;
+    }
+    
     setIsLoading(true);
     setResumeData(data); // Also update data on final generation
     setIsReviewing(false); // Move away from review screen to show loading state
@@ -38,7 +49,7 @@ export function ResumeBuilder() {
       description: "The AI is working its magic. This may take a moment.",
     });
 
-    const response = await generateResumeAction(data);
+    const response = await generateResumeAction(user.uid, data);
 
     if (response.error || !response.resume || !response.suggestions) {
       toast({
@@ -77,6 +88,7 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
+          userId={user?.uid}
         />
       )
      }
@@ -97,6 +109,7 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
+          userId={user?.uid}
         />
       </div>
     </div>

@@ -4,11 +4,18 @@ import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/f
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
 
-export async function generateResumeAction(data: ResumeData): Promise<{
+export async function generateResumeAction(
+  userId: string | null,
+  data: ResumeData
+): Promise<{
   error?: string;
   resume?: string;
   suggestions?: string;
 }> {
+  if (!userId) {
+    return { error: "You must be logged in to generate a resume." };
+  }
+
   const validation = resumeSchema.safeParse(data);
   if (!validation.success) {
     // Log the detailed validation error for debugging

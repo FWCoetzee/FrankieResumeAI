@@ -17,6 +17,7 @@ interface ResumePreviewProps {
   isReviewing: boolean;
   onEdit: () => void;
   onGenerate: (data: ResumeData) => void;
+  userId?: string | null;
 }
 
 const LoadingSkeleton = () => (
@@ -159,7 +160,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
-export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
+export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, userId }: ResumePreviewProps) {
 
   const handlePrint = () => {
     if (!result?.resume) return;
