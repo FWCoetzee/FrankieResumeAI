@@ -1,10 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2 } from "lucide-react";
+import { FileText, Wand2, Download } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
+import { Button } from "./ui/button";
 
 interface ResumePreviewProps {
   result: { resume: string; suggestions: string } | null;
@@ -73,6 +74,18 @@ const ReviewScreen = ({ resumeData }: { resumeData: ResumeData | null }) => {
 }
 
 export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewProps) {
+
+  const handlePrint = () => {
+    if (!result?.resume) return;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(result.resume);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+  }
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -93,13 +106,21 @@ export function ResumePreview({ result, isLoading, resumeData }: ResumePreviewPr
         </TabsTrigger>
       </TabsList>
       <TabsContent value="preview" className="mt-4">
-        <Card className="overflow-hidden aspect-[8.5/11]">
-          <iframe
-            srcDoc={result.resume}
-            className="w-full h-full border-0"
-            title="Resume Preview"
-            sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
-          />
+        <Card className="overflow-hidden">
+          <div className="aspect-[8.5/11]">
+            <iframe
+              srcDoc={result.resume}
+              className="w-full h-full border-0"
+              title="Resume Preview"
+              sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
+            />
+          </div>
+          <CardFooter className="p-2 justify-end">
+            <Button onClick={handlePrint} size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
+          </CardFooter>
         </Card>
       </TabsContent>
       <TabsContent value="suggestions" className="mt-4">
