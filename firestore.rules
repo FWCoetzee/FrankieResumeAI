@@ -1,0 +1,118 @@
+/**
+ * This ruleset enforces a strict user-ownership model for a resume-building application.
+ * All user-generated data is private and can only be accessed by the user who created it.
+ *
+ * Core Philosophy:
+ * The security model is built on the principle of least privilege. By default, all access is
+ * denied. Rules explicitly grant access only to authenticated users for their own data,
+ * preventing any user from seeing or modifying another user's information.
+ *
+ * Data Structure:
+ * The data is organized hierarchically under a top-level `users` collection. Each user's
+ * profile (`UserProfile`) is a document at `/users/{userId}`. All other data related to that
+ * user, such as their resume data (`ResumeData`), is stored in subcollections under their
+ * specific user document (e.g., `/users/{userId}/resumeData/{resumeDataId}`).
+ *
+ * Key Security Decisions:
+ * - Path-Based Ownership: Authorization is primarily determined by matching the authenticated
+ *   user's UID (`request.auth.uid`) with the `{userId}` wildcard in the document path.
+ * - No Public Data: There are no publicly readable collections. All access requires authentication.
+ * - User Privacy: Listing all users from the top-level `/users` collection is explicitly disallowed
+ *   to protect user privacy and prevent data scraping.
+ * - Relational Integrity: On document creation, rules validate that an internal ID field
+ *   (e.g., `id` or `userId`) matches the user ID in the path. On update, these fields are
+ *   enforced as immutable to prevent re-associating data with a different user.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions to provide clear, reusable logic.
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Validates if the requesting user is the owner of the document based on the userId path parameter.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * For update/delete operations, validates ownership AND ensures the document exists.
+     * This prevents unauthorized changes to documents that don't exist, which could otherwise
+     * be exploited in certain scenarios.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * On UserProfile creation, ensures the document's internal `id` field is correctly
+     * set to the user's UID, establishing a durable ownership link.
+     */
+    function hasValidUserProfileDataForCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * On UserProfile update, ensures the internal `id` field cannot be changed,
+     * preventing the document from being re-assigned to a different user.
+     */
+    function isUserProfileDataImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+    
+    /**
+     * On ResumeData creation, ensures the document's internal `userId` field is correctly
+     * set to the user's UID, linking it to the parent user profile.
+     */
+    function hasValidResumeDataForCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * On ResumeData update, ensures the internal `userId` field cannot be changed,
+     * preventing the document from being moved to a different user.
+     */
+    function isResumeDataOwnerImmutable() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    /**
+     * @description Controls access to a user's own profile document.
+     * @path /users/{userId}
+     * @allow A user (auth.uid='user123') can (create) their own profile at `/users/user123`.
+     * @deny An anonymous user cannot (get) any user's profile.
+     * @deny A user (auth.uid='user456') cannot (update) another user's profile at `/users/user123`.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // CRITICAL: Prevents listing all users in the application.
+      allow create: if isOwner(userId) && hasValidUserProfileDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && isUserProfileDataImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to a user's private resume data documents.
+     * @path /users/{userId}/resumeData/{resumeDataId}
+     * @allow A user (auth.uid='user123') can (list) all their resumes under `/users/user123/resumeData`.
+     * @deny A user (auth.uid='user456') cannot (get) a resume from `/users/user123/resumeData/resumeABC`.
+     * @principle Enforces document ownership for a user's private subcollection data.
+     */
+    match /users/{userId}/resumeData/{resumeDataId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidResumeDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && isResumeDataOwnerImmutable();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

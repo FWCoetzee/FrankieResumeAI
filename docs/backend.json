@@ -1,0 +1,159 @@
+{
+  "entities": {
+    "ResumeData": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ResumeData",
+      "type": "object",
+      "description": "Represents the structured data collected for generating a resume.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ResumeData entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ResumeData)"
+        },
+        "personalInformation": {
+          "type": "string",
+          "description": "JSON string representing the user's personal information, including name, contact details, and profile summary."
+        },
+        "experience": {
+          "type": "string",
+          "description": "JSON string representing the user's work experience, including job titles, companies, dates of employment, and descriptions of responsibilities."
+        },
+        "education": {
+          "type": "string",
+          "description": "JSON string representing the user's education history, including degrees, institutions, and dates of attendance."
+        },
+        "skills": {
+          "type": "string",
+          "description": "JSON string representing the user's skills, categorized as technical, soft, or other relevant areas."
+        },
+        "projects": {
+          "type": "string",
+          "description": "JSON string representing the user's projects, including project names, descriptions, and relevant technologies or accomplishments."
+        },
+        "awards": {
+          "type": "string",
+          "description": "JSON string representing any awards or recognitions the user has received."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the resume data was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the resume data was last updated.",
+          "format": "date-time"
+        },
+        "templateType": {
+          "type": "string",
+          "description": "The selected resume template."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "personalInformation",
+        "experience",
+        "education",
+        "skills",
+        "createdAt",
+        "updatedAt",
+        "templateType"
+      ]
+    },
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user profile within the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures only the user can access their profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/resumeData/{resumeDataId}",
+        "definition": {
+          "entityName": "ResumeData",
+          "schema": {
+            "$ref": "#/backend/entities/ResumeData"
+          },
+          "description": "Stores resume data for a specific user. Path-based ownership guarantees only the user can access their resume data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "resumeDataId",
+              "description": "The unique identifier for the resume data."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, DBAC, and QAPs. User profiles and resume data are stored in separate collections with clear ownership, facilitating secure list operations and straightforward security rules. The design leverages path-based ownership for private user data (user profiles and resume data), ensuring data belonging to a user is stored under their user ID."
+  }
+}
