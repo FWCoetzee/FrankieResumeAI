@@ -21,21 +21,15 @@ export async function generateResumeAction(data: ResumeData): Promise<{
   // This payload is now shared between both flows.
   const aiPayload = {
     ...resumeCoreData,
-    skills: resumeCoreData.skills.map((s) => s.value),
-    projects: resumeCoreData.projects.map(p => ({
-      ...p,
-      technologies: p.technologies.map(t => t.value)
-    })),
-    certifications: resumeCoreData.certifications.map(c => c.value),
   };
 
   try {
     const [resumeResult, suggestionsResult] = await Promise.all([
-      generateResumeFromData(aiPayload),
+      generateResumeFromData(aiPayload as GenerateResumeFromDataInput),
       provideResumeSuggestions({
         ...aiPayload,
         jobDescription: jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`,
-      }),
+      } as ProvideResumeSuggestionsInput),
     ]);
     
     // The AI might sometimes wrap the HTML in markdown backticks.

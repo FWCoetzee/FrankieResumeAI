@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -99,15 +100,15 @@ const sampleValues: ResumeData = {
       end_year: "2018",
     }
   ],
-  skills: [{ value: "React" }, { value: "TypeScript" }, { value: "Next.js" }, { value: "JavaScript (ES6+)" }, { value: "HTML5 & CSS3" }, { value: "Tailwind CSS" }, { value: "State Management (Zustand, Redux)" }, { value: "Testing (Jest, React Testing Library)" }],
+  skills: ["React", "TypeScript", "Next.js", "JavaScript (ES6+)", "HTML5 & CSS3", "Tailwind CSS", "State Management (Zustand, Redux)", "Testing (Jest, React Testing Library)"],
   projects: [
     {
       title: "Personal Portfolio Website",
       description: "A fully responsive personal portfolio built with Next.js and deployed on Vercel. Features a blog, project gallery, and contact form.",
-      technologies: [{ value: "Next.js" }, { value: "Tailwind CSS" }, { value: "MDX" }],
+      technologies: ["Next.js", "Tailwind CSS", "MDX"],
     }
   ],
-  certifications: [{ value: "Certified React Developer" }, { value: "AWS Certified Cloud Practitioner" }],
+  certifications: ["Certified React Developer", "AWS Certified Cloud Practitioner"],
 };
 
 export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormProps) {
@@ -127,9 +128,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "work_experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "education" });
-  const { fields: skillFields, append: appendSkill, remove: removeSkill } = useFieldArray({ control: form.control, name: "skills" });
   const { fields: projFields, append: appendProj, remove: removeProj } = useFieldArray({ control: form.control, name: "projects" });
-  const { fields: certFields, append: appendCert, remove: removeCert } = useFieldArray({ control: form.control, name: "certifications" });
 
   const handleFillSampleData = () => {
     form.reset(sampleValues);
@@ -162,7 +161,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </CardContent>
         </Card>
 
-        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full">
+        <Accordion type="multiple" defaultValue={['customization', 'personal_info', 'work_experience', 'education', 'skills', 'projects', 'certifications']} className="w-full">
           
           <AccordionItem value="customization">
             <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
@@ -268,13 +267,25 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
           <AccordionItem value="skills">
             <AccordionTrigger className="text-xl font-bold">Skills</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <SectionHeader title="Your Skills" onAdd={() => appendSkill({ value: "" })} />
-              {skillFields.map((field, index) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <FormField name={`skills.${index}.value`} control={form.control} render={({ field }) => ( <FormItem className="flex-grow"><FormControl><Input placeholder="e.g., Python" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeSkill(index)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              ))}
+              <FormField
+                name="skills"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Skills</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter skills separated by commas"
+                        {...field}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                      />
+                    </FormControl>
+                    <FormDescription>Separate each skill with a comma.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </AccordionContent>
           </AccordionItem>
 
@@ -288,29 +299,24 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                     <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeProj(index)}><Trash2 className="h-4 w-4" /></Button>
                     <FormField name={`projects.${index}.title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Project Title</FormLabel><FormControl><Input placeholder="My Awesome App" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField name={`projects.${index}.description`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A brief description of the project..." {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <Controller
-                      name={`projects.${index}.technologies`}
-                      control={form.control}
-                      render={({ field }) => {
-                        const { fields: techFields, append: appendTech, remove: removeTech } = useFieldArray({
-                          control: form.control,
-                          name: `projects.${index}.technologies`
-                        });
-                        return (
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <FormLabel>Technologies Used</FormLabel>
-                              <Button type="button" variant="outline" size="sm" onClick={() => appendTech({ value: "" })}>Add Tech</Button>
-                            </div>
-                            {techFields.map((techField, techIndex) => (
-                              <div key={techField.id} className="flex items-center gap-2">
-                                <FormField name={`projects.${index}.technologies.${techIndex}.value`} control={form.control} render={({ field }) => ( <FormItem className="flex-grow"><FormControl><Input placeholder="e.g., Next.js" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                <Button type="button" variant="ghost" size="icon" onClick={() => removeTech(techIndex)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }}
+                    <FormField
+                        name={`projects.${index}.technologies`}
+                        control={form.control}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Technologies Used</FormLabel>
+                            <FormControl>
+                            <Textarea
+                                placeholder="e.g., Next.js, Tailwind CSS, MDX"
+                                {...field}
+                                onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                                value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                            />
+                            </FormControl>
+                             <FormDescription>Separate each technology with a comma.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                        )}
                     />
                   </CardContent>
                 </Card>
@@ -321,13 +327,25 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
           <AccordionItem value="certifications">
             <AccordionTrigger className="text-xl font-bold">Certifications</AccordionTrigger>
             <AccordionContent className="pt-4 space-y-4">
-              <SectionHeader title="Your Certifications" onAdd={() => appendCert({ value: "" })} />
-              {certFields.map((field, index) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <FormField name={`certifications.${index}.value`} control={form.control} render={({ field }) => ( <FormItem className="flex-grow"><FormControl><Input placeholder="e.g., AWS Certified Cloud Practitioner" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeCert(index)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              ))}
+               <FormField
+                name="certifications"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Certifications</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter certifications separated by commas"
+                        {...field}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                      />
+                    </FormControl>
+                    <FormDescription>Separate each certification with a comma.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </AccordionContent>
           </AccordionItem>
 
@@ -346,5 +364,3 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
-
-    

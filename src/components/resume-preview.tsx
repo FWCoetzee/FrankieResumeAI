@@ -117,7 +117,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         {skills.length > 0 && (
            <ReviewSection icon={<Star className="h-5 w-5 text-primary" />} title="Skills">
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill.value}</Badge>)}
+                {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
               </div>
             </ReviewSection>
         )}
@@ -129,7 +129,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
                 <p className="font-semibold">{proj.title}</p>
                 {proj.description && <p className="text-pretty">{proj.description}</p>}
                 <div className="flex flex-wrap gap-1">
-                  {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech.value}</Badge>)}
+                  {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech}</Badge>)}
                 </div>
               </div>
             ))}
@@ -139,7 +139,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         {certifications.length > 0 && (
            <ReviewSection icon={<Award className="h-5 w-5 text-primary" />} title="Certifications">
               <div className="flex flex-wrap gap-2">
-                {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert.value}</Badge>)}
+                {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert}</Badge>)}
               </div>
             </ReviewSection>
         )}
