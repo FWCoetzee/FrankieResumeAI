@@ -9,6 +9,7 @@ import { ResumePreview } from "./resume-preview";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/firebase";
+import { ResumeHistory } from "./resume-history";
 
 type GenerationResult = {
   resume: string;
@@ -75,6 +76,17 @@ export function ResumeBuilder() {
     setResult(null);
   };
 
+  const handleLoadResume = (data: ResumeData) => {
+    setResumeData(data);
+    setIsReviewing(false);
+    setResult(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast({
+        title: "Resume Loaded",
+        description: "The selected resume data has been loaded into the form.",
+    });
+  }
+
   const showForm = !isReviewing && !result;
 
   // On mobile, we only show one component at a time.
@@ -92,14 +104,20 @@ export function ResumeBuilder() {
         />
       )
      }
-     return <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+     return (
+        <div className="space-y-8">
+            <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+            <ResumeHistory onSelectResume={handleLoadResume} />
+        </div>
+     );
   }
 
   // On desktop, we show both side-by-side.
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
-      <div>
+      <div className="space-y-8">
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+        <ResumeHistory onSelectResume={handleLoadResume} />
       </div>
       <div className="lg:sticky top-8">
         <ResumePreview 
