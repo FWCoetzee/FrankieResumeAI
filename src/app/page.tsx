@@ -1,6 +1,8 @@
 
+
 import { AppLogo } from "@/components/icons";
 import { ResumeBuilder } from "@/components/resume-builder";
+import { ResumeHistory } from "@/components/resume-history";
 import { UserNav } from "@/components/user-nav";
 
 export default function Home() {
@@ -19,6 +21,7 @@ export default function Home() {
           </div>
         </header>
         <ResumeBuilder />
+        <ResumeHistory />
       </div>
     </main>
   );

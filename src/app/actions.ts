@@ -1,7 +1,9 @@
+
 "use server";
 
 import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
+import { saveResumeData } from "@/lib/firestore";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
 
 export async function generateResumeAction(
@@ -39,6 +41,9 @@ export async function generateResumeAction(
       } as ProvideResumeSuggestionsInput),
     ]);
     
+    // Save the complete resume data to Firestore after successful generation
+    await saveResumeData(userId, validation.data);
+    
     // The AI might sometimes wrap the HTML in markdown backticks.
     // This removes them to ensure clean rendering.
     const cleanedResume = resumeResult.replace(/^```html\n|```$/g, '');
@@ -48,7 +53,10 @@ export async function generateResumeAction(
       suggestions: suggestionsResult.suggestions,
     };
   } catch (error) {
-    console.error("AI Generation Error:", error);
-    return { error: "Failed to generate resume. The AI model may be temporarily unavailable. Please try again." };
+    console.error("AI Generation or Firestore Error:", error);
+    if (error instanceof Error) {
+        return { error: `An unexpected error occurred: ${error.message}` };
+    }
+    return { error: "Failed to generate or save resume. Please try again." };
   }
 }
