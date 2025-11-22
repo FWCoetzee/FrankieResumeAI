@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser } from "lucide-react";
+import { useAutosave } from "@/hooks/use-autosave";
 
 interface ResumeFormProps {
   onGenerate: (data: ResumeData) => void;
@@ -112,6 +113,8 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
     defaultValues: emptyValues,
     mode: "onBlur",
   });
+  
+  useAutosave(form, "deep-resume-form", emptyValues);
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "work_experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "education" });
@@ -125,6 +128,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   
   const handleClearForm = () => {
     form.reset(emptyValues);
+    localStorage.removeItem("deep-resume-form");
   }
 
   const SectionHeader = ({ title, onAdd }: { title: string; onAdd: () => void }) => (
@@ -222,7 +226,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                     <FormField name={`work_experience.${index}.company`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Company</FormLabel><FormControl><Input placeholder="Acme Inc." {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <div className="grid md:grid-cols-2 gap-4">
                       <FormField name={`work_experience.${index}.start_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input placeholder="e.g., 2020-01" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField name={`work_experience.${index}.end_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date</FormLabel><FormControl><Input placeholder="e.g., 2024-05 or Present" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField name={`work_experience.${index}.end_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date</FormLabel><FormControl><Input placeholder="e.g., 2024-05 or Present" {...field} /></FormControl><FormMessage /></FormMessage /></FormItem> )} />
                     </div>
                     <FormField name={`work_experience.${index}.responsibilities`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Responsibilities</FormLabel><FormControl><Textarea placeholder="Describe your key duties and tasks..." {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <FormField name={`work_experience.${index}.achievements`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Achievements</FormLabel><FormControl><Textarea placeholder="List key accomplishments, preferably with metrics..." {...field} /></FormControl><FormMessage /></FormItem> )} />
