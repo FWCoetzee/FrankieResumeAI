@@ -12,14 +12,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
+import { useUser } from "@/firebase";
+import { LogOut, User } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 export function UserNav() {
+  const { user, isUserLoading } = useUser();
 
-  // This is a placeholder. In the future, this will come from an authentication hook.
-  const user = {
-    name: "John Doe",
-    email: "john@example.com",
+  if (isUserLoading) {
+    return <Skeleton className="h-9 w-9 rounded-full" />;
+  }
+
+  if (!user) {
+    // In the future, this could trigger a login modal
+    return (
+      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Avatar className="h-9 w-9">
+          <AvatarFallback>
+            <User className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+      </Button>
+    );
   }
 
   return (
@@ -27,8 +41,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {/* In the future, this will be the user's profile picture */}
-            <AvatarImage src="/placeholder-user.jpg" alt={`@${user.name}`} />
+            <AvatarImage src={user.photoURL || undefined} alt={`@${user.displayName || 'user'}`} />
             <AvatarFallback>
               <User className="h-5 w-5" />
             </AvatarFallback>
@@ -38,9 +51,9 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.displayName || "Anonymous User"}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {user.email || user.uid}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -58,7 +71,8 @@ export function UserNav() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          Log out
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
