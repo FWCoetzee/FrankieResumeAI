@@ -161,7 +161,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </CardContent>
         </Card>
 
-        <Accordion type="multiple" defaultValue={['customization', 'personal_info', 'work_experience', 'education', 'skills', 'projects', 'certifications']} className="w-full">
+        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full">
           
           <AccordionItem value="customization">
             <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
@@ -277,7 +277,11 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                       <Textarea
                         placeholder="Enter skills separated by commas"
                         {...field}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                        onChange={e => {
+                          const value = e.target.value;
+                          const skillsArray = value.split(',').map(s => s.trim()).filter(s => s);
+                          field.onChange(skillsArray);
+                        }}
                         value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                       />
                     </FormControl>
@@ -309,7 +313,11 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                             <Textarea
                                 placeholder="e.g., Next.js, Tailwind CSS, MDX"
                                 {...field}
-                                onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                                onChange={e => {
+                                  const value = e.target.value;
+                                  const techArray = value.split(',').map(s => s.trim()).filter(s => s);
+                                  field.onChange(techArray);
+                                }}
                                 value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                             />
                             </FormControl>
@@ -337,7 +345,11 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                       <Textarea
                         placeholder="Enter certifications separated by commas"
                         {...field}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                        onChange={e => {
+                          const value = e.target.value;
+                          const certsArray = value.split(',').map(s => s.trim()).filter(s => s);
+                          field.onChange(certsArray);
+                        }}
                         value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                       />
                     </FormControl>
@@ -364,3 +376,5 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
+
+    
