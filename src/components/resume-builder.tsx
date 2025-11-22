@@ -42,9 +42,9 @@ export function ResumeBuilder() {
 
     if (response.error || !response.resume || !response.suggestions) {
       toast({
+        variant: "destructive",
         title: "Generation Failed",
         description: response.error || "An unknown error occurred. Please check your input and try again.",
-        variant: "destructive",
       });
     } else {
       setResult({
