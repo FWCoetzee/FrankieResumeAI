@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
@@ -114,7 +115,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
             </ReviewSection>
         )}
         
-        {skills.length > 0 && (
+        {Array.isArray(skills) && skills.length > 0 && (
            <ReviewSection icon={<Star className="h-5 w-5 text-primary" />} title="Skills">
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
@@ -122,21 +123,23 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
             </ReviewSection>
         )}
 
-        {projects.length > 0 && (
+        {Array.isArray(projects) && projects.length > 0 && (
           <ReviewSection icon={<FolderGit className="h-5 w-5 text-primary" />} title="Projects">
             {projects.map((proj, index) => (
               <div key={index} className="space-y-1">
                 <p className="font-semibold">{proj.title}</p>
                 {proj.description && <p className="text-pretty">{proj.description}</p>}
-                <div className="flex flex-wrap gap-1">
-                  {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech}</Badge>)}
-                </div>
+                {Array.isArray(proj.technologies) && proj.technologies.length > 0 &&
+                  <div className="flex flex-wrap gap-1">
+                    {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech}</Badge>)}
+                  </div>
+                }
               </div>
             ))}
           </ReviewSection>
         )}
 
-        {certifications.length > 0 && (
+        {Array.isArray(certifications) && certifications.length > 0 && (
            <ReviewSection icon={<Award className="h-5 w-5 text-primary" />} title="Certifications">
               <div className="flex flex-wrap gap-2">
                 {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert}</Badge>)}

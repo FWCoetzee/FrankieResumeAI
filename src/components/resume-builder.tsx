@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,6 +7,7 @@ import { generateResumeAction } from "@/app/actions";
 import { ResumeForm } from "./resume-form";
 import { ResumePreview } from "./resume-preview";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type GenerationResult = {
   resume: string;
@@ -18,6 +20,7 @@ export function ResumeBuilder() {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleDataForReview = (data: ResumeData) => {
     setResumeData(data);
@@ -63,12 +66,30 @@ export function ResumeBuilder() {
 
   const showForm = !isReviewing && !result;
 
+  // On mobile, we only show one component at a time.
+  if (isMobile) {
+     if (!showForm) {
+      return (
+         <ResumePreview 
+          result={result} 
+          isLoading={isLoading} 
+          resumeData={resumeData} 
+          isReviewing={isReviewing}
+          onEdit={handleEdit}
+          onGenerate={handleGenerate}
+        />
+      )
+     }
+     return <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+  }
+
+  // On desktop, we show both side-by-side.
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
-      <div className={showForm ? "w-full" : "hidden lg:block w-full"}>
+      <div>
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
       </div>
-      <div className={showForm ? "hidden lg:block w-full lg:sticky top-8" : "w-full lg:sticky top-8"}>
+      <div className="lg:sticky top-8">
         <ResumePreview 
           result={result} 
           isLoading={isLoading} 
