@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -161,7 +161,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </CardContent>
         </Card>
 
-        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full">
+        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full space-y-4">
           
           <AccordionItem value="customization">
             <AccordionTrigger className="text-xl font-bold">Resume Customization</AccordionTrigger>
@@ -279,8 +279,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                         {...field}
                         onChange={e => {
                           const value = e.target.value;
-                          const skillsArray = value.split(',').map(s => s.trim()).filter(s => s);
-                          field.onChange(skillsArray);
+                          field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
                         }}
                         value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                       />
@@ -315,8 +314,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                                 {...field}
                                 onChange={e => {
                                   const value = e.target.value;
-                                  const techArray = value.split(',').map(s => s.trim()).filter(s => s);
-                                  field.onChange(techArray);
+                                  field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
                                 }}
                                 value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                             />
@@ -347,8 +345,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                         {...field}
                         onChange={e => {
                           const value = e.target.value;
-                          const certsArray = value.split(',').map(s => s.trim()).filter(s => s);
-                          field.onChange(certsArray);
+                          field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
                         }}
                         value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                       />
