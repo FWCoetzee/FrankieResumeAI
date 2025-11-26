@@ -87,11 +87,10 @@ export function ResumeBuilder() {
     });
   }
 
-  const showForm = !isReviewing && !result;
-
   // On mobile, we only show one component at a time.
+  // The logic is: show the form and history, UNLESS we are reviewing or showing a result.
   if (isMobile) {
-     if (!showForm) {
+     if (isReviewing || result) {
       return (
          <ResumePreview 
           result={result} 
@@ -100,7 +99,6 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
-          userId={user?.uid}
         />
       )
      }
@@ -127,7 +125,6 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
-          userId={user?.uid}
         />
       </div>
     </div>

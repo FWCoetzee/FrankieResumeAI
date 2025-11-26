@@ -17,7 +17,6 @@ interface ResumePreviewProps {
   isReviewing: boolean;
   onEdit: () => void;
   onGenerate: (data: ResumeData) => void;
-  userId?: string | null;
 }
 
 const LoadingSkeleton = () => (
@@ -160,7 +159,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
-export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, userId }: ResumePreviewProps) {
+export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
   const handlePrint = () => {
     if (!result?.resume) return;
@@ -177,62 +176,61 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return <LoadingSkeleton />;
   }
 
+  if (result) {
+    return (
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="preview" className="gap-2">
+            <FileText className="h-4 w-4" /> Resume Preview
+          </TabsTrigger>
+          <TabsTrigger value="suggestions" className="gap-2">
+            <Wand2 className="h-4 w-4" /> AI Suggestions
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="preview" className="mt-4">
+          <Card className="overflow-hidden">
+            <div className="aspect-[8.5/11] bg-white">
+              <iframe
+                srcDoc={result.resume}
+                className="w-full h-full border-0"
+                title="Resume Preview"
+                sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
+              />
+            </div>
+            <CardFooter className="p-4 flex-row-reverse">
+              <Button onClick={handlePrint} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
+              <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        <TabsContent value="suggestions" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wand2 className="h-5 w-5" />
+                AI Suggestions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2"
+                dangerouslySetInnerHTML={{ __html: result.suggestions }}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    );
+  }
+
   if (isReviewing && resumeData) {
     return <ReviewScreen resumeData={resumeData} onEdit={onEdit} onGenerate={onGenerate} isLoading={isLoading} />;
   }
   
-  if (!result) {
-    return <Placeholder />;
-  }
-
-
-  return (
-    <Tabs defaultValue="preview" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="preview" className="gap-2">
-          <FileText className="h-4 w-4" /> Resume Preview
-        </TabsTrigger>
-        <TabsTrigger value="suggestions" className="gap-2">
-          <Wand2 className="h-4 w-4" /> AI Suggestions
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="preview" className="mt-4">
-        <Card className="overflow-hidden">
-          <div className="aspect-[8.5/11] bg-white">
-            <iframe
-              srcDoc={result.resume}
-              className="w-full h-full border-0"
-              title="Resume Preview"
-              sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
-            />
-          </div>
-          <CardFooter className="p-4 flex-row-reverse">
-            <Button onClick={handlePrint} size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
-            <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-            </Button>
-          </CardFooter>
-        </Card>
-      </TabsContent>
-      <TabsContent value="suggestions" className="mt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Wand2 className="h-5 w-5" />
-              AI Suggestions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div
-              className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2"
-              dangerouslySetInnerHTML={{ __html: result.suggestions }}
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
-  );
+  return <Placeholder />;
 }
