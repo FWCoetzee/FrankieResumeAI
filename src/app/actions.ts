@@ -1,10 +1,12 @@
 
-"use server";
+"use client";
 
 import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
-import { saveResumeData } from "@/lib/firestore";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
+import { getFirestore } from "firebase/firestore";
+import { saveResumeDataClient } from "@/lib/client-firestore";
+import { initializeFirebase } from "@/firebase";
 
 export async function generateResumeAction(
   userId: string | null,
@@ -20,14 +22,12 @@ export async function generateResumeAction(
 
   const validation = resumeSchema.safeParse(data);
   if (!validation.success) {
-    // Log the detailed validation error for debugging
     console.error("Zod validation failed:", validation.error.flatten());
     return { error: "Invalid data provided. Check the form for errors." };
   }
   
   const { jobDescription, ...resumeCoreData } = validation.data;
 
-  // This payload is now shared between both flows.
   const aiPayload = {
     ...resumeCoreData,
   };
@@ -41,11 +41,10 @@ export async function generateResumeAction(
       } as ProvideResumeSuggestionsInput),
     ]);
     
-    // Save the complete resume data to Firestore after successful generation
-    await saveResumeData(userId, validation.data);
+    // Get firestore instance and save data on the client
+    const { firestore } = initializeFirebase();
+    saveResumeDataClient(firestore, userId, validation.data);
     
-    // The AI might sometimes wrap the HTML in markdown backticks.
-    // This removes them to ensure clean rendering.
     const cleanedResume = resumeResult.replace(/^```html\n|```$/g, '');
 
     return {
