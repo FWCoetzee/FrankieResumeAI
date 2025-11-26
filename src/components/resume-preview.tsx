@@ -60,15 +60,14 @@ const Placeholder = () => (
 );
 
 const ReviewSection = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
-  <div className="space-y-3">
-    <div className="flex items-center gap-2">
+  <div className="space-y-4">
+    <div className="flex items-center gap-3">
       {icon}
-      <h4 className="font-semibold text-md">{title}</h4>
+      <h4 className="font-semibold text-lg border-b-2 border-primary pb-1">{title}</h4>
     </div>
-    <div className="pl-8 space-y-4 text-sm text-muted-foreground">
+    <div className="pl-8 space-y-4 text-sm">
       {children}
     </div>
-    <Separator />
   </div>
 )
 
@@ -81,39 +80,28 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         <CardTitle>Review Your Information</CardTitle>
         <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your resume.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto pr-6">
+      <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-background rounded-md border">
         
-        <ReviewSection icon={<User className="h-5 w-5 text-primary" />} title="Personal Info">
-            <p><strong>Name:</strong> {personal_info.full_name}</p>
-            <p><strong>Target Role:</strong> {target_job_title}</p>
-            <p><strong>Contact:</strong> {personal_info.email} | {personal_info.phone}</p>
-            {personal_info.location && <p><strong>Location:</strong> {personal_info.location}</p>}
-            {personal_info.summary && <p className="text-pretty"><strong>Summary:</strong> {personal_info.summary}</p>}
-        </ReviewSection>
-        
-        {work_experience.length > 0 && (
-          <ReviewSection icon={<Briefcase className="h-5 w-5 text-primary" />} title="Work Experience">
-            {work_experience.map((job, index) => (
-              <div key={index} className="space-y-1">
-                <p className="font-semibold">{job.job_title} at {job.company}</p>
-                <p className="text-xs">{job.start_date} - {job.end_date}</p>
-                {job.responsibilities && <p className="text-pretty"><em>Responsibilities:</em> {job.responsibilities}</p>}
-                {job.achievements && <p className="text-pretty"><em>Achievements:</em> {job.achievements}</p>}
-              </div>
-            ))}
-          </ReviewSection>
+        {/* Header Section */}
+        <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold">{personal_info.full_name}</h2>
+            <p className="text-muted-foreground">{target_job_title}</p>
+            <div className="flex justify-center gap-4 text-xs mt-2 text-muted-foreground">
+                <span>{personal_info.email}</span>
+                <span>|</span>
+                <span>{personal_info.phone}</span>
+                {personal_info.location && <><span>|</span><span>{personal_info.location}</span></>}
+            </div>
+        </div>
+
+        {personal_info.summary && (
+            <div className="space-y-2">
+                <h3 className="text-md font-semibold text-center">Summary</h3>
+                <p className="text-center text-sm text-pretty">{personal_info.summary}</p>
+            </div>
         )}
         
-        {education.length > 0 && (
-           <ReviewSection icon={<GraduationCap className="h-5 w-5 text-primary" />} title="Education">
-              {education.map((edu, index) => (
-                <div key={index} className="space-y-1">
-                  <p className="font-semibold">{edu.degree}</p>
-                  <p>{edu.institution} ({edu.start_year} - {edu.end_year})</p>
-                </div>
-              ))}
-            </ReviewSection>
-        )}
+        <Separator />
         
         {Array.isArray(skills) && skills.length > 0 && (
            <ReviewSection icon={<Star className="h-5 w-5 text-primary" />} title="Skills">
@@ -123,14 +111,43 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
             </ReviewSection>
         )}
 
+        {work_experience.length > 0 && (
+          <ReviewSection icon={<Briefcase className="h-5 w-5 text-primary" />} title="Work Experience">
+            {work_experience.map((job, index) => (
+              <div key={index} className="space-y-1.5">
+                <div className="flex justify-between items-baseline">
+                    <p className="font-semibold">{job.job_title} at {job.company}</p>
+                    <p className="text-xs text-muted-foreground">{job.start_date} - {job.end_date}</p>
+                </div>
+                {job.responsibilities && <p className="text-pretty pl-4 text-muted-foreground"> {job.responsibilities}</p>}
+                {job.achievements && <p className="text-pretty pl-4"><strong>Achievements:</strong> {job.achievements}</p>}
+              </div>
+            ))}
+          </ReviewSection>
+        )}
+        
+        {education.length > 0 && (
+           <ReviewSection icon={<GraduationCap className="h-5 w-5 text-primary" />} title="Education">
+              {education.map((edu, index) => (
+                <div key={index} className="space-y-1 flex justify-between items-baseline">
+                  <div>
+                    <p className="font-semibold">{edu.degree}</p>
+                    <p className="text-muted-foreground">{edu.institution}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{edu.start_year} - {edu.end_year}</p>
+                </div>
+              ))}
+            </ReviewSection>
+        )}
+
         {Array.isArray(projects) && projects.length > 0 && (
           <ReviewSection icon={<FolderGit className="h-5 w-5 text-primary" />} title="Projects">
             {projects.map((proj, index) => (
-              <div key={index} className="space-y-1">
+              <div key={index} className="space-y-1.5">
                 <p className="font-semibold">{proj.title}</p>
-                {proj.description && <p className="text-pretty">{proj.description}</p>}
+                {proj.description && <p className="text-pretty text-muted-foreground">{proj.description}</p>}
                 {Array.isArray(proj.technologies) && proj.technologies.length > 0 &&
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 pt-1">
                     {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech}</Badge>)}
                   </div>
                 }
@@ -234,3 +251,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
