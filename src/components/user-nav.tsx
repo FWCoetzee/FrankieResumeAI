@@ -13,11 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUser, useAuth, useStorage } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { signOut, updateProfile } from "firebase/auth";
 import { LogIn, LogOut, User, UserPlus, Image as ImageIcon, Loader2, Settings } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,12 @@ export function UserNav() {
   const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // When user changes, reset optimistic URL
+  useEffect(() => {
+    setOptimisticAvatarUrl(null);
+  }, [user?.uid]);
+
 
   const handleSignOut = () => {
     if (auth) {
@@ -62,11 +68,19 @@ export function UserNav() {
       setIsUploading(true);
       toast({ title: "Uploading avatar...", description: "Please wait." });
       try {
-        const newUrl = await uploadAvatar(storage, auth, user, file);
+        // 1. Upload the file and get the URL
+        const newUrl = await uploadAvatar(storage, user, file);
+        
+        // 2. Update the user's profile with the new URL
+        await updateProfile(user, { photoURL: newUrl });
+
+        // 3. Optimistically update the UI
         setOptimisticAvatarUrl(newUrl);
+
         toast({ title: "Success!", description: "Your avatar has been updated." });
       } catch (error: any) {
-        toast({ variant: "destructive", title: "Upload Failed", description: error.message });
+        console.error("Avatar upload process failed:", error);
+        toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
       } finally {
         setIsUploading(false);
         if(fileInputRef.current) fileInputRef.current.value = "";
