@@ -4,11 +4,22 @@
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, Timestamp } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { History, Loader2, ServerCrash, FileText, ArrowRight } from "lucide-react";
+import { History, Loader2, ServerCrash, FileText, ArrowRight, Trash2 } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from "./ui/badge";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Firestore documents have Timestamps
 type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
@@ -19,10 +30,10 @@ type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
 
 interface ResumeHistoryProps {
     onSelectResume: (data: ResumeData) => void;
+    onDeleteResume: (id: string) => void;
 }
 
-
-const HistoryItem = ({ resume, onSelectResume }: { resume: FirestoreResumeData, onSelectResume: (data: ResumeData) => void }) => {
+const HistoryItem = ({ resume, onSelectResume, onDeleteClick }: { resume: FirestoreResumeData, onSelectResume: (data: ResumeData) => void, onDeleteClick: () => void }) => {
   const handleSelect = () => {
     // Convert Timestamps to strings for form compatibility, and pass the whole object
     const formData: ResumeData = {
@@ -34,7 +45,7 @@ const HistoryItem = ({ resume, onSelectResume }: { resume: FirestoreResumeData, 
   }
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors group">
       <div className="space-y-1">
         <p className="font-semibold">{resume.target_job_title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
@@ -43,16 +54,23 @@ const HistoryItem = ({ resume, onSelectResume }: { resume: FirestoreResumeData, 
             <Badge variant="outline">{resume.resume_style}</Badge>
         </div>
       </div>
-       <Button variant="outline" size="sm" onClick={handleSelect}>
-        Load <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDeleteClick}>
+            <Trash2 className="h-4 w-4 text-destructive" />
+            <span className="sr-only">Delete</span>
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleSelect}>
+            Load <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }
 
-export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
+export function ResumeHistory({ onSelectResume, onDeleteResume }: ResumeHistoryProps) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [deleteCandidate, setDeleteCandidate] = useState<FirestoreResumeData | null>(null);
 
   const resumesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -63,6 +81,13 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
   }, [user, firestore]);
   
   const { data: resumes, isLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
+
+  const handleConfirmDelete = () => {
+    if (deleteCandidate?.id) {
+        onDeleteResume(deleteCandidate.id);
+    }
+    setDeleteCandidate(null);
+  }
 
   const renderContent = () => {
     if (isLoading) {
@@ -106,26 +131,43 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.id} resume={resume} onSelectResume={onSelectResume} />
+                <HistoryItem key={resume.id} resume={resume} onSelectResume={onSelectResume} onDeleteClick={() => setDeleteCandidate(resume)} />
             ))}
         </div>
     );
   };
 
   return (
-    <Card className="mt-8">
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <History className="h-6 w-6" />
-                Resume History
-            </CardTitle>
-            <CardDescription>
-                Your previously generated resumes are saved here. Load one to edit it.
-            </CardDescription>
-        </CardHeader>
-        <CardContent>
-            {renderContent()}
-        </CardContent>
-    </Card>
+    <>
+    <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the resume for "{deleteCandidate?.target_job_title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Card className="mt-8">
+          <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                  <History className="h-6 w-6" />
+                  Resume History
+              </CardTitle>
+              <CardDescription>
+                  Your previously generated resumes are saved here. Load one to edit or delete it.
+              </CardDescription>
+          </CardHeader>
+          <CardContent>
+              {renderContent()}
+          </CardContent>
+      </Card>
+    </>
   )
 }

@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore';
 import type { ResumeFormData } from '@/lib/schema';
 import { v4 as uuidv4 } from "uuid";
-import { setDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { setDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 /**
  * Creates or updates resume data in Firestore for a specific user.
@@ -53,4 +53,21 @@ export function saveOrUpdateResumeDataClient(
     // Use the non-blocking set function for creation
     setDocumentNonBlocking(docRef, dataToSave, {});
   }
+}
+
+
+/**
+ * Deletes resume data in Firestore for a specific user.
+ * This is a non-blocking operation.
+ * @param firestore The Firestore instance.
+ * @param userId The ID of the user.
+ * @param resumeId The ID of the resume document to delete.
+ */
+export function deleteResumeDataClient(
+  firestore: Firestore,
+  userId: string,
+  resumeId: string
+): void {
+  const docRef = doc(firestore, 'users', userId, 'resumeData', resumeId);
+  deleteDocumentNonBlocking(docRef);
 }

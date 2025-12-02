@@ -10,6 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/firebase";
 import { ResumeHistory } from "./resume-history";
+import { deleteResumeDataClient } from "@/lib/client-firestore";
+import { getFirestore } from "firebase/firestore";
+import { initializeFirebase } from "@/firebase";
+
 
 type GenerationResult = {
   resume: string;
@@ -95,6 +99,22 @@ export function ResumeBuilder() {
     });
   }
 
+  const handleDeleteResume = (resumeId: string) => {
+    if (!user) return;
+    const { firestore } = initializeFirebase();
+    deleteResumeDataClient(firestore, user.uid, resumeId);
+    
+    // If the deleted resume is the one currently in the form, clear it
+    if (currentResume?.id === resumeId) {
+        setCurrentResume(null);
+    }
+    
+    toast({
+        title: "Resume Deleted",
+        description: "The selected resume has been removed from your history.",
+    });
+  }
+
   // On mobile, we only show one component at a time.
   // The logic is: show the form and history, UNLESS we are reviewing or showing a result.
   if (isMobile) {
@@ -113,7 +133,7 @@ export function ResumeBuilder() {
      return (
         <div className="space-y-8">
             <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
-            <ResumeHistory onSelectResume={handleLoadResume} />
+            <ResumeHistory onSelectResume={handleLoadResume} onDeleteResume={handleDeleteResume} />
         </div>
      );
   }
@@ -123,7 +143,7 @@ export function ResumeBuilder() {
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="space-y-8">
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
-        <ResumeHistory onSelectResume={handleLoadResume} />
+        <ResumeHistory onSelectResume={handleLoadResume} onDeleteResume={handleDeleteResume} />
       </div>
       <div className="lg:sticky top-8">
         <ResumePreview 
