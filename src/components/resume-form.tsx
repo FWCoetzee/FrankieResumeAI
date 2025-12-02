@@ -157,12 +157,12 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
         </Card>
 
         <Tabs defaultValue="customization" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="customization"><Settings className="mr-2"/> Customization</TabsTrigger>
-                <TabsTrigger value="personal_info"><User className="mr-2"/> Personal Info</TabsTrigger>
-                <TabsTrigger value="experience"><Briefcase className="mr-2"/> Experience</TabsTrigger>
-                <TabsTrigger value="education"><GraduationCap className="mr-2"/> Education</TabsTrigger>
-                <TabsTrigger value="skills"><Star className="mr-2"/> Skills & More</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-1 h-auto md:h-10 md:grid-cols-5">
+                <TabsTrigger value="customization"><Settings className="mr-2 hidden md:inline-flex"/> Customization</TabsTrigger>
+                <TabsTrigger value="personal_info"><User className="mr-2 hidden md:inline-flex"/> Personal Info</TabsTrigger>
+                <TabsTrigger value="experience"><Briefcase className="mr-2 hidden md:inline-flex"/> Experience</TabsTrigger>
+                <TabsTrigger value="education"><GraduationCap className="mr-2 hidden md:inline-flex"/> Education</TabsTrigger>
+                <TabsTrigger value="skills"><Star className="mr-2 hidden md:inline-flex"/> Skills & More</TabsTrigger>
             </TabsList>
             
             <Card className="mt-4">
@@ -351,5 +351,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
+
+    
 
     
