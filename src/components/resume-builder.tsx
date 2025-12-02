@@ -14,6 +14,7 @@ import { ResumeHistory } from "./resume-history";
 type GenerationResult = {
   resume: string;
   suggestions: string;
+  coverLetter: string;
 };
 
 export function ResumeBuilder() {
@@ -46,13 +47,13 @@ export function ResumeBuilder() {
     setIsReviewing(false); // Move away from review screen to show loading state
     setResult(null);
     toast({
-      title: "Generating your resume...",
+      title: "Generating your documents...",
       description: "The AI is working its magic. This may take a moment.",
     });
 
     const response = await generateResumeAction(user.uid, data);
 
-    if (response.error || !response.resume || !response.suggestions) {
+    if (response.error || !response.resume || !response.suggestions || !response.coverLetter) {
       toast({
         variant: "destructive",
         title: "Generation Failed",
@@ -62,10 +63,11 @@ export function ResumeBuilder() {
       setResult({
         resume: response.resume,
         suggestions: response.suggestions,
+        coverLetter: response.coverLetter,
       });
       toast({
         title: "Success!",
-        description: "Your new resume has been generated.",
+        description: "Your new resume and cover letter have been generated.",
       });
     }
     setIsLoading(false);

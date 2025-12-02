@@ -3,6 +3,7 @@
 
 import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
+import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { resumeSchema, type ResumeData } from "@/lib/schema";
 import { getFirestore } from "firebase/firestore";
 import { saveResumeDataClient } from "@/lib/client-firestore";
@@ -15,6 +16,7 @@ export async function generateResumeAction(
   error?: string;
   resume?: string;
   suggestions?: string;
+  coverLetter?: string;
 }> {
   if (!userId) {
     return { error: "You must be logged in to generate a resume." };
@@ -31,14 +33,20 @@ export async function generateResumeAction(
   const aiPayload = {
     ...resumeCoreData,
   };
+  
+  const jobDescForAI = jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`;
 
   try {
-    const [resumeResult, suggestionsResult] = await Promise.all([
+    const [resumeResult, suggestionsResult, coverLetterResult] = await Promise.all([
       generateResumeFromData(aiPayload as GenerateResumeFromDataInput),
       provideResumeSuggestions({
         ...aiPayload,
-        jobDescription: jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`,
+        jobDescription: jobDescForAI,
       } as ProvideResumeSuggestionsInput),
+      generateCoverLetterFromData({
+        ...aiPayload,
+        jobDescription: jobDescForAI,
+      } as GenerateCoverLetterFromDataInput)
     ]);
     
     // Get firestore instance and save data on the client
@@ -50,6 +58,7 @@ export async function generateResumeAction(
     return {
       resume: cleanedResume,
       suggestions: suggestionsResult.suggestions,
+      coverLetter: coverLetterResult,
     };
   } catch (error) {
     console.error("AI Generation or Firestore Error:", error);

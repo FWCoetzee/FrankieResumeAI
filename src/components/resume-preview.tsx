@@ -4,14 +4,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot } from "lucide-react";
+import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 
 interface ResumePreviewProps {
-  result: { resume: string; suggestions: string } | null;
+  result: { resume: string; suggestions: string; coverLetter: string; } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
   isReviewing: boolean;
@@ -78,7 +78,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
     <Card>
       <CardHeader>
         <CardTitle>Review Your Information</CardTitle>
-        <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your resume.</CardDescription>
+        <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your documents.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-background rounded-md border">
         
@@ -178,11 +178,11 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
-  const handlePrint = () => {
-    if (!result?.resume) return;
+  const handlePrint = (content: string) => {
+    if (!content) return;
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(result.resume);
+      printWindow.document.write(content);
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
@@ -196,14 +196,18 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   if (result) {
     return (
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="preview" className="gap-2">
-            <FileText className="h-4 w-4" /> Resume Preview
+            <FileText className="h-4 w-4" /> Resume
+          </TabsTrigger>
+          <TabsTrigger value="cover-letter" className="gap-2">
+            <FileSignature className="h-4 w-4" /> Cover Letter
           </TabsTrigger>
           <TabsTrigger value="suggestions" className="gap-2">
             <Wand2 className="h-4 w-4" /> AI Suggestions
           </TabsTrigger>
         </TabsList>
+
         <TabsContent value="preview" className="mt-4">
           <Card className="overflow-hidden">
             <div className="aspect-[8.5/11] bg-white">
@@ -211,11 +215,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                 srcDoc={result.resume}
                 className="w-full h-full border-0"
                 title="Resume Preview"
-                sandbox="allow-scripts" // Added for security, though srcDoc is generally safe
+                sandbox="allow-scripts"
               />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
-              <Button onClick={handlePrint} size="sm">
+              <Button onClick={() => handlePrint(result.resume)} size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
@@ -225,6 +229,27 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
             </CardFooter>
           </Card>
         </TabsContent>
+
+        <TabsContent value="cover-letter" className="mt-4">
+          <Card className="overflow-hidden">
+            <CardContent className="p-6 aspect-[8.5/11] bg-white text-black overflow-auto">
+                 <div
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: result.coverLetter }}
+                  />
+            </CardContent>
+            <CardFooter className="p-4 flex-row-reverse">
+               <Button onClick={() => handlePrint(`<html><body>${result.coverLetter}</body></html>`)} size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
+              <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
+                  <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="suggestions" className="mt-4">
           <Card>
             <CardHeader>
@@ -251,5 +276,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
