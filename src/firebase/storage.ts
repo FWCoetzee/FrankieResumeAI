@@ -1,39 +1,58 @@
 
 'use client';
 
-import { FirebaseStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { FirebaseStorage, ref, uploadBytesResumable, getDownloadURL, UploadTaskSnapshot } from "firebase/storage";
 import { User } from "firebase/auth";
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * Uploads an avatar image for a user.
+ * Uploads an avatar image for a user with progress tracking.
  * @param storage The Firebase Storage instance.
  * @param user The current user.
  * @param file The image file to upload.
- * @returns The public URL of the uploaded image.
+ * @param onProgress A callback function to report upload progress (0-100).
+ * @returns A Promise that resolves with the public URL of the uploaded image.
  */
-export async function uploadAvatar(
+export function uploadAvatar(
     storage: FirebaseStorage,
     user: User,
-    file: File
+    file: File,
+    onProgress: (percentage: number) => void
 ): Promise<string> {
     if (!user) {
-        throw new Error("User must be logged in to upload an avatar.");
+        return Promise.reject(new Error("User must be logged in to upload an avatar."));
     }
     if (!file.type.startsWith("image/")) {
-        throw new Error("File is not an image.");
+        return Promise.reject(new Error("File is not an image."));
     }
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
     const storageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
 
-    try {
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
-        return downloadURL;
-    } catch (error) {
-        console.error("Avatar upload failed:", error);
-        throw new Error("Failed to upload avatar to Firebase Storage.");
-    }
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+        uploadTask.on('state_changed',
+            (snapshot: UploadTaskSnapshot) => {
+                // Progress function
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                onProgress(progress);
+            },
+            (error) => {
+                // Error function
+                console.error("Avatar upload failed:", error);
+                reject(new Error("Failed to upload avatar to Firebase Storage."));
+            },
+            () => {
+                // Complete function
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    resolve(downloadURL);
+                }).catch((error) => {
+                    console.error("Failed to get download URL:", error);
+                    reject(new Error("Upload complete, but failed to get download URL."));
+                });
+            }
+        );
+    });
 }

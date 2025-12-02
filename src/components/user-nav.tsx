@@ -20,6 +20,7 @@ import { AuthDialog } from "./auth-dialog";
 import { useState, useRef, useEffect } from "react";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "./ui/progress";
 
 export function UserNav() {
   const { user, isUserLoading } = useUser();
@@ -30,6 +31,7 @@ export function UserNav() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<"login" | "signup">("login");
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +40,6 @@ export function UserNav() {
   useEffect(() => {
     setOptimisticAvatarUrl(null);
   }, [user?.uid]);
-
 
   const handleSignOut = () => {
     if (auth) {
@@ -63,31 +64,29 @@ export function UserNav() {
     }
     
     setIsUploading(true);
+    setUploadProgress(0);
     toast({ title: "Uploading avatar...", description: "Please wait." });
 
     try {
-      // 1. Upload the file and get the URL
-      const newUrl = await uploadAvatar(storage, user, file);
+      const onProgress = (percentage: number) => {
+        setUploadProgress(percentage);
+      };
       
-      // 2. Update the user's profile in Firebase Auth
+      const newUrl = await uploadAvatar(storage, user, file, onProgress);
+      
       await updateProfile(user, { photoURL: newUrl });
-      
-      // 3. CRITICAL: Force-refresh the token to get the updated user profile
-      // This ensures the `useUser` hook receives the new `photoURL`
       await user.getIdToken(true);
 
-      // 4. Optimistically update the UI right away
       setOptimisticAvatarUrl(newUrl);
 
       toast({ title: "Success!", description: "Your avatar has been updated." });
     } catch (error: any) {
       console.error("Avatar upload process failed:", error);
       toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
-      setOptimisticAvatarUrl(null); // Revert optimistic update on error
+      setOptimisticAvatarUrl(null);
     } finally {
-      // 5. GUARANTEED: This block will always run, ensuring the UI is unlocked
       setIsUploading(false);
-      // It's good practice to clear the file input value
+      setUploadProgress(0);
       if(fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -136,20 +135,49 @@ export function UserNav() {
       />
       <div className="flex items-center gap-4">
         <div className="relative group">
-            <div 
-              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full transition-opacity z-10"
-              style={{ opacity: isUploading ? 1 : 0 }}
-            >
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-            </div>
-
-            <div 
-              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
-              onClick={handleAvatarChangeClick}
-              style={{ display: isUploading ? 'none' : 'flex' }}
-             >
-                <ImageIcon className="h-8 w-8 text-white" />
-            </div>
+            
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full transition-opacity z-10">
+                <div className="relative h-28 w-28">
+                   <svg className="h-full w-full" viewBox="0 0 100 100">
+                    <circle
+                      className="text-muted"
+                      strokeWidth="10"
+                      stroke="currentColor"
+                      fill="transparent"
+                      r="40"
+                      cx="50"
+                      cy="50"
+                    />
+                    <circle
+                      className="text-primary"
+                      strokeWidth="10"
+                      strokeDasharray={2 * Math.PI * 40}
+                      strokeDashoffset={(2 * Math.PI * 40) * (1 - uploadProgress / 100)}
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="transparent"
+                      r="40"
+                      cx="50"
+                      cy="50"
+                      style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+                    />
+                  </svg>
+                   <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-white">
+                        {Math.round(uploadProgress)}%
+                    </span>
+                </div>
+              </div>
+            )}
+            
+            {!isUploading && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                  onClick={handleAvatarChangeClick}
+                >
+                    <ImageIcon className="h-8 w-8 text-white" />
+                </div>
+            )}
             
             <Avatar className="h-24 w-24 border-4 border-muted">
                 <AvatarImage src={avatarUrl} alt={`@${userDisplayName}`} />
