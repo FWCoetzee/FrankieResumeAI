@@ -17,7 +17,7 @@ import { signOut } from "firebase/auth";
 import { LogIn, LogOut, User, UserPlus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -31,8 +31,20 @@ export function UserNav() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<"login" | "signup">("login");
   const [isUploading, setIsUploading] = useState(false);
+  const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // When the user object from Firebase changes, update our local avatar URL.
+    if (user?.photoURL) {
+      setOptimisticAvatarUrl(user.photoURL);
+    } else {
+      setOptimisticAvatarUrl(null);
+    }
+  }, [user?.photoURL]);
+
 
   const handleSignOut = () => {
     if (auth) {
@@ -61,7 +73,8 @@ export function UserNav() {
       setIsUploading(true);
       toast({ title: "Uploading avatar...", description: "Please wait." });
       try {
-        await uploadAvatar(storage, auth, user, file);
+        const newUrl = await uploadAvatar(storage, auth, user, file);
+        setOptimisticAvatarUrl(newUrl); // Optimistically update the UI with the new URL
         toast({ title: "Success!", description: "Your avatar has been updated." });
       } catch (error: any) {
         toast({ variant: "destructive", title: "Upload Failed", description: error.message });
@@ -80,7 +93,7 @@ export function UserNav() {
   const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
   const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
   const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user?.uid}`;
-  const avatarUrl = user?.photoURL || defaultAvatar;
+  const avatarUrl = optimisticAvatarUrl || defaultAvatar;
 
 
   return (

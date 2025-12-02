@@ -1,3 +1,4 @@
+
 'use client';
 
 import { FirebaseStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -34,9 +35,9 @@ export async function uploadAvatar(
         const downloadURL = await getDownloadURL(snapshot.ref);
 
         await updateProfile(user, { photoURL: downloadURL });
-
-        // Manually reload the user to get the updated photoURL
-        await auth.currentUser?.reload();
+        
+        // No need to reload here, we return the URL for optimistic update
+        // await auth.currentUser?.reload();
 
         return downloadURL;
     } catch (error) {
