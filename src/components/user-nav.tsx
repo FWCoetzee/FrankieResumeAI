@@ -67,19 +67,25 @@ export function UserNav() {
         setUploadProgress(percentage);
       };
       
+      // 1. Upload the file and get the URL
       const newUrl = await uploadAvatar(storage, user, file, onProgress);
       
-      await updateProfile(user, { photoURL: newUrl });
-      await user.getIdToken(true);
-
+      // 2. Optimistically update the UI
       setOptimisticAvatarUrl(newUrl);
+
+      // 3. Update the user profile in the background
+      await updateProfile(user, { photoURL: newUrl });
+
+      // 4. Force a token refresh to get the latest user data
+      await user.getIdToken(true);
 
       toast({ title: "Success!", description: "Your avatar has been updated." });
     } catch (error: any) {
       console.error("Avatar upload process failed:", error);
       toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
-      setOptimisticAvatarUrl(null);
+      setOptimisticAvatarUrl(null); // Revert on failure
     } finally {
+      // 5. Always reset the loading state
       setIsUploading(false);
       setUploadProgress(0);
       if(fileInputRef.current) {
