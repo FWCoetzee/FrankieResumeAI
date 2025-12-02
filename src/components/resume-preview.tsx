@@ -4,14 +4,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature } from "lucide-react";
-import type { ResumeData } from "@/lib/schema";
+import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature, Link as LinkIcon, Phone, Mail } from "lucide-react";
+import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 
 interface ResumePreviewProps {
-  result: { resume: string; suggestions: string; coverLetter: string; } | null;
+  result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
   isReviewing: boolean;
@@ -82,7 +82,6 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
       </CardHeader>
       <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-background rounded-md border">
         
-        {/* Header Section */}
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold">{personal_info.full_name}</h2>
             <p className="text-muted-foreground">{target_job_title}</p>
@@ -176,18 +175,138 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
+const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
+  const { header, summary, skills, experience, education, projects } = resume;
+
+  return (
+    <div className="bg-white text-black p-8 font-sans text-sm">
+      {/* Header */}
+      <div className="text-center border-b pb-4 mb-6">
+        <h1 className="text-4xl font-bold tracking-tight">{header.name}</h1>
+        <div className="flex justify-center items-center gap-x-4 gap-y-1 text-xs text-gray-600 mt-2 flex-wrap">
+          <a href={`mailto:${header.email}`} className="flex items-center gap-1 hover:text-blue-600"><Mail className="h-3 w-3" />{header.email}</a>
+          <span className="text-gray-300 hidden md:inline">|</span>
+          <a href={`tel:${header.phone}`} className="flex items-center gap-1 hover:text-blue-600"><Phone className="h-3 w-3" />{header.phone}</a>
+          <span className="text-gray-300 hidden md:inline">|</span>
+          <p className="flex items-center gap-1">{header.location}</p>
+          {header.website && (
+            <>
+            <span className="text-gray-300 hidden md:inline">|</span>
+            <a href={header.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-600">
+                <LinkIcon className="h-3 w-3" />{header.website.replace(/https?:\/\//, '')}
+            </a>
+            </>
+          )}
+        </div>
+      </div>
+      
+      {/* Summary */}
+      <section className="mb-6">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Professional Summary</h2>
+        <p className="text-gray-700 leading-relaxed">{summary}</p>
+      </section>
+
+      {/* Skills */}
+      <section className="mb-6">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Core Competencies</h2>
+        <div className="flex flex-wrap gap-2">
+          {skills.map((skill, index) => <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800 font-medium">{skill}</Badge>)}
+        </div>
+      </section>
+      
+      {/* Experience */}
+      <section className="mb-6">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Professional Experience</h2>
+        {experience.map((job, index) => (
+          <div key={index} className="mb-4 last:mb-0">
+            <div className="flex justify-between items-baseline mb-1">
+              <h3 className="font-bold text-base">{job.title}</h3>
+              <p className="text-xs text-gray-600">{job.dates}</p>
+            </div>
+            <p className="text-sm font-medium italic text-gray-800">{job.company}</p>
+            <ul className="mt-2 list-disc list-inside space-y-1 text-gray-700">
+              {job.bulletPoints.map((point, i) => <li key={i}>{point}</li>)}
+            </ul>
+          </div>
+        ))}
+      </section>
+
+      {/* Education */}
+      <section className="mb-6">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Education</h2>
+        {education.map((edu, index) => (
+          <div key={index} className="flex justify-between items-baseline">
+            <div>
+              <h3 className="font-bold text-base">{edu.degree}</h3>
+              <p className="text-sm italic text-gray-800">{edu.institution}</p>
+            </div>
+            <p className="text-xs text-gray-600">{edu.year}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Projects */}
+      {projects && projects.length > 0 && (
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Projects</h2>
+          {projects.map((proj, index) => (
+            <div key={index} className="mb-3 last:mb-0">
+               <h3 className="font-bold text-base">{proj.title}</h3>
+               <p className="mt-1 list-disc list-inside space-y-1 text-gray-700">{proj.description}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+    </div>
+  )
+}
+
+
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
-  const handlePrint = (content: string, styles?: string) => {
-    if (!content) return;
+  const handlePrint = () => {
+    if (!result?.resume) return;
+    
+    // We can't directly print the component, so we render it to a string.
+    // For a real app, a library like react-to-print would be better.
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`<html><head><style>${styles || ''}</style></head><body>${content}</body></html>`);
+      const { JSDOM } = require('jsdom');
+      const dom = new JSDOM(`<!DOCTYPE html><html><head><title>Resume</title></head><body><div id="root"></div></body></html>`);
+      const { document } = dom.window;
+
+      // This is a simplified and not fully working approach for server-side rendering to string.
+      // In a real scenario, you'd use ReactDOMServer.renderToString or a dedicated library.
+      // For this client-side context, we will just take the innerHTML of the rendered component.
+      
+      const tempContainer = document.createElement('div');
+      
+      // A more complex solution with ReactDOMServer would be needed for a perfect print.
+      // This is a limitation of this environment. Let's just print the raw HTML for now.
+      
+      const resumeHtml = document.getElementById('resume-container')?.innerHTML;
+
+      printWindow.document.write(`<html><head><title>Resume</title><link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"><style>body { font-family: sans-serif; }</style></head><body>${resumeHtml}</body></html>`);
       printWindow.document.close();
       printWindow.focus();
-      printWindow.print();
+      // printWindow.print();
     }
   }
+  
+  const handleDownloadHtml = () => {
+    const content = document.getElementById('resume-container')?.innerHTML;
+    if (content) {
+      const blob = new Blob([content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'resume.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -214,18 +333,13 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
         <TabsContent value="preview" className="mt-4">
           <Card className="overflow-hidden">
-            <div className="aspect-[8.5/11] bg-white">
-              <iframe
-                srcDoc={result.resume}
-                className="w-full h-full border-0"
-                title="Resume Preview"
-                sandbox="allow-scripts"
-              />
+             <div id="resume-container" className="aspect-[8.5/11] bg-white overflow-y-auto">
+               <GeneratedResume resume={result.resume} />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
-              <Button onClick={() => handlePrint(result.resume)} size="sm">
+              <Button onClick={handleDownloadHtml} size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                Download PDF
+                Download HTML
               </Button>
               <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
                   <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -243,7 +357,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
-               <Button onClick={() => handlePrint(result.coverLetter, coverLetterPrintStyles)} size="sm">
+               <Button onClick={() => {
+                 const printWindow = window.open('', '_blank');
+                 if(printWindow) {
+                   printWindow.document.write(`<html><head><style>${coverLetterPrintStyles}</style></head><body>${result.coverLetter}</body></html>`);
+                   printWindow.document.close();
+                   printWindow.focus();
+                   printWindow.print();
+                 }
+               }} size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>

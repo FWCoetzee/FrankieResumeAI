@@ -1,7 +1,7 @@
 
 "use client";
 
-import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
+import { generateResumeFromData, type GenerateResumeFromDataInput, type GenerateResumeFromDataOutput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { resumeFormSchema, type ResumeFormData } from "@/lib/schema";
@@ -15,7 +15,7 @@ export async function generateResumeAction(
   data: ResumeFormData
 ): Promise<{
   error?: string;
-  resume?: string;
+  resume?: GenerateResumeFromDataOutput;
   suggestions?: string;
   coverLetter?: string;
 }> {
@@ -54,10 +54,8 @@ export async function generateResumeAction(
     const { firestore } = initializeFirebase();
     saveOrUpdateResumeDataClient(firestore, userId, resumeId, validation.data);
     
-    const cleanedResume = resumeResult.replace(/^```html\n|```$/g, '');
-
     return {
-      resume: cleanedResume,
+      resume: resumeResult,
       suggestions: suggestionsResult.suggestions,
       coverLetter: coverLetterResult,
     };

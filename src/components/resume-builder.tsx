@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ResumeData } from "@/lib/schema";
+import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { generateResumeAction } from "@/app/actions";
 import { ResumeForm } from "./resume-form";
 import { ResumePreview } from "./resume-preview";
@@ -16,7 +16,7 @@ import { initializeFirebase } from "@/firebase";
 
 
 type GenerationResult = {
-  resume: string;
+  resume: GeneratedResumeData;
   suggestions: string;
   coverLetter: string;
 };
