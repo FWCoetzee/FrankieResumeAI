@@ -20,14 +20,19 @@ type GenerationResult = {
 export function ResumeBuilder() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
-  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [currentResume, setCurrentResume] = useState<ResumeData | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { user } = useUser();
 
   const handleDataForReview = (data: ResumeData) => {
-    setResumeData(data);
+    // When submitting the form, we only have form data.
+    // Preserve the id from the currently loaded resume if it exists.
+    setCurrentResume(prev => ({
+        ...data,
+        id: prev?.id, // Keep the existing ID
+    }));
     setResult(null); // Clear previous results
     setIsReviewing(true);
   };
@@ -43,7 +48,7 @@ export function ResumeBuilder() {
     }
     
     setIsLoading(true);
-    setResumeData(data); // Also update data on final generation
+    setCurrentResume(data); // Also update data on final generation
     setIsReviewing(false); // Move away from review screen to show loading state
     setResult(null);
     toast({
@@ -51,7 +56,8 @@ export function ResumeBuilder() {
       description: "The AI is working its magic. This may take a moment.",
     });
 
-    const response = await generateResumeAction(user.uid, data);
+    // Pass the user.uid and the current resume's ID (if it exists) to the action
+    const response = await generateResumeAction(user.uid, data.id ?? null, data);
 
     if (response.error || !response.resume || !response.suggestions || !response.coverLetter) {
       toast({
@@ -67,7 +73,7 @@ export function ResumeBuilder() {
       });
       toast({
         title: "Success!",
-        description: "Your new resume and cover letter have been generated.",
+        description: data.id ? "Your resume has been updated." : "Your new resume has been saved and generated.",
       });
     }
     setIsLoading(false);
@@ -79,7 +85,7 @@ export function ResumeBuilder() {
   };
 
   const handleLoadResume = (data: ResumeData) => {
-    setResumeData(data);
+    setCurrentResume(data); // This now includes the ID
     setIsReviewing(false);
     setResult(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -97,7 +103,7 @@ export function ResumeBuilder() {
          <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={resumeData} 
+          resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
@@ -106,7 +112,7 @@ export function ResumeBuilder() {
      }
      return (
         <div className="space-y-8">
-            <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+            <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
             <ResumeHistory onSelectResume={handleLoadResume} />
         </div>
      );
@@ -116,14 +122,14 @@ export function ResumeBuilder() {
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="space-y-8">
-        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={resumeData} />
+        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
         <ResumeHistory onSelectResume={handleLoadResume} />
       </div>
       <div className="lg:sticky top-8">
         <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={resumeData} 
+          resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}

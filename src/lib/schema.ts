@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 // Re-defined based on Day 2 Blueprint
@@ -56,8 +57,8 @@ export const resumeStyleSchema = z.enum([
 ]);
 
 
-// Main resume schema based on Day 2 Blueprint
-export const resumeSchema = z.object({
+// This schema represents the data collected from the form. It does not include database-specific fields like id.
+export const resumeFormSchema = z.object({
   jobDescription: z.string().optional(),
   target_job_title: z.string().min(1, "Target job title is required"),
   resume_intent: resumeIntentSchema,
@@ -71,4 +72,14 @@ export const resumeSchema = z.object({
   certifications: z.array(z.string()),
 });
 
-export type ResumeData = z.infer<typeof resumeSchema>;
+// This is the type for the data that comes directly from the form.
+export type ResumeFormData = z.infer<typeof resumeFormSchema>;
+
+// This represents the full resume data structure, including optional database fields like id and timestamps.
+// This is the main type used for state management within the app.
+export type ResumeData = ResumeFormData & {
+  id?: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};

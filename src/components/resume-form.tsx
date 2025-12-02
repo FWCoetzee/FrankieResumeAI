@@ -3,7 +3,7 @@
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resumeSchema, type ResumeData, resumeIntentSchema, experienceLevelSchema, resumeStyleSchema } from "@/lib/schema";
+import { resumeFormSchema, type ResumeData, resumeIntentSchema, experienceLevelSchema, resumeStyleSchema } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -113,7 +113,7 @@ const sampleValues: ResumeData = {
 
 export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormProps) {
   const form = useForm<ResumeData>({
-    resolver: zodResolver(resumeSchema),
+    resolver: zodResolver(resumeFormSchema),
     defaultValues: initialData || emptyValues,
     mode: "onBlur",
   });

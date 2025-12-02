@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from "./ui/badge";
 
+// Firestore documents have Timestamps
 type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
   id: string;
   createdAt: Timestamp;
@@ -23,13 +24,12 @@ interface ResumeHistoryProps {
 
 const HistoryItem = ({ resume, onSelectResume }: { resume: FirestoreResumeData, onSelectResume: (data: ResumeData) => void }) => {
   const handleSelect = () => {
-    // Convert Timestamps back to strings or whatever format your form expects.
-    // This is a placeholder; you might need a more robust conversion.
-    const formData = {
+    // Convert Timestamps to strings for form compatibility, and pass the whole object
+    const formData: ResumeData = {
         ...resume,
         createdAt: resume.createdAt.toDate().toISOString(),
         updatedAt: resume.updatedAt.toDate().toISOString(),
-    } as unknown as ResumeData;
+    };
     onSelectResume(formData);
   }
 
@@ -38,7 +38,7 @@ const HistoryItem = ({ resume, onSelectResume }: { resume: FirestoreResumeData, 
       <div className="space-y-1">
         <p className="font-semibold">{resume.target_job_title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-            <span>Generated {formatDistanceToNow(resume.createdAt.toDate(), { addSuffix: true })}</span>
+            <span>Updated {formatDistanceToNow(resume.updatedAt.toDate(), { addSuffix: true })}</span>
             <Badge variant="outline">{resume.experience_level}</Badge>
             <Badge variant="outline">{resume.resume_style}</Badge>
         </div>
@@ -58,7 +58,7 @@ export function ResumeHistory({ onSelectResume }: ResumeHistoryProps) {
     if (!user || !firestore) return null;
     return query(
       collection(firestore, 'users', user.uid, 'resumeData'),
-      orderBy('createdAt', 'desc')
+      orderBy('updatedAt', 'desc') // Order by updated time to show recent edits first
     );
   }, [user, firestore]);
   

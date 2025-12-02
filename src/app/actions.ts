@@ -4,14 +4,15 @@
 import { generateResumeFromData, type GenerateResumeFromDataInput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
-import { resumeSchema, type ResumeData } from "@/lib/schema";
+import { resumeFormSchema, type ResumeFormData } from "@/lib/schema";
 import { getFirestore } from "firebase/firestore";
-import { saveResumeDataClient } from "@/lib/client-firestore";
+import { saveOrUpdateResumeDataClient } from "@/lib/client-firestore";
 import { initializeFirebase } from "@/firebase";
 
 export async function generateResumeAction(
   userId: string | null,
-  data: ResumeData
+  resumeId: string | null, // Added to know if we are updating
+  data: ResumeFormData
 ): Promise<{
   error?: string;
   resume?: string;
@@ -22,7 +23,7 @@ export async function generateResumeAction(
     return { error: "You must be logged in to generate a resume." };
   }
 
-  const validation = resumeSchema.safeParse(data);
+  const validation = resumeFormSchema.safeParse(data);
   if (!validation.success) {
     console.error("Zod validation failed:", validation.error.flatten());
     return { error: "Invalid data provided. Check the form for errors." };
@@ -51,7 +52,7 @@ export async function generateResumeAction(
     
     // Get firestore instance and save data on the client
     const { firestore } = initializeFirebase();
-    saveResumeDataClient(firestore, userId, validation.data);
+    saveOrUpdateResumeDataClient(firestore, userId, resumeId, validation.data);
     
     const cleanedResume = resumeResult.replace(/^```html\n|```$/g, '');
 
