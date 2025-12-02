@@ -266,43 +266,32 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
   const handlePrint = () => {
-    if (!result?.resume) return;
-    
-    // We can't directly print the component, so we render it to a string.
-    // For a real app, a library like react-to-print would be better.
+    const resumeHtml = document.getElementById('resume-container')?.innerHTML;
+    if (!resumeHtml) return;
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      const { JSDOM } = require('jsdom');
-      const dom = new JSDOM(`<!DOCTYPE html><html><head><title>Resume</title></head><body><div id="root"></div></body></html>`);
-      const { document } = dom.window;
-
-      // This is a simplified and not fully working approach for server-side rendering to string.
-      // In a real scenario, you'd use ReactDOMServer.renderToString or a dedicated library.
-      // For this client-side context, we will just take the innerHTML of the rendered component.
-      
-      const tempContainer = document.createElement('div');
-      
-      // A more complex solution with ReactDOMServer would be needed for a perfect print.
-      // This is a limitation of this environment. Let's just print the raw HTML for now.
-      
-      const resumeHtml = document.getElementById('resume-container')?.innerHTML;
-
-      printWindow.document.write(`<html><head><title>Resume</title><link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"><style>body { font-family: sans-serif; }</style></head><body>${resumeHtml}</body></html>`);
+      printWindow.document.write(`<html><head><title>Resume</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"><style>body { font-family: sans-serif; }</style></head><body>${resumeHtml}</body></html>`);
       printWindow.document.close();
       printWindow.focus();
-      // printWindow.print();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
     }
   }
   
   const handleDownloadHtml = () => {
     const content = document.getElementById('resume-container')?.innerHTML;
+    const fullHtml = `<!DOCTYPE html><html><head><title>Resume</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></head><body>${content}</body></html>`;
     if (content) {
-      const blob = new Blob([content], { type: 'text/html' });
+      const blob = new Blob([fullHtml], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'resume.html';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
   }
@@ -402,5 +391,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
 
     
