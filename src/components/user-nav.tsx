@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ export function UserNav() {
 
   const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
   const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
+  const avatarUrl = user ? `https://api.dicebear.com/8.x/lorelei/svg?seed=${user.uid}` : '';
+
 
   return (
     <>
@@ -61,7 +63,7 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-9 w-9">
-              {user?.photoURL && <AvatarImage src={user.photoURL} alt={`@${userDisplayName}`} />}
+              {user && <AvatarImage src={avatarUrl} alt={`@${userDisplayName}`} />}
               <AvatarFallback>
                 <User className="h-5 w-5" />
               </AvatarFallback>
