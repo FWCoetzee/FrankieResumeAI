@@ -17,7 +17,7 @@ import { signOut } from "firebase/auth";
 import { LogIn, LogOut, User, UserPlus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
@@ -31,8 +31,13 @@ export function UserNav() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<"login" | "signup">("login");
   const [isUploading, setIsUploading] = useState(false);
-  // Initialize state directly from the user prop. It will only run once on component mount.
-  const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(user?.photoURL || null);
+  const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // When the user object changes (login/logout), reset the optimistic URL
+    // and sync it with the user's current photoURL.
+    setOptimisticAvatarUrl(user?.photoURL || null);
+  }, [user]);
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,14 +70,12 @@ export function UserNav() {
       toast({ title: "Uploading avatar...", description: "Please wait." });
       try {
         const newUrl = await uploadAvatar(storage, auth, user, file);
-        // This will now correctly update the UI and won't be overridden.
         setOptimisticAvatarUrl(newUrl);
         toast({ title: "Success!", description: "Your avatar has been updated." });
       } catch (error: any) {
         toast({ variant: "destructive", title: "Upload Failed", description: error.message });
       } finally {
         setIsUploading(false);
-        // Reset file input
         if(fileInputRef.current) fileInputRef.current.value = "";
       }
     }
@@ -85,8 +88,7 @@ export function UserNav() {
   const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
   const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
   const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user?.uid}`;
-  // The displayed URL is now a combination of the user's actual photoURL, the optimistic one, or the default.
-  const avatarUrl = user?.photoURL || optimisticAvatarUrl || defaultAvatar;
+  const avatarUrl = optimisticAvatarUrl || user?.photoURL || defaultAvatar;
 
 
   return (
