@@ -69,14 +69,15 @@ export function UserNav() {
       // 1. Upload the file and get the URL
       const newUrl = await uploadAvatar(storage, user, file);
       
-      // 2. Optimistically update the UI right away
-      setOptimisticAvatarUrl(newUrl);
-
-      // 3. Update the user's profile in Firebase Auth
+      // 2. Update the user's profile in Firebase Auth
       await updateProfile(user, { photoURL: newUrl });
       
-      // 4. CRITICAL: Force-refresh the token to get the updated user profile
+      // 3. CRITICAL: Force-refresh the token to get the updated user profile
+      // This ensures the `useUser` hook receives the new `photoURL`
       await user.getIdToken(true);
+
+      // 4. Optimistically update the UI right away
+      setOptimisticAvatarUrl(newUrl);
 
       toast({ title: "Success!", description: "Your avatar has been updated." });
     } catch (error: any) {
@@ -84,6 +85,7 @@ export function UserNav() {
       toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
       setOptimisticAvatarUrl(null); // Revert optimistic update on error
     } finally {
+      // 5. GUARANTEED: This block will always run, ensuring the UI is unlocked
       setIsUploading(false);
       // It's good practice to clear the file input value
       if(fileInputRef.current) {
