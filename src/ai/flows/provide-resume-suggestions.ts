@@ -59,7 +59,7 @@ const ProvideResumeSuggestionsInputSchema = z.object({
 export type ProvideResumeSuggestionsInput = z.infer<typeof ProvideResumeSuggestionsInputSchema>;
 
 const ProvideResumeSuggestionsOutputSchema = z.object({
-  suggestions: z.string().describe('A block of HTML content with actionable suggestions, formatted with tailwind classes for styling.'),
+  suggestions: z.string().describe('A block of simple HTML content with actionable suggestions. Use only <p>, <ul>, <li>, and <strong> tags. Do not include any CSS classes or styles.'),
 });
 export type ProvideResumeSuggestionsOutput = z.infer<typeof ProvideResumeSuggestionsOutputSchema>;
 
@@ -102,7 +102,7 @@ You MUST provide your output as a single, valid JSON object that adheres to the 
 
 ALWAYS respond in this exact format:
 {
-  "suggestions": "Your HTML content with suggestions here. Use <p>, <ul>, <li> and <strong> tags. Format with TailwindCSS classes like 'mb-2', 'font-bold', 'list-disc', 'ml-4'."
+  "suggestions": "Your HTML content with suggestions here. Use only <p>, <ul>, <li> and <strong> tags. Do NOT use any TailwindCSS classes or any other styling."
 }
 `,
 });

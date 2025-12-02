@@ -262,6 +262,17 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
   )
 }
 
+const CoverLetterContent = ({ content }: { content: string }) => {
+  const paragraphs = content.split('\n').filter(p => p.trim() !== '');
+  return (
+    <div className="prose prose-sm max-w-none prose-p:mb-4">
+      {paragraphs.map((p, i) => (
+        <p key={i}>{p}</p>
+      ))}
+    </div>
+  );
+};
+
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
@@ -340,16 +351,14 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         <TabsContent value="cover-letter" className="mt-4">
           <Card className="overflow-hidden">
             <div className="aspect-[8.5/11] bg-white text-black p-8 md:p-12 overflow-y-auto">
-                 <div
-                    className="prose prose-sm max-w-none prose-p:mb-4"
-                    dangerouslySetInnerHTML={{ __html: result.coverLetter }}
-                  />
+                 <CoverLetterContent content={result.coverLetter} />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
                <Button onClick={() => {
                  const printWindow = window.open('', '_blank');
                  if(printWindow) {
-                   printWindow.document.write(`<html><head><style>${coverLetterPrintStyles}</style></head><body>${result.coverLetter}</body></html>`);
+                   const content = document.getElementById('cover-letter-content')?.innerHTML || '';
+                   printWindow.document.write(`<html><head><title>Cover Letter</title><style>${coverLetterPrintStyles}</style></head><body>${content}</body></html>`);
                    printWindow.document.close();
                    printWindow.focus();
                    printWindow.print();
@@ -391,7 +400,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
-
-    

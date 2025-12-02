@@ -41,7 +41,7 @@ const GenerateCoverLetterFromDataInputSchema = z.object({
 
 export type GenerateCoverLetterFromDataInput = z.infer<typeof GenerateCoverLetterFromDataInputSchema>;
 
-const GenerateCoverLetterFromDataOutputSchema = z.string().describe('The generated cover letter content as a simple HTML document using only <p> tags.');
+const GenerateCoverLetterFromDataOutputSchema = z.string().describe('The generated cover letter content. Each paragraph should be separated by a newline character (\\n).');
 
 export type GenerateCoverLetterFromDataOutput = z.infer<typeof GenerateCoverLetterFromDataOutputSchema>;
 
@@ -57,7 +57,7 @@ const prompt = ai.definePrompt({
 
 The tone should be professional but authentic. The letter should highlight the most relevant skills and experiences from the resume that match the job description.
 
-You MUST generate a simple HTML document. Use <p> tags for paragraphs. Do NOT include <html>, <head>, or <body> tags. Just generate the content that would go inside a document body. NEVER add any commentary or text outside of the HTML content itself.
+You MUST generate plain text. Each paragraph MUST be separated by a single newline character (\\n). Do NOT use any HTML or Markdown. NEVER add any commentary or text outside of the cover letter content itself.
 
 Start with the user's contact information, the date, and the hiring manager/company info (if available in the job description, otherwise use a generic placeholder).
 
