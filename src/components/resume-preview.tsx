@@ -276,36 +276,60 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
-  const handlePrint = () => {
-    const resumeHtml = document.getElementById('resume-container')?.innerHTML;
-    if (!resumeHtml) return;
+  const handleDownloadHtml = () => {
+    const resumeContainer = document.getElementById('resume-container');
+    if (!resumeContainer) return;
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    const content = resumeContainer.innerHTML;
+    const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Resume</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: sans-serif; }
+  </style>
+</head>
+<body>
+  ${content}
+</body>
+</html>`;
+    const file = new Blob([fullHtml], { type: 'text/html' });
+    link.href = URL.createObjectURL(file);
+    link.download = 'resume.html';
+    
+    // Programmatically click the link to trigger the download
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+  
+  const coverLetterPrintStyles = `
+    body { font-family: sans-serif; line-height: 1.6; color: #333; }
+    p { margin-bottom: 1em; }
+  `;
+
+  const handleDownloadPdf = (contentElementId: string, styles: string, documentTitle: string) => {
+    const content = document.getElementById(contentElementId)?.innerHTML;
+    if (!content) return;
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`<html><head><title>Resume</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"><style>body { font-family: sans-serif; }</style></head><body>${resumeHtml}</body></html>`);
+      printWindow.document.write(`<html><head><title>${documentTitle}</title><style>${styles}</style></head><body>${content}</body></html>`);
       printWindow.document.close();
       printWindow.focus();
+      // Use a timeout to allow the content to load before printing
       setTimeout(() => {
         printWindow.print();
+        printWindow.close(); // Close the window after printing
       }, 500);
     }
-  }
-  
-  const handleDownloadHtml = () => {
-    const content = document.getElementById('resume-container')?.innerHTML;
-    const fullHtml = `<!DOCTYPE html><html><head><title>Resume</title><link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"></head><body>${content}</body></html>`;
-    if (content) {
-      const blob = new Blob([fullHtml], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'resume.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  }
+  };
 
 
   if (isLoading) {
@@ -313,10 +337,6 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   }
 
   if (result) {
-    const coverLetterPrintStyles = `
-      body { font-family: sans-serif; line-height: 1.6; color: #333; }
-      p { margin-bottom: 1em; }
-    `;
     return (
       <Tabs defaultValue="preview" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -350,20 +370,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
         <TabsContent value="cover-letter" className="mt-4">
           <Card className="overflow-hidden">
-            <div className="aspect-[8.5/11] bg-white text-black p-8 md:p-12 overflow-y-auto">
+            <div id="cover-letter-content" className="aspect-[8.5/11] bg-white text-black p-8 md:p-12 overflow-y-auto">
                  <CoverLetterContent content={result.coverLetter} />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
-               <Button onClick={() => {
-                 const printWindow = window.open('', '_blank');
-                 if(printWindow) {
-                   const content = document.getElementById('cover-letter-content')?.innerHTML || '';
-                   printWindow.document.write(`<html><head><title>Cover Letter</title><style>${coverLetterPrintStyles}</style></head><body>${content}</body></html>`);
-                   printWindow.document.close();
-                   printWindow.focus();
-                   printWindow.print();
-                 }
-               }} size="sm">
+               <Button onClick={() => handleDownloadPdf('cover-letter-content', coverLetterPrintStyles, 'Cover Letter')} size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
