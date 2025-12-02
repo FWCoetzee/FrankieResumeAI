@@ -18,19 +18,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, GraduationCap, Star } from "lucide-react";
 import { useAutosave } from "@/hooks/use-autosave";
 import { useEffect } from "react";
 
@@ -161,13 +156,18 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
             </CardContent>
         </Card>
 
-        <Accordion type="multiple" defaultValue={['customization', 'personal_info']} className="w-full space-y-4">
-          
-          <AccordionItem value="customization" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Resume Customization</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg">
-              <Card className="border-0 shadow-none rounded-t-none">
-                <CardContent className="pt-6 space-y-4">
+        <Tabs defaultValue="customization" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="customization"><Settings className="mr-2"/> Customization</TabsTrigger>
+                <TabsTrigger value="personal_info"><User className="mr-2"/> Personal Info</TabsTrigger>
+                <TabsTrigger value="experience"><Briefcase className="mr-2"/> Experience</TabsTrigger>
+                <TabsTrigger value="education"><GraduationCap className="mr-2"/> Education</TabsTrigger>
+                <TabsTrigger value="skills"><Star className="mr-2"/> Skills & More</TabsTrigger>
+            </TabsList>
+            
+            <Card className="mt-4">
+              <CardContent className="pt-6">
+                <TabsContent value="customization" className="m-0 space-y-4">
                   <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid md:grid-cols-3 gap-4">
                     <FormField control={form.control} name="resume_intent" render={({ field }) => (
@@ -208,173 +208,135 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                     )} />
                   </div>
                   <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Paste the job description (for tailored suggestions)</FormLabel><FormControl><Textarea placeholder="e.g., Seeking a software engineer with 5+ years of experience in..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="personal_info" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Personal Info</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg">
-              <Card className="border-0 shadow-none rounded-t-none">
-                <CardContent className="pt-6 space-y-4">
-                  <FormField name="personal_info.full_name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <FormField name="personal_info.email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="john.doe@email.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField name="personal_info.phone" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="(123) 456-7890" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  </div>
-                  <FormField name="personal_info.location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location (e.g. City, State)</FormLabel><FormControl><Input placeholder="San Francisco, CA" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField name="personal_info.summary" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Professional Summary</FormLabel><FormControl><Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={4} /></FormControl><FormMessage /></FormItem> )} />
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="work_experience" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Work Experience</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
-              <SectionHeader title="Your Experience" onAdd={() => appendExp({ job_title: "", company: "", start_date: "", end_date: "", responsibilities: "", achievements: "" })} />
-              {expFields.map((field, index) => (
-                <Card key={field.id} className="relative">
-                  <CardContent className="pt-6 space-y-4">
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeExp(index)}><Trash2 className="h-4 w-4" /></Button>
-                    <FormField name={`work_experience.${index}.job_title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Job Title</FormLabel><FormControl><Input placeholder="Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField name={`work_experience.${index}.company`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Company</FormLabel><FormControl><Input placeholder="Acme Inc." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                </TabsContent>
+                
+                <TabsContent value="personal_info" className="m-0 space-y-4">
+                    <FormField name="personal_info.full_name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     <div className="grid md:grid-cols-2 gap-4">
-                      <FormField name={`work_experience.${index}.start_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input placeholder="e.g., 2020-01" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField name={`work_experience.${index}.end_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date</FormLabel><FormControl><Input placeholder="e.g., 2024-05 or Present" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField name="personal_info.email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input placeholder="john.doe@email.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        <FormField name="personal_info.phone" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="(123) 456-7890" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     </div>
-                    <FormField name={`work_experience.${index}.responsibilities`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Responsibilities</FormLabel><FormControl><Textarea placeholder="Describe your key duties and tasks..." {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField name={`work_experience.${index}.achievements`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Achievements</FormLabel><FormControl><Textarea placeholder="List key accomplishments, preferably with metrics..." {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  </CardContent>
-                </Card>
-              ))}
-            </AccordionContent>
-          </AccordionItem>
+                    <FormField name="personal_info.location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location (e.g. City, State)</FormLabel><FormControl><Input placeholder="San Francisco, CA" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField name="personal_info.summary" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Professional Summary</FormLabel><FormControl><Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={4} /></FormControl><FormMessage /></FormItem> )} />
+                </TabsContent>
 
-          <AccordionItem value="education" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Education</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
-              <SectionHeader title="Your Education" onAdd={() => appendEdu({ degree: "", institution: "", start_year: "", end_year: "" })} />
-              {eduFields.map((field, index) => (
-                <Card key={field.id} className="relative">
-                  <CardContent className="pt-6 space-y-4">
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeEdu(index)}><Trash2 className="h-4 w-4" /></Button>
-                    <FormField name={`education.${index}.degree`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Degree</FormLabel><FormControl><Input placeholder="B.S. in Computer Science" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField name={`education.${index}.institution`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Institution</FormLabel><FormControl><Input placeholder="University of Example" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <FormField name={`education.${index}.start_year`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Year</FormLabel><FormControl><Input placeholder="2018" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                      <FormField name={`education.${index}.end_year`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Year</FormLabel><FormControl><Input placeholder="2022" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="skills" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Skills</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg">
-               <Card className="border-0 shadow-none rounded-t-none">
-                <CardContent className="pt-6">
-                  <FormField
-                    name="skills"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Skills</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter skills separated by commas"
-                            {...field}
-                            onChange={e => {
-                              const value = e.target.value;
-                              field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
-                            }}
-                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
-                          />
-                        </FormControl>
-                        <FormDescription>Separate each skill with a comma.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
+                <TabsContent value="experience" className="m-0 space-y-4">
+                    <SectionHeader title="Your Experience" onAdd={() => appendExp({ job_title: "", company: "", start_date: "", end_date: "", responsibilities: "", achievements: "" })} />
+                    {expFields.map((field, index) => (
+                        <Card key={field.id} className="relative bg-muted/50 p-4">
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeExp(index)}><Trash2 className="h-4 w-4" /></Button>
+                            <FormField name={`work_experience.${index}.job_title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Job Title</FormLabel><FormControl><Input placeholder="Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`work_experience.${index}.company`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Company</FormLabel><FormControl><Input placeholder="Acme Inc." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                <FormField name={`work_experience.${index}.start_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input placeholder="e.g., 2020-01" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField name={`work_experience.${index}.end_date`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date</FormLabel><FormControl><Input placeholder="e.g., 2024-05 or Present" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            </div>
+                            <FormField name={`work_experience.${index}.responsibilities`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Responsibilities</FormLabel><FormControl><Textarea placeholder="Describe your key duties and tasks..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`work_experience.${index}.achievements`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Achievements</FormLabel><FormControl><Textarea placeholder="List key accomplishments, preferably with metrics..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        </Card>
+                    ))}
+                </TabsContent>
+                
+                <TabsContent value="education" className="m-0 space-y-4">
+                    <SectionHeader title="Your Education" onAdd={() => appendEdu({ degree: "", institution: "", start_year: "", end_year: "" })} />
+                    {eduFields.map((field, index) => (
+                        <Card key={field.id} className="relative bg-muted/50 p-4">
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeEdu(index)}><Trash2 className="h-4 w-4" /></Button>
+                            <FormField name={`education.${index}.degree`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Degree</FormLabel><FormControl><Input placeholder="B.S. in Computer Science" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`education.${index}.institution`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Institution</FormLabel><FormControl><Input placeholder="University of Example" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                <FormField name={`education.${index}.start_year`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Year</FormLabel><FormControl><Input placeholder="2018" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField name={`education.${index}.end_year`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Year</FormLabel><FormControl><Input placeholder="2022" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            </div>
+                        </Card>
+                    ))}
+                </TabsContent>
 
-          <AccordionItem value="projects" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Projects</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg p-4 space-y-4">
-              <SectionHeader title="Your Projects" onAdd={() => appendProj({ title: "", description: "", technologies: [] })} />
-              {projFields.map((field, index) => (
-                 <Card key={field.id} className="relative">
-                  <CardContent className="pt-6 space-y-4">
-                    <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeProj(index)}><Trash2 className="h-4 w-4" /></Button>
-                    <FormField name={`projects.${index}.title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Project Title</FormLabel><FormControl><Input placeholder="My Awesome App" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField name={`projects.${index}.description`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A brief description of the project..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <TabsContent value="skills" className="m-0 space-y-6">
                     <FormField
-                        name={`projects.${index}.technologies`}
+                        name="skills"
                         control={form.control}
                         render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Technologies Used</FormLabel>
+                            <FormLabel>Your Skills</FormLabel>
                             <FormControl>
                             <Textarea
-                                placeholder="e.g., Next.js, Tailwind CSS, MDX"
+                                placeholder="Enter skills separated by commas"
                                 {...field}
                                 onChange={e => {
-                                  const value = e.target.value;
-                                  field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
+                                const value = e.target.value;
+                                field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
                                 }}
                                 value={Array.isArray(field.value) ? field.value.join(', ') : ''}
                             />
                             </FormControl>
-                             <FormDescription>Separate each technology with a comma.</FormDescription>
+                            <FormDescription>Separate each skill with a comma.</FormDescription>
                             <FormMessage />
                         </FormItem>
                         )}
                     />
-                  </CardContent>
-                </Card>
-              ))}
-            </AccordionContent>
-          </AccordionItem>
-          
-          <AccordionItem value="certifications" className="border-b-0">
-            <AccordionTrigger className="text-xl font-bold p-4 bg-card rounded-t-lg border">Certifications</AccordionTrigger>
-            <AccordionContent className="border border-t-0 rounded-b-lg">
-              <Card className="border-0 shadow-none rounded-t-none">
-                <CardContent className="pt-6">
-                  <FormField
-                    name="certifications"
-                    control={form.control}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Your Certifications</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Enter certifications separated by commas"
-                            {...field}
-                            onChange={e => {
-                              const value = e.target.value;
-                              field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
-                            }}
-                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
-                          />
-                        </FormControl>
-                        <FormDescription>Separate each certification with a comma.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
+                    
+                    <div className="space-y-4">
+                        <SectionHeader title="Your Projects" onAdd={() => appendProj({ title: "", description: "", technologies: [] })} />
+                        {projFields.map((field, index) => (
+                            <Card key={field.id} className="relative bg-muted/50 p-4">
+                                <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeProj(index)}><Trash2 className="h-4 w-4" /></Button>
+                                <FormField name={`projects.${index}.title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Project Title</FormLabel><FormControl><Input placeholder="My Awesome App" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField name={`projects.${index}.description`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A brief description of the project..." {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField
+                                    name={`projects.${index}.technologies`}
+                                    control={form.control}
+                                    render={({ field }) => (
+                                    <FormItem className="mt-4">
+                                        <FormLabel>Technologies Used</FormLabel>
+                                        <FormControl>
+                                        <Textarea
+                                            placeholder="e.g., Next.js, Tailwind CSS, MDX"
+                                            {...field}
+                                            onChange={e => {
+                                            const value = e.target.value;
+                                            field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
+                                            }}
+                                            value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                                        />
+                                        </FormControl>
+                                        <FormDescription>Separate each technology with a comma.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                            </Card>
+                        ))}
+                    </div>
 
-        </Accordion>
+                     <FormField
+                        name="certifications"
+                        control={form.control}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Your Certifications</FormLabel>
+                            <FormControl>
+                            <Textarea
+                                placeholder="Enter certifications separated by commas"
+                                {...field}
+                                onChange={e => {
+                                const value = e.target.value;
+                                field.onChange(value.split(',').map(s => s.trim()).filter(Boolean));
+                                }}
+                                value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                            />
+                            </FormControl>
+                            <FormDescription>Separate each certification with a comma.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </TabsContent>
+
+              </CardContent>
+            </Card>
+
+        </Tabs>
 
         <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
           {isLoading ? (
