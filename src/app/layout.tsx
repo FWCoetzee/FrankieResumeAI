@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
+import { AppLogo } from '@/components/icons';
+import { UserNav } from '@/components/user-nav';
 
 export const metadata: Metadata = {
   title: 'DeepResumeAI',
@@ -22,7 +24,22 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          {children}
+          <div className="relative min-h-screen bg-background">
+            <header className="container mx-auto px-4 py-8 flex justify-between items-center mb-8">
+              <div className="flex items-center justify-center gap-3">
+                <AppLogo className="h-8 w-8 text-primary" />
+                <h1 className="text-4xl font-bold tracking-tight text-primary">
+                  DeepResumeAI
+                </h1>
+              </div>
+              <div className="flex items-center gap-4">
+                 <UserNav />
+              </div>
+            </header>
+            <main className="container mx-auto px-4 pb-8">
+              {children}
+            </main>
+          </div>
         </FirebaseClientProvider>
         <Toaster />
       </body>
