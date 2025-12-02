@@ -14,11 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser, useAuth, useStorage } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { LogIn, LogOut, User, UserPlus, Image as ImageIcon, Loader2, Settings } from "lucide-react";
+import { LogOut, Image as ImageIcon, Loader2, Settings } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
 import { useState, useRef, useEffect } from "react";
-import { initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -34,7 +33,7 @@ export function UserNav() {
   const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  
   // When user changes, reset optimistic URL
   useEffect(() => {
     setOptimisticAvatarUrl(null);
@@ -47,43 +46,48 @@ export function UserNav() {
     }
   };
   
-  const handleAnonymousSignIn = () => {
-    if (auth) {
-      initiateAnonymousSignIn(auth);
-    }
-  }
-
   const openAuthDialog = (mode: "login" | "signup") => {
     setAuthDialogMode(mode);
     setAuthDialogOpen(true);
   }
 
   const handleAvatarChangeClick = () => {
+    if (isUploading) return;
     fileInputRef.current?.click();
   }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && user && auth && storage) {
-      setIsUploading(true);
-      toast({ title: "Uploading avatar...", description: "Please wait." });
-      try {
-        // 1. Upload the file and get the URL
-        const newUrl = await uploadAvatar(storage, user, file);
-        
-        // 2. Update the user's profile with the new URL
-        await updateProfile(user, { photoURL: newUrl });
+    if (!file || !user || !auth || !storage) {
+        return;
+    }
+    
+    setIsUploading(true);
+    toast({ title: "Uploading avatar...", description: "Please wait." });
 
-        // 3. Optimistically update the UI
-        setOptimisticAvatarUrl(newUrl);
+    try {
+      // 1. Upload the file and get the URL
+      const newUrl = await uploadAvatar(storage, user, file);
+      
+      // 2. Optimistically update the UI right away
+      setOptimisticAvatarUrl(newUrl);
 
-        toast({ title: "Success!", description: "Your avatar has been updated." });
-      } catch (error: any) {
-        console.error("Avatar upload process failed:", error);
-        toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
-      } finally {
-        setIsUploading(false);
-        if(fileInputRef.current) fileInputRef.current.value = "";
+      // 3. Update the user's profile in Firebase Auth
+      await updateProfile(user, { photoURL: newUrl });
+      
+      // 4. CRITICAL: Force-refresh the token to get the updated user profile
+      await user.getIdToken(true);
+
+      toast({ title: "Success!", description: "Your avatar has been updated." });
+    } catch (error: any) {
+      console.error("Avatar upload process failed:", error);
+      toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
+      setOptimisticAvatarUrl(null); // Revert optimistic update on error
+    } finally {
+      setIsUploading(false);
+      // It's good practice to clear the file input value
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     }
   }
@@ -91,11 +95,6 @@ export function UserNav() {
   if (isUserLoading) {
     return <Skeleton className="h-24 w-24 rounded-full" />;
   }
-
-  const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
-  const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
-  const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user?.uid}`;
-  const avatarUrl = optimisticAvatarUrl || user?.photoURL || defaultAvatar;
 
   if (!user) {
      return (
@@ -112,6 +111,11 @@ export function UserNav() {
         </>
      )
   }
+  
+  const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
+  const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
+  const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user?.uid}`;
+  const avatarUrl = optimisticAvatarUrl || user.photoURL || defaultAvatar;
 
   return (
     <>
@@ -126,24 +130,29 @@ export function UserNav() {
         onChange={handleFileChange}
         className="hidden"
         accept="image/png, image/jpeg, image/gif"
+        disabled={isUploading}
       />
       <div className="flex items-center gap-4">
         <div className="relative group">
-            {isUploading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full z-10">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <Button variant="ghost" size="icon" onClick={handleAvatarChangeClick} className="h-12 w-12 text-white hover:bg-white/20 hover:text-white">
-                        <ImageIcon className="h-6 w-6" />
-                    </Button>
-                </div>
-            )}
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full transition-opacity z-10"
+              style={{ opacity: isUploading ? 1 : 0 }}
+            >
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+              onClick={handleAvatarChangeClick}
+              style={{ display: isUploading ? 'none' : 'flex' }}
+             >
+                <ImageIcon className="h-8 w-8 text-white" />
+            </div>
+            
             <Avatar className="h-24 w-24 border-4 border-muted">
                 <AvatarImage src={avatarUrl} alt={`@${userDisplayName}`} />
                 <AvatarFallback>
-                    <User className="h-10 w-10" />
+                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
                 </AvatarFallback>
             </Avatar>
         </div>
