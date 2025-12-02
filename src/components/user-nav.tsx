@@ -14,13 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser, useAuth, useStorage } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { LogOut, Image as ImageIcon, Loader2, Settings } from "lucide-react";
+import { LogOut, Image as ImageIcon, Settings } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "./ui/progress";
 
 export function UserNav() {
   const { user, isUserLoading } = useUser();
@@ -35,15 +34,11 @@ export function UserNav() {
   const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // When user changes, reset optimistic URL
-  useEffect(() => {
-    setOptimisticAvatarUrl(null);
-  }, [user?.uid]);
 
   const handleSignOut = () => {
     if (auth) {
       signOut(auth);
+      setOptimisticAvatarUrl(null);
     }
   };
   
