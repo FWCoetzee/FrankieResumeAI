@@ -276,42 +276,40 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
 
-  const handleDownloadHtml = () => {
-    const resumeContainer = document.getElementById('resume-container');
-    if (!resumeContainer) return;
-    
-    // Create a temporary link element
-    const link = document.createElement('a');
-    const content = resumeContainer.innerHTML;
-    const fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Resume</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: sans-serif; }
-  </style>
-</head>
-<body>
-  ${content}
-</body>
-</html>`;
-    const file = new Blob([fullHtml], { type: 'text/html' });
-    link.href = URL.createObjectURL(file);
-    link.download = 'resume.html';
-    
-    // Programmatically click the link to trigger the download
-    document.body.appendChild(link);
-    link.click();
-    
-    // Clean up
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-  };
-  
   const coverLetterPrintStyles = `
     body { font-family: sans-serif; line-height: 1.6; color: #333; }
     p { margin-bottom: 1em; }
+  `;
+
+  const resumePrintStyles = `
+    body { font-family: sans-serif; color: #333; background-color: #fff; }
+    h1, h2, h3 { color: #000; }
+    h1 { font-size: 2.25rem; font-weight: bold; }
+    h2 { font-size: 0.875rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #2563eb; margin-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.25rem; }
+    h3 { font-size: 1rem; font-weight: bold; }
+    a { color: #3b82f6; text-decoration: none; }
+    .badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.75rem; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; background-color: #e5e7eb; color: #1f2937; }
+    ul { margin-top: 0.5rem; list-style-position: inside; list-style-type: disc; }
+    li { margin-bottom: 0.25rem; }
+    section { margin-bottom: 1.5rem; }
+    .text-center { text-align: center; }
+    .border-b { border-bottom-width: 1px; }
+    .pb-4 { padding-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .flex { display: flex; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .items-center { align-items: center; }
+    .items-baseline { align-items: baseline; }
+    .gap-x-4 { column-gap: 1rem; }
+    .text-xs { font-size: 0.75rem; }
+    .text-sm { font-size: 0.875rem; }
+    .text-base { font-size: 1rem; }
+    .text-gray-600 { color: #4b5563; }
+    .text-gray-700 { color: #374151; }
+    .text-gray-800 { color: #1f2937; }
+    .mt-2 { margin-top: 0.5rem; }
+    .italic { font-style: italic; }
   `;
 
   const handleDownloadPdf = (contentElementId: string, styles: string, documentTitle: string) => {
@@ -357,9 +355,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                <GeneratedResume resume={result.resume} />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
-              <Button onClick={handleDownloadHtml} size="sm">
+              <Button onClick={() => handleDownloadPdf('resume-container', resumePrintStyles, 'Resume')} size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                Download HTML
+                Download PDF
               </Button>
               <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
                   <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -411,3 +409,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
