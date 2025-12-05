@@ -337,7 +337,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   if (result) {
     return (
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 h-auto md:h-10 md:grid-cols-3">
           <TabsTrigger value="preview" className="gap-2">
             <FileText className="h-4 w-4" /> Resume
           </TabsTrigger>
