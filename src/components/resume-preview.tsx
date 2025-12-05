@@ -209,7 +209,7 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       {/* Skills */}
       <section className="mb-6">
         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Core Competencies</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-2 gap-y-3">
           {skills.map((skill, index) => <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800 font-medium">{skill}</Badge>)}
         </div>
       </section>
@@ -405,5 +405,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
