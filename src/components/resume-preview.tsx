@@ -321,11 +321,10 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       printWindow.document.write(`<html><head><title>${documentTitle}</title><style>${styles}</style></head><body>${content}</body></html>`);
       printWindow.document.close();
       printWindow.focus();
-      // Use a timeout to allow the content to load before printing
-      setTimeout(() => {
+      printWindow.onload = () => {
         printWindow.print();
-        printWindow.close(); // Close the window after printing
-      }, 500);
+        printWindow.close();
+      };
     }
   };
 
@@ -409,3 +408,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
