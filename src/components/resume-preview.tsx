@@ -165,9 +165,9 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
       </CardContent>
-       <CardFooter className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onEdit}><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
-          <Button onClick={() => onGenerate(resumeData)} disabled={isLoading}>
+       <CardFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
+          <Button onClick={() => onGenerate(resumeData)} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
             Generate with AI
           </Button>
