@@ -1,9 +1,9 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { FirebaseClientProvider } from '@/firebase';
 import { AppLogo } from '@/components/icons';
 import { UserNav } from '@/components/user-nav';
+import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
   title: 'DeepResumeAI',
@@ -23,7 +23,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseClientProvider>
+        <Providers>
           <div className="relative min-h-screen bg-background">
             <header className="container mx-auto px-4 py-8 flex flex-col items-center justify-center gap-4 mb-8">
               <div className="flex items-center justify-center gap-3">
@@ -38,7 +38,7 @@ export default function RootLayout({
               {children}
             </main>
           </div>
-        </FirebaseClientProvider>
+        </Providers>
         <Toaster />
       </body>
     </html>
