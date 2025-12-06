@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -338,7 +339,6 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
-      // Not closing automatically to avoid issues with some browsers
     }
   };
 
