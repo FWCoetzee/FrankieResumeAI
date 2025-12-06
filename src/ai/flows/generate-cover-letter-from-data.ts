@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -59,7 +60,7 @@ The tone should be professional but authentic. The letter should highlight the m
 
 You MUST generate plain text. Each paragraph MUST be separated by a single newline character (\\n). Do NOT use any HTML or Markdown. NEVER add any commentary or text outside of the cover letter content itself.
 
-Start with the user's contact information, the date, and the hiring manager/company info (if available in the job description, otherwise use a generic placeholder).
+Start with the user's contact information and the date. Do NOT include placeholders for a company name or address.
 
 Job Description to target:
 {{{jobDescription}}}
