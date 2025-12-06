@@ -406,7 +406,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
             </CardHeader>
             <CardContent className="p-6">
               <div
-                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2"
+                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
                 dangerouslySetInnerHTML={{ __html: result.suggestions }}
               />
             </CardContent>
@@ -422,3 +422,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
