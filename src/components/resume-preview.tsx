@@ -209,8 +209,15 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       {/* Skills */}
       <section className="mb-6">
         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Core Competencies</h2>
-        <div className="flex flex-wrap gap-x-2 gap-y-3">
-          {skills.map((skill, index) => <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800 font-medium">{skill}</Badge>)}
+        <div className="flex flex-wrap items-center gap-y-2">
+          {skills.map((skill, index) => (
+              <React.Fragment key={index}>
+                  <span className="font-medium">{skill}</span>
+                  {index < skills.length - 1 && (
+                      <span className="text-gray-300 mx-2">|</span>
+                  )}
+              </React.Fragment>
+          ))}
         </div>
       </section>
       
@@ -291,7 +298,6 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       h2 { font-size: 0.875rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #2563eb; margin-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.25rem; }
       h3 { font-size: 1rem; font-weight: bold; }
       a { color: #3b82f6; text-decoration: none; }
-      .badge { display: inline-block; padding: 0.25em 0.5em; font-size: 0.75rem; font-weight: 500; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; background-color: #e5e7eb; color: #1f2937; }
       ul { margin-top: 0.5rem; list-style-position: inside; list-style-type: disc; }
       li { margin-bottom: 0.25rem; }
       section { margin-bottom: 1.5rem; }
@@ -308,11 +314,17 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       .text-xs { font-size: 0.75rem; }
       .text-sm { font-size: 0.875rem; }
       .text-base { font-size: 1rem; }
+      .text-gray-300 { color: #d1d5db; }
       .text-gray-600 { color: #4b5563; }
       .text-gray-700 { color: #374151; }
       .text-gray-800 { color: #1f2937; }
       .mt-2 { margin-top: 0.5rem; }
+      .mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
       .italic { font-style: italic; }
+      .font-medium { font-weight: 500; }
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area { position: absolute; left: 0; top: 0; width: 100%; }
     }
   `;
 
@@ -322,10 +334,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(`<html><head><title>${documentTitle}</title><style>${styles}</style></head><body>${content}</body></html>`);
+      printWindow.document.write(`<html><head><title>${documentTitle}</title><style>${styles}</style></head><body><div id="print-area">${content}</div></body></html>`);
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
+      // Not closing automatically to avoid issues with some browsers
     }
   };
 
@@ -409,5 +422,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
