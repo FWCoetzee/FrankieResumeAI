@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, generatedResumeSchema, type GeneratedResumeData } from '@/lib/schema';
+import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, generatedResumeSchema, type GeneratedResumeData, languageSchema } from '@/lib/schema';
 
 // The input remains the same raw data from the form.
 const GenerateResumeFromDataInputSchema = z.object({
@@ -18,6 +19,7 @@ const GenerateResumeFromDataInputSchema = z.object({
   resume_intent: resumeIntentSchema,
   experience_level: experienceLevelSchema,
   resume_style: resumeStyleSchema,
+  language: languageSchema,
   personal_info: z.object({
     full_name: z.string(),
     email: z.string(),
@@ -67,7 +69,7 @@ const prompt = ai.definePrompt({
   name: 'generateResumeFromDataPrompt',
   input: {schema: GenerateResumeFromDataInputSchema},
   output: {schema: generatedResumeSchema},
-  prompt: `You are an expert resume writer AI. Your task is to take the user's raw resume data and transform it into a professional, polished, and ATS-optimized resume.
+  prompt: `You are an expert resume writer AI. Your task is to take the user's raw resume data and transform it into a professional, polished, and ATS-optimized resume. You MUST generate the entire resume in the specified language: {{{language}}}.
 
 You will rewrite and enhance the provided content. For example:
 - Rewrite the professional summary to be more impactful and tailored to the target job title.
@@ -81,6 +83,7 @@ Resume Metadata:
 - Resume Intent: {{{resume_intent}}}
 - Experience Level: {{{experience_level}}}
 - Desired Style: {{{resume_style}}}
+- Language: {{{language}}}
 
 Raw Resume Data:
 - Name: {{{personal_info.full_name}}}
@@ -106,7 +109,7 @@ Raw Resume Data:
   - {{{this}}}
 {{/each}}
 
-Based on all this information, generate the final, polished JSON output.`,
+Based on all this information, generate the final, polished JSON output in the requested language ({{{language}}}).`,
 });
 
 const generateResumeFromDataFlow = ai.defineFlow(

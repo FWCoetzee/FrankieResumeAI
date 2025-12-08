@@ -3,7 +3,7 @@
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resumeFormSchema, type ResumeData, resumeIntentSchema, experienceLevelSchema, resumeStyleSchema } from "@/lib/schema";
+import { resumeFormSchema, type ResumeData, resumeIntentSchema, experienceLevelSchema, resumeStyleSchema, languageSchema } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -41,6 +41,7 @@ const emptyValues: ResumeData = {
   resume_intent: "Tech (ATS-Optimized)",
   experience_level: "Mid-level",
   resume_style: "Modern",
+  language: "English",
   personal_info: {
     full_name: "",
     email: "",
@@ -62,6 +63,7 @@ const sampleValues: ResumeData = {
   resume_intent: "Tech (ATS-Optimized)",
   experience_level: "Senior",
   resume_style: "Modern",
+  language: "English",
   personal_info: {
     full_name: "Jane Doe",
     email: "jane.doe@example.com",
@@ -118,6 +120,8 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
   useEffect(() => {
     if (initialData) {
       form.reset(initialData);
+    } else {
+      form.reset(emptyValues);
     }
   }, [initialData, form]);
 
@@ -169,7 +173,7 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
               <CardContent className="pt-6">
                 <TabsContent value="customization" className="m-0 space-y-4">
                   <FormField name="target_job_title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField control={form.control} name="resume_intent" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Resume Intent</FormLabel>
@@ -201,6 +205,18 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
                           <FormControl><SelectTrigger><SelectValue placeholder="Select style..." /></SelectTrigger></FormControl>
                           <SelectContent>
                             {resumeStyleSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="language" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Language</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select language..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {languageSchema.options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -351,7 +367,3 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
     </Form>
   );
 }
-
-    
-
-    

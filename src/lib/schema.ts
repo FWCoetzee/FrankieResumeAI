@@ -56,6 +56,13 @@ export const resumeStyleSchema = z.enum([
   "Clean ATS-Friendly",
 ]);
 
+export const languageSchema = z.enum([
+    "English",
+    "isiZulu",
+    "isiXhosa",
+    "Afrikaans",
+]);
+
 
 // This schema represents the data collected from the form. It does not include database-specific fields like id.
 export const resumeFormSchema = z.object({
@@ -64,6 +71,7 @@ export const resumeFormSchema = z.object({
   resume_intent: resumeIntentSchema,
   experience_level: experienceLevelSchema,
   resume_style: resumeStyleSchema,
+  language: languageSchema,
   personal_info: personalInfoSchema,
   work_experience: z.array(workExperienceSchema),
   education: z.array(educationSchema),

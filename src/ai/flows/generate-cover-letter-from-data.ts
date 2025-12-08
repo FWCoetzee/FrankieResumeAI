@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema } from '@/lib/schema';
+import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, languageSchema } from '@/lib/schema';
 
 // This input schema is based on the resume data, as the cover letter needs this context.
 const GenerateCoverLetterFromDataInputSchema = z.object({
@@ -20,6 +20,7 @@ const GenerateCoverLetterFromDataInputSchema = z.object({
   resume_intent: resumeIntentSchema,
   experience_level: experienceLevelSchema,
   resume_style: resumeStyleSchema,
+  language: languageSchema,
   personal_info: z.object({
     full_name: z.string(),
     email: z.string(),
@@ -54,7 +55,7 @@ const prompt = ai.definePrompt({
   name: 'generateCoverLetterFromDataPrompt',
   input: {schema: GenerateCoverLetterFromDataInputSchema},
   output: { format: 'text' },
-  prompt: `You are an expert career coach AI. Your task is to write a professional and compelling cover letter based on the provided resume information and target job description.
+  prompt: `You are an expert career coach AI. Your task is to write a professional and compelling cover letter based on the provided resume information and target job description. The entire cover letter MUST be in the specified language: {{{language}}}.
 
 The tone should be professional but authentic. The letter should highlight the most relevant skills and experiences from the resume that match the job description.
 
@@ -69,6 +70,7 @@ Resume Data:
 - Candidate Name: {{{personal_info.full_name}}}
 - Target Job Title: {{{target_job_title}}}
 - Experience Level: {{{experience_level}}}
+- Language: {{{language}}}
 - Summary: {{{personal_info.summary}}}
 - Relevant Experience:
 {{#each work_experience}}
@@ -76,7 +78,7 @@ Resume Data:
 {{/each}}
 - Key Skills: {{#each skills}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
-Write a 3-4 paragraph cover letter.
+Write a 3-4 paragraph cover letter in {{{language}}}.
 - Paragraph 1: Introduction - State the position being applied for and where it was seen. Express enthusiasm.
 - Paragraph 2: Body - Highlight 2-3 key experiences or skills from the resume data that directly align with the requirements in the job description. Use specific examples.
 - Paragraph 3: Body - Mention a specific aspect of the company (if possible from the job description) that excites the candidate.
