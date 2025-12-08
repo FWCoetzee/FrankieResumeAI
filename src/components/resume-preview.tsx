@@ -177,7 +177,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
 }
 
 const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
-  const { header, summary, skills, experience, education, projects } = resume;
+  const { header, summary, skills, experience, education, projects, headings } = resume;
 
   return (
     <div className="bg-white text-black p-8 font-sans text-sm">
@@ -203,13 +203,13 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       
       {/* Summary */}
       <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Professional Summary</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.summary}</h2>
         <p className="text-gray-700 leading-relaxed">{summary}</p>
       </section>
 
       {/* Skills */}
       <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Core Competencies</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.skills}</h2>
         <div className="flex flex-wrap items-center gap-y-2">
           {skills.map((skill, index) => (
               <React.Fragment key={index}>
@@ -224,7 +224,7 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       
       {/* Experience */}
       <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Professional Experience</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.experience}</h2>
         {experience.map((job, index) => (
           <div key={index} className="mb-4 last:mb-0">
             <div className="flex justify-between items-baseline mb-1">
@@ -241,7 +241,7 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
 
       {/* Education */}
       <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Education</h2>
+        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.education}</h2>
         {education.map((edu, index) => (
           <div key={index} className="flex justify-between items-baseline">
             <div>
@@ -256,7 +256,7 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       {/* Projects */}
       {projects && projects.length > 0 && (
         <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">Projects</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.projects}</h2>
           {projects.map((proj, index) => (
             <div key={index} className="mb-3 last:mb-0">
                <h3 className="font-bold text-base">{proj.title}</h3>
@@ -422,5 +422,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    

@@ -75,6 +75,7 @@ You will rewrite and enhance the provided content. For example:
 - Rewrite the professional summary to be more impactful and tailored to the target job title.
 - For each work experience, convert the responsibilities and achievements into a concise list of 3-5 bullet points. Start each bullet point with a strong action verb. Quantify achievements with metrics wherever possible.
 - Select the most relevant skills and categorize them.
+- You MUST also provide translations for the main section headings of the resume in the specified language.
 
 You MUST provide your output as a single, valid JSON object that strictly adheres to the provided Zod schema for the output. Do NOT add any commentary or text outside of the JSON structure.
 
