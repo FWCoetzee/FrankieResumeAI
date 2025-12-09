@@ -106,10 +106,10 @@ export function PricingPage() {
                                 <CardDescription>Perfect for getting started and testing the waters.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>1 Resume</strong> generation</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>Basic Template</strong> access</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>Watermarked</strong> PDF download</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div>No advanced AI enhancements</div></p>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>1 Resume</strong> generation</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>Basic Template</strong> access</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div><strong>Watermarked</strong> PDF download</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div>No advanced AI enhancements</div></div>
                             </CardContent>
                             <CardFooter>
                                 <Link href="/#resume-builder" className="w-full"><Button variant="outline" className="w-full">Choose Plan</Button></Link>
@@ -124,12 +124,12 @@ export function PricingPage() {
                                 <CardDescription>The essential toolkit for active job seekers.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div><strong>Unlimited</strong> Resumes</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>All <strong>Pro Templates</strong></div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Job-Tailored Rewrites</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>AI Cover Letters</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>LinkedIn Enhancements</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Multi-Language Export</div></p>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div><strong>Unlimited</strong> Resumes</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>All <strong>Pro Templates</strong></div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Job-Tailored Rewrites</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>AI Cover Letters</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>LinkedIn Enhancements</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Multi-Language Export</div></div>
                             </CardContent>
                             <CardFooter>
                                 <Link href="/#resume-builder" className="w-full"><Button className="w-full">Choose Plan</Button></Link>
@@ -148,10 +148,10 @@ export function PricingPage() {
                             </CardHeader>
                             <CardContent className="space-y-3">
                                 <p className="font-semibold">Everything in Pro, plus:</p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div><strong>Unlimited Forever</strong> access</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>All <strong>Future Tools</strong> included</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>One-Time Payment</div></p>
-                                <p className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Priority Support</div></p>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div><strong>Unlimited Forever</strong> access</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>All <strong>Future Tools</strong> included</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>One-Time Payment</div></div>
+                                <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Priority Support</div></div>
                             </CardContent>
                             <CardFooter>
                                 <Link href="/#resume-builder" className="w-full"><Button className="w-full">Choose Plan</Button></Link>
@@ -257,6 +257,7 @@ export function PricingPage() {
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold">Ready to Take Control of Your Career?</h2>
                     <p className="max-w-xl mx-auto mt-4 text-lg text-primary-foreground/80">Stop letting opportunities pass you by. Build a resume that opens doors.</p>
+
                     <div className="mt-8 flex justify-center gap-4 flex-wrap">
                         <Link href="/#resume-builder"><Button size="lg" variant="secondary">Choose Lifetime Deal</Button></Link>
                         <Link href="/#resume-builder"><Button size="lg" variant="outline">Try Free Plan</Button></Link>
@@ -268,3 +269,5 @@ export function PricingPage() {
         </div>
     );
 }
+
+    
