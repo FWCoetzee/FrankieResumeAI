@@ -1,13 +1,13 @@
 
 import { LandingPage } from "@/components/landing-page";
-import { ResumeBuilder } from "@/components/resume-builder";
+import { OnboardingFlow } from "@/components/onboarding-flow";
 
 export default function Home() {
   return (
     <>
       <LandingPage />
-      <div className="container mx-auto px-4 pb-8">
-        <ResumeBuilder />
+      <div id="resume-builder" className="container mx-auto px-4 py-16 md:py-24">
+        <OnboardingFlow />
       </div>
     </>
   );

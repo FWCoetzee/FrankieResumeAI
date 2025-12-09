@@ -14,7 +14,6 @@ import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { getFirestore } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
-
 type GenerationResult = {
   resume: GeneratedResumeData;
   suggestions: string;
@@ -145,7 +144,7 @@ export function ResumeBuilder() {
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
         <ResumeHistory onSelectResume={handleLoadResume} onDeleteResume={handleDeleteResume} />
       </div>
-      <div className="lg:sticky top-8">
+      <div className="lg:sticky top-24">
         <ResumePreview 
           result={result} 
           isLoading={isLoading} 
