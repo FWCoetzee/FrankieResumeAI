@@ -135,29 +135,24 @@ const UserDetailsStep = ({ onBack, onSubmit }: { onBack: () => void, onSubmit: (
             </CardContent>
             <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-2">
                 <Button variant="ghost" onClick={onBack}>Back</Button>
-                <Button type="submit" form="user-details-form">Proceed to Secure Checkout</Button>
+                <Button type="submit" form="user-details-form">Proceed to Checkout</Button>
             </CardFooter>
         </Card>
     );
 };
 
 const CheckoutStep = ({ plan, userDetails, onBack, onCheckout }: { plan: any, userDetails: UserDetailsForm, onBack: () => void, onCheckout: () => void }) => {
-    const microFaq = [
-        { q: "Why is my email required?", a: "We use your email to create your secure account and send you a receipt." },
-        { q: "How is my data used?", a: "Your data is only used to generate your resume documents. We do not sell or share it." },
-        { q: "What is the refund policy?", a: "We offer a 14-day money-back guarantee on our Lifetime Deal. Monthly plans can be cancelled anytime." },
-        { q: "Can I change my plan later?", a: "Yes, you can upgrade, downgrade, or cancel your plan from your account dashboard at any time." },
-    ];
     
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Checkout Summary</CardTitle>
-                <CardDescription>You're one step away from unlocking your career potential. Please confirm your order.</CardDescription>
+            <CardHeader className="text-center">
+                 <h1 className="text-2xl font-bold">Almost done!</h1>
+                <CardDescription>Your payment is secure and encrypted.</CardDescription>
             </CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                    <div className="p-4 border rounded-lg bg-muted/50">
+                    <h3 className="text-lg font-semibold">Order Summary</h3>
+                    <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-primary">{plan.name}</p>
@@ -165,54 +160,75 @@ const CheckoutStep = ({ plan, userDetails, onBack, onCheckout }: { plan: any, us
                             </div>
                             <p className="text-xl font-bold">{plan.price}</p>
                         </div>
+                        <ul className="space-y-1 text-xs list-disc list-inside text-muted-foreground">
+                            {plan.features.map((f: string, i: number) => <li key={i}>{f}</li>)}
+                         </ul>
                         <div className="border-t my-3"></div>
                          <div className="flex justify-between font-bold">
                             <p>Total</p>
                             <p>{plan.price}</p>
                         </div>
-                    </div>
-                    <div className="text-sm space-y-3">
-                         <h4 className="font-semibold">What you'll unlock immediately:</h4>
-                         <ul className="space-y-1 list-disc list-inside text-muted-foreground">
-                            {plan.features.map((f: string, i: number) => <li key={i}>{f}</li>)}
-                         </ul>
-                         {plan.id === 'pro' && <p className="text-xs text-muted-foreground">You can cancel your subscription at any time.</p>}
-                         {plan.id === 'lifetime' && <p className="text-xs text-muted-foreground">This is a one-time payment with no recurring charges.</p>}
+                        <p className="text-xs text-muted-foreground text-center pt-2">No hidden fees. You can review your order before paying.</p>
                     </div>
 
-                    <div className="mt-4">
-                        <h4 className="font-semibold text-sm mb-2">Secure Payment Options:</h4>
-                        <div className="flex items-center gap-4">
-                            <StripeLogo className="h-8 w-auto text-gray-500" />
-                            <PaypalLogo className="h-8 w-auto" />
+                    <div className="text-sm space-y-4">
+                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                            <ShieldCheck className="h-5 w-5 text-green-600 shrink-0"/>
+                            <p><strong>SSL Encrypted Checkout.</strong> We use PCI-compliant processing and never store your card details.</p>
                         </div>
+                         {plan.id === 'lifetime' && (
+                            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                                <CheckCircle className="h-5 w-5 text-green-600 shrink-0"/>
+                                <p><strong>14-Day Money-Back Guarantee.</strong> Not satisfied? Get a full refund, no questions asked.</p>
+                            </div>
+                        )}
                     </div>
+
                 </div>
 
-                <div className="space-y-4">
-                     <h4 className="font-semibold text-sm">Quick Questions</h4>
-                     <Accordion type="single" collapsible className="w-full">
-                        {microFaq.map((item, index) => (
-                        <AccordionItem value={`item-${index}`} key={index}>
-                            <AccordionTrigger className="text-sm text-left">{item.q}</AccordionTrigger>
-                            <AccordionContent className="text-sm text-muted-foreground">
-                                {item.a}
-                            </AccordionContent>
-                        </AccordionItem>
-                        ))}
-                    </Accordion>
+                <div className="space-y-6">
+                    <h3 className="text-lg font-semibold">Payment Method</h3>
+                    {/* This is where a real payment form (e.g., Stripe Elements) would be mounted */}
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                             <Button variant="outline" className="py-6"><StripeLogo className="h-6" /></Button>
+                             <Button variant="outline" className="py-6"><PaypalLogo className="h-6" /></Button>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Cardholder Name</Label>
+                            <Input placeholder="John Doe" />
+                        </div>
+                         <div className="space-y-2">
+                            <Label>Card Number</Label>
+                            <Input placeholder="•••• •••• •••• ••••" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <Label>Expiry Date</Label>
+                                <Input placeholder="MM / YY" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label>CVV</Label>
+                                <Input placeholder="•••" />
+                            </div>
+                        </div>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Email for receipt</Label>
+                        <Input value={userDetails.email} readOnly disabled />
+                    </div>
                 </div>
             </CardContent>
             <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-2">
-                <Button variant="ghost" onClick={onBack}>Back to Details</Button>
-                <Button onClick={onCheckout} size="lg"><Lock className="mr-2 h-4 w-4" /> Proceed to Checkout</Button>
+                <Button variant="ghost" onClick={onBack}>Go Back</Button>
+                <Button onClick={onCheckout} size="lg"><Lock className="mr-2 h-4 w-4" /> Complete Payment</Button>
             </CardFooter>
         </Card>
     )
 }
 
 function SubscribeFlowContent({ selectedPlanId }: { selectedPlanId: PlanId }) {
-    const { plan, setPlanId, userDetails, setUserDetails, currentStep, setCurrentStep } = useSubscription(selectedPlanId);
+    const { plan, userDetails, setUserDetails, currentStep, setCurrentStep } = useSubscription(selectedPlanId);
 
     const goTo = (step: number) => setCurrentStep(step);
     const goNext = () => setCurrentStep(currentStep + 1);
@@ -231,7 +247,7 @@ function SubscribeFlowContent({ selectedPlanId }: { selectedPlanId: PlanId }) {
     const handleGoToCheckout = () => {
         // Here you would integrate with Stripe/Paypal
         console.log("Proceeding to checkout with:", { plan, userDetails });
-        alert("Redirecting to payment gateway...");
+        alert("This is where the payment gateway would be integrated. Thank you for testing!");
     }
 
     if (!plan) {
