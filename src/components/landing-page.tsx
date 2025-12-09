@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle, Zap, Target, Bot, BookCopy, Languages, Star, Linkedin, Maximize } from "lucide-react";
+import Link from 'next/link';
 
 const features = [
     {
@@ -102,8 +103,8 @@ export function LandingPage() {
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary">Build Your Future, Faster Than Ever</h1>
                 <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
                 <div className="mt-8 flex justify-center gap-4 flex-wrap">
-                    <Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button>
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto">Get Lifetime Access for R199</Button>
+                    <Link href="/#resume-builder"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
+                    <Link href="/pricing"><Button size="lg" variant="outline" className="w-full sm:w-auto">Get Lifetime Access for R199</Button></Link>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
             </section>
@@ -164,12 +165,12 @@ export function LandingPage() {
                         <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Multi-Language Export</p>
                         <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> All Future Tools & Updates</p>
                     </div>
-                    <Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Claim Your Lifetime Deal</Button>
+                    <Link href="/pricing"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Claim Your Lifetime Deal</Button></Link>
                 </div>
             </section>
             
             {/* Features Section */}
-            <section className="w-full py-16 md:py-24">
+            <section id="features" className="w-full py-16 md:py-24">
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold">Everything You Need to Get Hired</h2>
                     <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Our feature suite is designed to give you an edge at every step of your job application process.</p>
@@ -190,7 +191,7 @@ export function LandingPage() {
             </section>
             
             {/* Pricing Section */}
-            <section className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section id="pricing" className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
                  <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Choose Your Plan</h2>
@@ -209,7 +210,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> ATS Optimization</p>
                             </CardContent>
                             <CardFooter>
-                                <Button variant="outline" className="w-full">Get Started</Button>
+                                <Link href="/#resume-builder" className="w-full"><Button variant="outline" className="w-full">Get Started</Button></Link>
                             </CardFooter>
                         </Card>
                         <Card className="border-2 border-primary flex flex-col h-full shadow-lg">
@@ -229,7 +230,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> LinkedIn Rewrite Tool</p>
                             </CardContent>
                             <CardFooter>
-                                <Button className="w-full">Go Pro</Button>
+                                <Link href="/pricing" className="w-full"><Button className="w-full">Go Pro</Button></Link>
                             </CardFooter>
                         </Card>
                          <Card className="flex flex-col h-full">
@@ -245,7 +246,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> One-Time Payment</p>
                             </CardContent>
                             <CardFooter>
-                                <Button variant="outline" className="w-full">Get Lifetime Access</Button>
+                                <Link href="/pricing" className="w-full"><Button variant="outline" className="w-full">Get Lifetime Access</Button></Link>
                             </CardFooter>
                         </Card>
                     </div>
@@ -275,7 +276,7 @@ export function LandingPage() {
              </section>
 
              {/* FAQ Section */}
-            <section className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section id="faq" className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
                 <div className="container mx-auto px-4 max-w-3xl">
                      <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Frequently Asked Questions</h2>
@@ -294,11 +295,11 @@ export function LandingPage() {
             </section>
 
              {/* Final CTA */}
-            <section className="w-full py-20 md:py-32 text-center">
+            <section id="resume-builder" className="w-full py-20 md:py-32 text-center">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Ready to Land Your Dream Job?</h2>
                     <p className="max-w-xl mx-auto mt-4 text-lg text-muted-foreground">Stop wasting time on formatting and second-guessing. Start building a resume that gets results.</p>
-                    <Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button>
+                    <Link href="/#resume-builder"><Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button></Link>
                 </div>
             </section>
 

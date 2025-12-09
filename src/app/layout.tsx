@@ -1,9 +1,11 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppLogo } from '@/components/icons';
 import { UserNav } from '@/components/user-nav';
 import { Providers } from '@/components/providers';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'DeepResumeAI',
@@ -16,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -25,16 +27,25 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <Providers>
           <div className="relative min-h-screen bg-background">
-            <header className="container mx-auto px-4 py-8 flex flex-col items-center justify-center gap-4 mb-8">
-              <div className="flex items-center justify-center gap-3">
-                <AppLogo className="h-8 w-8 text-primary" />
-                <h1 className="text-4xl font-bold tracking-tight text-primary">
-                  DeepResumeAI
-                </h1>
+            <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container mx-auto flex h-16 items-center justify-between">
+                <Link href="/" className="flex items-center gap-3">
+                  <AppLogo className="h-8 w-8 text-primary" />
+                  <h1 className="text-2xl font-bold tracking-tight text-primary hidden sm:block">
+                    DeepResumeAI
+                  </h1>
+                </Link>
+                
+                <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                  <Link href="/#features" className="text-muted-foreground transition-colors hover:text-foreground">Features</Link>
+                  <Link href="/pricing" className="text-muted-foreground transition-colors hover:text-foreground">Pricing</Link>
+                  <Link href="/#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQ</Link>
+                </nav>
+
+                <UserNav />
               </div>
-              <UserNav />
             </header>
-            <main className="container mx-auto px-4 pb-8">
+            <main>
               {children}
             </main>
           </div>
