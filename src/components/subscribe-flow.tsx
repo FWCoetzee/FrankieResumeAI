@@ -16,6 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { CheckCircle, ShieldCheck, UploadCloud, Lock, FileText, Mail, User } from 'lucide-react';
 import { StripeLogo, PaypalLogo } from './icons';
 import Link from 'next/link';
+import { Label } from '@/components/ui/label';
 
 const userDetailsSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -302,3 +303,5 @@ function SubscribeFlowResolver({ initialPlanId }: { initialPlanId: string }) {
 
   return <SubscribeFlowContent selectedPlanId={finalPlanId} />
 }
+
+    
