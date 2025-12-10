@@ -13,6 +13,7 @@ import { ResumeHistory } from "./resume-history";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { getFirestore } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
+import { set } from "lodash";
 
 type GenerationResult = {
   resume: GeneratedResumeData;
@@ -87,6 +88,27 @@ export function ResumeBuilder() {
     setResult(null);
   };
 
+  const handleAcceptEdit = (fieldPath: string, newValue: string) => {
+    if (!result) return;
+  
+    setResult(prevResult => {
+      if (!prevResult) return null;
+      
+      // Use lodash's set to safely update the nested property
+      const newResume = { ...prevResult.resume };
+      set(newResume, fieldPath, newValue);
+      
+      return {
+        ...prevResult,
+        resume: newResume,
+      };
+    });
+    toast({
+        title: "Content Updated",
+        description: "Your resume has been updated with the AI's suggestion.",
+    })
+  };
+
   const handleLoadResume = (data: ResumeData) => {
     setCurrentResume(data); // This now includes the ID
     setIsReviewing(false);
@@ -126,6 +148,7 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
+          onAcceptEdit={handleAcceptEdit}
         />
       )
      }
@@ -152,6 +175,7 @@ export function ResumeBuilder() {
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
+          onAcceptEdit={handleAcceptEdit}
         />
       </div>
     </div>

@@ -10,6 +10,7 @@ import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
+import { EditableField } from "./editable-field";
 
 interface ResumePreviewProps {
   result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
@@ -18,6 +19,7 @@ interface ResumePreviewProps {
   isReviewing: boolean;
   onEdit: () => void;
   onGenerate: (data: ResumeData) => void;
+  onAcceptEdit: (fieldPath: string, newValue: string) => void;
 }
 
 const LoadingSkeleton = () => (
@@ -165,7 +167,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
       </CardContent>
-       <CardFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+       <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2">
           <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
           <Button onClick={() => onGenerate(resumeData)} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
@@ -176,14 +178,21 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
-const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
+const GeneratedResume = ({ resume, onAcceptEdit, targetJob }: { resume: GeneratedResumeData; onAcceptEdit: (fieldPath: string, newValue: string) => void; targetJob: string | undefined; }) => {
   const { header, summary, skills, experience, education, projects, headings } = resume;
 
   return (
     <div className="bg-white text-black p-8 font-sans text-sm">
       {/* Header */}
       <div className="text-center border-b pb-4 mb-6">
-        <h1 className="text-4xl font-bold tracking-tight">{header.name}</h1>
+        <EditableField
+          as="h1"
+          fieldPath="header.name"
+          value={header.name}
+          onAccept={onAcceptEdit}
+          targetJob={targetJob}
+          className="text-4xl font-bold tracking-tight"
+        />
         <div className="flex justify-center items-center gap-x-4 gap-y-1 text-xs text-gray-600 mt-2 flex-wrap">
           <a href={`mailto:${header.email}`} className="flex items-center gap-1 hover:text-blue-600"><Mail className="h-3 w-3" />{header.email}</a>
           <span className="text-gray-300 hidden md:inline">|</span>
@@ -204,7 +213,14 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
       {/* Summary */}
       <section className="mb-6">
         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.summary}</h2>
-        <p className="text-gray-700 leading-relaxed">{summary}</p>
+        <EditableField
+          as="p"
+          fieldPath="summary"
+          value={summary}
+          onAccept={onAcceptEdit}
+          targetJob={targetJob}
+          className="text-gray-700 leading-relaxed"
+        />
       </section>
 
       {/* Skills */}
@@ -213,7 +229,14 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
         <div className="flex flex-wrap items-center gap-y-2">
           {skills.map((skill, index) => (
               <React.Fragment key={index}>
-                  <span className="font-medium">{skill}</span>
+                  <EditableField
+                    as="span"
+                    fieldPath={`skills[${index}]`}
+                    value={skill}
+                    onAccept={onAcceptEdit}
+                    targetJob={targetJob}
+                    className="font-medium"
+                  />
                   {index < skills.length - 1 && (
                       <span className="text-gray-300 mx-2">|</span>
                   )}
@@ -228,12 +251,22 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
         {experience.map((job, index) => (
           <div key={index} className="mb-4 last:mb-0">
             <div className="flex justify-between items-baseline mb-1">
-              <h3 className="font-bold text-base">{job.title}</h3>
+                <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
               <p className="text-xs text-gray-600">{job.dates}</p>
             </div>
             <p className="text-sm font-medium italic text-gray-800">{job.company}</p>
             <ul className="mt-2 list-disc list-inside space-y-1 text-gray-700">
-              {job.bulletPoints.map((point, i) => <li key={i}>{point}</li>)}
+              {job.bulletPoints.map((point, i) => (
+                 <li key={i}>
+                    <EditableField
+                      fieldPath={`experience[${index}].bulletPoints[${i}]`}
+                      value={point}
+                      onAccept={onAcceptEdit}
+                      targetJob={targetJob}
+                      isListItem
+                    />
+                </li>
+              ))}
             </ul>
           </div>
         ))}
@@ -259,8 +292,8 @@ const GeneratedResume = ({ resume }: { resume: GeneratedResumeData }) => {
           <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.projects}</h2>
           {projects.map((proj, index) => (
             <div key={index} className="mb-3 last:mb-0">
-               <h3 className="font-bold text-base">{proj.title}</h3>
-               <p className="mt-1 list-disc list-inside space-y-1 text-gray-700">{proj.description}</p>
+               <EditableField as="h3" fieldPath={`projects[${index}].title`} value={proj.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
+               <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 list-disc list-inside space-y-1 text-gray-700" />
             </div>
           ))}
         </section>
@@ -282,7 +315,7 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 };
 
 
-export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate }: ResumePreviewProps) {
+export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
 
   const coverLetterPrintStyles = `
     @media print {
@@ -365,7 +398,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         <TabsContent value="preview" className="mt-4">
           <Card className="overflow-hidden">
              <div id="resume-container" className="aspect-[8.5/11] bg-white overflow-y-auto">
-               <GeneratedResume resume={result.resume} />
+               <GeneratedResume resume={result.resume} onAcceptEdit={onAcceptEdit} targetJob={resumeData?.jobDescription} />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
               <Button onClick={() => handleDownloadPdf('resume-container', resumePrintStyles, 'Resume')} size="sm">

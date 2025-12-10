@@ -1,6 +1,3 @@
-
-'use server';
-
 /**
  * @fileOverview A deterministic AI agent for granularly editing resume text.
  *
@@ -8,6 +5,8 @@
  * - EditResumeTextInput - The input type for the editResumeText function.
  * - EditResumeTextOutput - The return type for the editResumeText function.
  */
+
+'use server';
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
