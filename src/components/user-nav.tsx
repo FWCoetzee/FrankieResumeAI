@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser, useAuth, useStorage } from "@/firebase";
 import { signOut, updateProfile } from "firebase/auth";
-import { LogOut, Image as ImageIcon, Settings } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Wallet } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { AuthDialog } from "./auth-dialog";
 import { useState, useRef } from "react";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 export function UserNav() {
   const { user, isUserLoading } = useUser();
@@ -67,16 +68,11 @@ export function UserNav() {
         setUploadProgress(percentage);
       };
       
-      // 1. Upload the file and get the URL
       const newUrl = await uploadAvatar(storage, user, file, onProgress);
       
-      // 2. Optimistically update the UI
       setOptimisticAvatarUrl(newUrl);
 
-      // 3. Update the user profile in the background
       await updateProfile(user, { photoURL: newUrl });
-
-      // 4. Force a token refresh to get the latest user data
       await user.getIdToken(true);
 
       toast({ title: "Success!", description: "Your avatar has been updated." });
@@ -85,7 +81,6 @@ export function UserNav() {
       toast({ variant: "destructive", title: "Upload Failed", description: error.message || "An unknown error occurred." });
       setOptimisticAvatarUrl(null); // Revert on failure
     } finally {
-      // 5. Always reset the loading state
       setIsUploading(false);
       setUploadProgress(0);
       if(fileInputRef.current) {
@@ -95,7 +90,7 @@ export function UserNav() {
   }
 
   if (isUserLoading) {
-    return <Skeleton className="h-24 w-24 rounded-full" />;
+    return <Skeleton className="h-10 w-10 rounded-full" />;
   }
 
   if (!user) {
@@ -107,8 +102,8 @@ export function UserNav() {
                 initialMode={authDialogMode}
             />
             <div className="flex items-center gap-2">
-                <Button onClick={() => openAuthDialog('login')}>Log In</Button>
-                <Button variant="secondary" onClick={() => openAuthDialog('signup')}>Sign Up</Button>
+                <Button variant="ghost" onClick={() => openAuthDialog('login')}>Log In</Button>
+                <Button onClick={() => openAuthDialog('signup')}>Sign Up</Button>
             </div>
         </>
      )
@@ -134,93 +129,49 @@ export function UserNav() {
         accept="image/png, image/jpeg, image/gif"
         disabled={isUploading}
       />
-      <div className="flex items-center gap-4">
-        <div className="relative group">
-            
-            {isUploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full transition-opacity z-10">
-                <div className="relative h-28 w-28">
-                   <svg className="h-full w-full" viewBox="0 0 100 100">
-                    <circle
-                      className="text-muted"
-                      strokeWidth="10"
-                      stroke="currentColor"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                    />
-                    <circle
-                      className="text-primary"
-                      strokeWidth="10"
-                      strokeDasharray={2 * Math.PI * 40}
-                      strokeDashoffset={(2 * Math.PI * 40) * (1 - uploadProgress / 100)}
-                      strokeLinecap="round"
-                      stroke="currentColor"
-                      fill="transparent"
-                      r="40"
-                      cx="50"
-                      cy="50"
-                      style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
-                    />
-                  </svg>
-                   <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-white">
-                        {Math.round(uploadProgress)}%
-                    </span>
-                </div>
-              </div>
-            )}
-            
-            {!isUploading && (
-                <div 
-                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
-                  onClick={handleAvatarChangeClick}
-                >
-                    <ImageIcon className="h-8 w-8 text-white" />
-                </div>
-            )}
-            
-            <Avatar className="h-24 w-24 border-4 border-muted">
-                <AvatarImage src={avatarUrl} alt={`@${userDisplayName}`} />
-                <AvatarFallback>
-                    <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                </AvatarFallback>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarUrl} alt={`@${userDisplayName}`} />
+              <AvatarFallback>
+                <UserIcon className="h-5 w-5 text-muted-foreground" />
+              </AvatarFallback>
             </Avatar>
-        </div>
-        
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <Settings />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{userDisplayName}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                        {userEmail}
-                    </p>
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={handleAvatarChangeClick} disabled={isUploading}>
-                    <ImageIcon className="mr-2 h-4 w-4" />
-                    <span>Change Avatar</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                    Settings
-                    </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{userDisplayName}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {userEmail}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={handleAvatarChangeClick} disabled={isUploading}>
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>Change Avatar</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>
+              <Wallet className="mr-2 h-4 w-4" />
+              <span>Billing</span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+          {isUploading && <Progress value={uploadProgress} className="h-1 mt-2 mx-1" />}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </>
   );
 }

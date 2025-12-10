@@ -18,14 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en" className="scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased">
         <Providers>
           <div className="relative min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -33,7 +32,7 @@ export default function RootLayout({
                 <Link href="/" className="flex items-center gap-3">
                   <AppLogo className="h-8 w-8 text-primary" />
                   <h1 className="text-2xl font-bold tracking-tight text-primary hidden sm:block">
-                    DeepResumeAI
+                    DeepResume
                   </h1>
                 </Link>
                 

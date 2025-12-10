@@ -162,7 +162,7 @@ export function PricingPage() {
             </section>
 
             {/* Feature Breakdown */}
-            <section className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section className="w-full py-16 md:py-24 bg-muted">
                 <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Features That Give You an Edge</h2>
@@ -211,7 +211,7 @@ export function PricingPage() {
             </section>
 
              {/* Which plan should I choose? */}
-            <section className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section className="w-full py-16 md:py-24 bg-muted">
                 <div className="container mx-auto px-4">
                      <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Which Plan Should I Choose?</h2>

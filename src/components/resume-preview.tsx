@@ -5,12 +5,11 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature } from "lucide-react";
+import { FileText, Wand2, Download, Pencil, Bot, FileSignature } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
-import { EditableField } from "./editable-field";
 import { ModernTemplate } from "./templates/modern-template";
 import { MinimalistTemplate } from "./templates/minimalist-template";
 
@@ -65,13 +64,10 @@ const Placeholder = () => (
   </Card>
 );
 
-const ReviewSection = ({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) => (
+const ReviewSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
   <div className="space-y-4">
-    <div className="flex items-center gap-3">
-      {icon}
-      <h4 className="font-semibold text-lg border-b-2 border-primary pb-1">{title}</h4>
-    </div>
-    <div className="pl-8 space-y-4 text-sm">
+    <h4 className="font-semibold text-lg border-b-2 border-primary pb-1">{title}</h4>
+    <div className="pl-4 space-y-4 text-sm">
       {children}
     </div>
   </div>
@@ -86,7 +82,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         <CardTitle>Review Your Information</CardTitle>
         <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your documents.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-background rounded-md border">
+      <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-muted/50 rounded-md border">
         
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold">{personal_info.full_name}</h2>
@@ -101,7 +97,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
 
         {personal_info.summary && (
             <div className="space-y-2">
-                <h3 className="text-md font-semibold text-center">Summary</h3>
+                <h3 className="text-md font-semibold text-center uppercase tracking-wider text-muted-foreground">Summary</h3>
                 <p className="text-center text-sm text-pretty">{personal_info.summary}</p>
             </div>
         )}
@@ -109,7 +105,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         <Separator />
         
         {Array.isArray(skills) && skills.length > 0 && (
-           <ReviewSection icon={<Star className="h-5 w-5 text-primary" />} title="Skills">
+           <ReviewSection title="Skills">
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
               </div>
@@ -117,7 +113,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
         {work_experience.length > 0 && (
-          <ReviewSection icon={<Briefcase className="h-5 w-5 text-primary" />} title="Work Experience">
+          <ReviewSection title="Work Experience">
             {work_experience.map((job, index) => (
               <div key={index} className="space-y-1.5">
                 <div className="flex justify-between items-baseline">
@@ -132,7 +128,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
         
         {education.length > 0 && (
-           <ReviewSection icon={<GraduationCap className="h-5 w-5 text-primary" />} title="Education">
+           <ReviewSection title="Education">
               {education.map((edu, index) => (
                 <div key={index} className="space-y-1 flex justify-between items-baseline">
                   <div>
@@ -146,7 +142,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
         {Array.isArray(projects) && projects.length > 0 && (
-          <ReviewSection icon={<FolderGit className="h-5 w-5 text-primary" />} title="Projects">
+          <ReviewSection title="Projects">
             {projects.map((proj, index) => (
               <div key={index} className="space-y-1.5">
                 <p className="font-semibold">{proj.title}</p>
@@ -162,7 +158,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
         {Array.isArray(certifications) && certifications.length > 0 && (
-           <ReviewSection icon={<Award className="h-5 w-5 text-primary" />} title="Certifications">
+           <ReviewSection title="Certifications">
               <div className="flex flex-wrap gap-2">
                 {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert}</Badge>)}
               </div>
@@ -170,7 +166,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         )}
 
       </CardContent>
-       <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2">
+       <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-6">
           <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
           <Button onClick={() => onGenerate(resumeData)} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
@@ -206,7 +202,7 @@ const TemplateRenderer = ({
 const CoverLetterContent = ({ content }: { content: string }) => {
   const paragraphs = content.split('\n').filter(p => p.trim() !== '');
   return (
-    <div className="prose prose-sm max-w-none prose-p:mb-4">
+    <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert">
       {paragraphs.map((p, i) => (
         <p key={i}>{p}</p>
       ))}
@@ -217,66 +213,9 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
 
-  const coverLetterPrintStyles = `
-    @media print {
-      body { font-family: sans-serif; line-height: 1.6; color: #333; }
-      p { margin-bottom: 1em; }
-    }
-  `;
-
-  const resumePrintStyles = `
-    @media print {
-      body { color: #333; background-color: #fff; }
-      .font-sans { font-family: Inter, sans-serif; }
-      .font-serif { font-family: 'Times New Roman', serif; }
-      h1, h2, h3, p, div, span, ul, li, a { visibility: visible; }
-      h1 { font-size: 2.25rem; font-weight: 700; }
-      h2 { font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-      h3 { font-size: 1rem; font-weight: 700; }
-      a { color: #2563eb; text-decoration: none; }
-      ul { list-style-position: inside; }
-      .text-center { text-align: center; }
-      .border-b { border-bottom-width: 1px; }
-      .border-gray-200 { border-color: #e5e7eb; }
-      .pb-4 { padding-bottom: 1rem; }
-      .mb-6 { margin-bottom: 1.5rem; }
-      .flex { display: flex; }
-      .justify-center { justify-content: center; }
-      .justify-between { justify-content: space-between; }
-      .items-center { align-items: center; }
-      .items-baseline { align-items: baseline; }
-      .gap-x-4 { column-gap: 1rem; }
-      .text-xs { font-size: 0.75rem; }
-      .text-sm { font-size: 0.875rem; }
-      .text-base { font-size: 1rem; }
-      .text-gray-300 { color: #d1d5db; }
-      .text-gray-600 { color: #4b5563; }
-      .text-gray-700 { color: #374151; }
-      .text-gray-800 { color: #1f2937; }
-      .mt-2 { margin-top: 0.5rem; }
-      .mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
-      .italic { font-style: italic; }
-      .font-medium { font-weight: 500; }
-      body * { visibility: hidden; }
-      #print-area, #print-area * { visibility: visible; }
-      #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-      .group\\/editable { display: contents; } /* Ensure editable fields don't break layout */
-    }
-  `;
-
-  const handleDownloadPdf = (contentElementId: string, styles: string, documentTitle: string) => {
-    const content = document.getElementById(contentElementId)?.innerHTML;
-    if (!content) return;
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`<html><head><title>${documentTitle}</title><style>${styles}</style></head><body><div id="print-area">${content}</div></body></html>`);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-    }
-  };
-
+  const handlePrint = () => {
+    window.print();
+  }
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -307,8 +246,8 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                  style={resumeData.resume_style}
                />
             </div>
-            <CardFooter className="p-4 flex-row-reverse">
-              <Button onClick={() => handleDownloadPdf('resume-container', resumePrintStyles, 'Resume')} size="sm">
+            <CardFooter className="p-4 flex-row-reverse bg-muted">
+              <Button onClick={handlePrint} size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
@@ -321,11 +260,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
         <TabsContent value="cover-letter" className="mt-4">
           <Card className="overflow-hidden">
-            <div id="cover-letter-content" className="aspect-[8.5/11] bg-white text-black p-8 md:p-12 overflow-y-auto">
+            <div id="cover-letter-content" className="aspect-[8.5/11] bg-white p-8 md:p-12 overflow-y-auto">
                  <CoverLetterContent content={result.coverLetter} />
             </div>
-            <CardFooter className="p-4 flex-row-reverse">
-               <Button onClick={() => handleDownloadPdf('cover-letter-content', coverLetterPrintStyles, 'Cover Letter')} size="sm">
+            <CardFooter className="p-4 flex-row-reverse bg-muted">
+               <Button onClick={handlePrint} size="sm">
                 <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>

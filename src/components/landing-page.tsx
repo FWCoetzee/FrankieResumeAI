@@ -110,7 +110,7 @@ export function LandingPage() {
             </section>
 
             {/* How It Works */}
-            <section className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section className="w-full py-16 md:py-24 bg-muted">
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold">Get Your Perfect Resume in 3 Simple Steps</h2>
                     <div className="mt-12 grid md:grid-cols-3 gap-8 md:gap-12">
@@ -176,7 +176,7 @@ export function LandingPage() {
                     <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Our feature suite is designed to give you an edge at every step of your job application process.</p>
                     <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {features.map((feature, index) => (
-                        <Card key={index} className="text-left bg-card hover:shadow-lg transition-shadow">
+                        <Card key={index} className="text-left hover:shadow-lg transition-shadow">
                             <CardHeader>
                                 {feature.icon}
                                 <CardTitle className="mt-4">{feature.title}</CardTitle>
@@ -191,7 +191,7 @@ export function LandingPage() {
             </section>
             
             {/* Pricing Section */}
-            <section id="pricing" className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section id="pricing" className="w-full py-16 md:py-24 bg-muted">
                  <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Choose Your Plan</h2>
@@ -261,7 +261,7 @@ export function LandingPage() {
                      </div>
                      <div className="mt-12 grid lg:grid-cols-3 gap-8">
                         {testimonials.map((t, i) => (
-                            <Card key={i} className="bg-card">
+                            <Card key={i}>
                                 <CardContent className="pt-6">
                                     <p className="italic">"{t.quote}"</p>
                                 </CardContent>
@@ -276,7 +276,7 @@ export function LandingPage() {
              </section>
 
              {/* FAQ Section */}
-            <section id="faq" className="w-full py-16 md:py-24 bg-muted/50 dark:bg-card">
+            <section id="faq" className="w-full py-16 md:py-24 bg-muted">
                 <div className="container mx-auto px-4 max-w-3xl">
                      <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Frequently Asked Questions</h2>
@@ -295,7 +295,7 @@ export function LandingPage() {
             </section>
 
              {/* Final CTA */}
-            <section id="resume-builder" className="w-full py-20 md:py-32 text-center">
+            <section className="w-full py-20 md:py-32 text-center">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Ready to Land Your Dream Job?</h2>
                     <p className="max-w-xl mx-auto mt-4 text-lg text-muted-foreground">Stop wasting time on formatting and second-guessing. Start building a resume that gets results.</p>

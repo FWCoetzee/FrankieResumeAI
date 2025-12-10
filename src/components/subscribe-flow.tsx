@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle, ShieldCheck, UploadCloud, Lock, FileText, Mail, User } from 'lucide-react';
+import { CheckCircle, ShieldCheck, UploadCloud, Lock } from 'lucide-react';
 import { StripeLogo, PaypalLogo } from './icons';
 import Link from 'next/link';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ const PlanConfirmationStep = ({ plan, onContinue, onChooseDifferent }: { plan: a
             <CardDescription>You've selected a great option to get started.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-            <div className="border rounded-lg p-4 bg-muted/50">
+            <div className="border rounded-lg p-4 bg-muted">
                 <h3 className="text-xl font-bold text-primary">{plan.name}</h3>
                 <p className="text-2xl font-bold">{plan.price} <span className="text-sm font-normal text-muted-foreground">{plan.pricePeriod}</span></p>
                 <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
@@ -127,7 +127,7 @@ const UserDetailsStep = ({ onBack, onSubmit }: { onBack: () => void, onSubmit: (
                         )} />
                     </form>
                 </Form>
-                 <div className="mt-6 p-4 bg-muted/50 rounded-lg text-sm flex items-start gap-3 text-muted-foreground">
+                 <div className="mt-6 p-4 bg-muted rounded-lg text-sm flex items-start gap-3 text-muted-foreground">
                     <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0" />
                     <div>
                         <strong>Your Information is Safe.</strong> We will never share or sell your data. Your privacy is our top priority. All payments are securely processed and encrypted.
@@ -153,7 +153,7 @@ const CheckoutStep = ({ plan, userDetails, onBack, onCheckout }: { plan: any, us
             <CardContent className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                     <h3 className="text-lg font-semibold">Order Summary</h3>
-                    <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
+                    <div className="p-4 border rounded-lg bg-muted space-y-3">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-semibold text-primary">{plan.name}</p>
@@ -173,12 +173,12 @@ const CheckoutStep = ({ plan, userDetails, onBack, onCheckout }: { plan: any, us
                     </div>
 
                     <div className="text-sm space-y-4">
-                        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                             <ShieldCheck className="h-5 w-5 text-green-600 shrink-0"/>
                             <p><strong>SSL Encrypted Checkout.</strong> We use PCI-compliant processing and never store your card details.</p>
                         </div>
                          {plan.id === 'lifetime' && (
-                            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                                 <CheckCircle className="h-5 w-5 text-green-600 shrink-0"/>
                                 <p><strong>14-Day Money-Back Guarantee.</strong> Not satisfied? Get a full refund, no questions asked.</p>
                             </div>

@@ -53,7 +53,7 @@ const StepGoal = ({ onNext, onSelect }: { onNext: () => void, onSelect: (goal: s
     <CardContent>
       <RadioGroup onValueChange={onSelect} className="space-y-4">
         {goals.map(goal => (
-          <Label key={goal.id} htmlFor={goal.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
+          <Label key={goal.id} htmlFor={goal.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
             <RadioGroupItem value={goal.id} id={goal.id} />
             <div>
               <p className="font-semibold">{goal.title}</p>
@@ -78,7 +78,7 @@ const StepExperience = ({ onNext, onSelect }: { onNext: () => void, onSelect: (l
     <CardContent>
       <RadioGroup onValueChange={onSelect} className="grid md:grid-cols-2 gap-4">
         {experienceLevels.map(level => (
-          <Label key={level.id} htmlFor={level.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
+          <Label key={level.id} htmlFor={level.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
             <RadioGroupItem value={level.id} id={level.id} />
             <div>
               <p className="font-semibold">{level.label}</p>
