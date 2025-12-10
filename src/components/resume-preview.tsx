@@ -12,7 +12,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { ModernTemplate } from "./templates/modern-template";
 import { MinimalistTemplate } from "./templates/minimalist-template";
-
+import { cn } from "@/lib/utils";
 
 interface ResumePreviewProps {
   result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
@@ -55,7 +55,7 @@ const LoadingSkeleton = () => (
 );
 
 const Placeholder = () => (
-  <Card className="flex items-center justify-center h-[500px] lg:h-full">
+  <Card className="flex items-center justify-center min-h-[500px] lg:min-h-[calc(100vh-8rem)] border-dashed border-2">
     <div className="text-center text-muted-foreground p-8">
       <FileText className="mx-auto h-12 w-12 mb-4" />
       <h3 className="text-lg font-semibold">Your resume will appear here</h3>
@@ -64,20 +64,11 @@ const Placeholder = () => (
   </Card>
 );
 
-const ReviewSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
-  <div className="space-y-4">
-    <h4 className="font-semibold text-lg border-b-2 border-primary pb-1">{title}</h4>
-    <div className="pl-4 space-y-4 text-sm">
-      {children}
-    </div>
-  </div>
-)
-
 const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeData) => void, isLoading: boolean }) => {
   const { personal_info, work_experience, education, skills, projects, certifications, target_job_title } = resumeData;
 
   return (
-    <Card>
+    <Card className="shadow-lg backdrop-blur-sm bg-card/80">
       <CardHeader>
         <CardTitle>Review Your Information</CardTitle>
         <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your documents.</CardDescription>
@@ -105,32 +96,35 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         <Separator />
         
         {Array.isArray(skills) && skills.length > 0 && (
-           <ReviewSection title="Skills">
+           <div className="space-y-2">
+              <h3 className="font-semibold text-md">Skills</h3>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
               </div>
-            </ReviewSection>
+            </div>
         )}
 
         {work_experience.length > 0 && (
-          <ReviewSection title="Work Experience">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-md">Work Experience</h3>
             {work_experience.map((job, index) => (
-              <div key={index} className="space-y-1.5">
+              <div key={index} className="space-y-1.5 pl-4">
                 <div className="flex justify-between items-baseline">
                     <p className="font-semibold">{job.job_title} at {job.company}</p>
                     <p className="text-xs text-muted-foreground">{job.start_date} - {job.end_date}</p>
                 </div>
-                {job.responsibilities && <p className="text-pretty pl-4 text-muted-foreground"> {job.responsibilities}</p>}
-                {job.achievements && <p className="text-pretty pl-4"><strong>Achievements:</strong> {job.achievements}</p>}
+                {job.responsibilities && <p className="text-pretty text-muted-foreground"> {job.responsibilities}</p>}
+                {job.achievements && <p className="text-pretty"><strong>Achievements:</strong> {job.achievements}</p>}
               </div>
             ))}
-          </ReviewSection>
+          </div>
         )}
         
         {education.length > 0 && (
-           <ReviewSection title="Education">
+           <div className="space-y-2">
+            <h3 className="font-semibold text-md">Education</h3>
               {education.map((edu, index) => (
-                <div key={index} className="space-y-1 flex justify-between items-baseline">
+                <div key={index} className="space-y-1 flex justify-between items-baseline pl-4">
                   <div>
                     <p className="font-semibold">{edu.degree}</p>
                     <p className="text-muted-foreground">{edu.institution}</p>
@@ -138,13 +132,14 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
                   <p className="text-xs text-muted-foreground">{edu.start_year} - {edu.end_year}</p>
                 </div>
               ))}
-            </ReviewSection>
+            </div>
         )}
 
         {Array.isArray(projects) && projects.length > 0 && (
-          <ReviewSection title="Projects">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-md">Projects</h3>
             {projects.map((proj, index) => (
-              <div key={index} className="space-y-1.5">
+              <div key={index} className="space-y-1.5 pl-4">
                 <p className="font-semibold">{proj.title}</p>
                 {proj.description && <p className="text-pretty text-muted-foreground">{proj.description}</p>}
                 {Array.isArray(proj.technologies) && proj.technologies.length > 0 &&
@@ -154,15 +149,16 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
                 }
               </div>
             ))}
-          </ReviewSection>
+          </div>
         )}
 
         {Array.isArray(certifications) && certifications.length > 0 && (
-           <ReviewSection title="Certifications">
-              <div className="flex flex-wrap gap-2">
+           <div className="space-y-2">
+            <h3 className="font-semibold text-md">Certifications</h3>
+              <div className="flex flex-wrap gap-2 pl-4">
                 {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert}</Badge>)}
               </div>
-            </ReviewSection>
+            </div>
         )}
 
       </CardContent>
@@ -212,86 +208,81 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
-
+  
   const handlePrint = () => {
     window.print();
   }
 
+  const wrapperClasses = cn(
+    "transition-all duration-300",
+    "bg-background/60 backdrop-blur-xl border rounded-xl shadow-lg",
+    "print:shadow-none print:border-none print:rounded-none print:bg-white print:backdrop-blur-none"
+  );
+  
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
   if (result && resumeData) {
     return (
-      <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 h-auto md:h-10 md:grid-cols-3">
-          <TabsTrigger value="preview" className="gap-2">
-            <FileText className="h-4 w-4" /> Resume
-          </TabsTrigger>
-          <TabsTrigger value="cover-letter" className="gap-2">
-            <FileSignature className="h-4 w-4" /> Cover Letter
-          </TabsTrigger>
-          <TabsTrigger value="suggestions" className="gap-2">
-            <Wand2 className="h-4 w-4" /> AI Suggestions
-          </TabsTrigger>
-        </TabsList>
+      <div className={wrapperClasses}>
+        <Tabs defaultValue="preview" className="w-full">
+            <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+            <TabsTrigger value="preview" className="gap-2 text-base">
+                <FileText /> Resume
+            </TabsTrigger>
+            <TabsTrigger value="cover-letter" className="gap-2 text-base">
+                <FileSignature /> Cover Letter
+            </TabsTrigger>
+            <TabsTrigger value="suggestions" className="gap-2 text-base">
+                <Wand2 /> AI Suggestions
+            </TabsTrigger>
+            </TabsList>
+            <div className="p-2 sm:p-4 print:p-0">
+                <TabsContent value="preview">
+                    <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                        <TemplateRenderer 
+                            resume={result.resume}
+                            onAcceptEdit={onAcceptEdit}
+                            targetJob={resumeData.jobDescription}
+                            style={resumeData.resume_style}
+                        />
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2 print:hidden">
+                        <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                        <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                    </div>
+                </TabsContent>
 
-        <TabsContent value="preview" className="mt-4">
-          <Card className="overflow-hidden">
-             <div id="resume-container" className="aspect-[8.5/11] bg-white overflow-y-auto">
-               <TemplateRenderer 
-                 resume={result.resume}
-                 onAcceptEdit={onAcceptEdit}
-                 targetJob={resumeData.jobDescription}
-                 style={resumeData.resume_style}
-               />
+                <TabsContent value="cover-letter">
+                    <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner p-8 md:p-12">
+                        <CoverLetterContent content={result.coverLetter} />
+                    </div>
+                     <div className="mt-4 flex justify-end gap-2 print:hidden">
+                        <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                        <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="suggestions">
+                    <Card className="bg-white">
+                        <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Wand2 className="h-5 w-5" />
+                            AI Suggestions
+                        </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                        <div
+                            className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
+                            dangerouslySetInnerHTML={{ __html: result.suggestions }}
+                        />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             </div>
-            <CardFooter className="p-4 flex-row-reverse bg-muted">
-              <Button onClick={handlePrint} size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
-              <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cover-letter" className="mt-4">
-          <Card className="overflow-hidden">
-            <div id="cover-letter-content" className="aspect-[8.5/11] bg-white p-8 md:p-12 overflow-y-auto">
-                 <CoverLetterContent content={result.coverLetter} />
-            </div>
-            <CardFooter className="p-4 flex-row-reverse bg-muted">
-               <Button onClick={handlePrint} size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-              </Button>
-              <Button onClick={onEdit} size="sm" variant="outline" className="mr-2">
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="suggestions" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Wand2 className="h-5 w-5" />
-                AI Suggestions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
-                dangerouslySetInnerHTML={{ __html: result.suggestions }}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     );
   }
 
