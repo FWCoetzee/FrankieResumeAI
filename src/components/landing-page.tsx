@@ -104,7 +104,7 @@ export function LandingPage() {
                 <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
                 <div className="mt-8 flex justify-center gap-4 flex-wrap">
                     <Link href="/#resume-builder"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
-                    <Link href="/pricing"><Button size="lg" variant="outline" className="w-full sm:w-auto">Get Lifetime Access for R199</Button></Link>
+                    <Link href="/subscribe?plan=lifetime"><Button size="lg" variant="outline" className="w-full sm:w-auto">Get Lifetime Access for R199</Button></Link>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
             </section>
@@ -165,7 +165,7 @@ export function LandingPage() {
                         <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Multi-Language Export</p>
                         <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> All Future Tools & Updates</p>
                     </div>
-                    <Link href="/pricing"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Claim Your Lifetime Deal</Button></Link>
+                    <Link href="/subscribe?plan=lifetime"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Claim Your Lifetime Deal</Button></Link>
                 </div>
             </section>
             
@@ -230,7 +230,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> LinkedIn Rewrite Tool</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/pricing" className="w-full"><Button className="w-full">Go Pro</Button></Link>
+                                <Link href="/subscribe?plan=pro" className="w-full"><Button className="w-full">Go Pro</Button></Link>
                             </CardFooter>
                         </Card>
                          <Card className="flex flex-col h-full">
@@ -246,7 +246,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> One-Time Payment</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/pricing" className="w-full"><Button variant="outline" className="w-full">Get Lifetime Access</Button></Link>
+                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button variant="outline" className="w-full">Get Lifetime Access</Button></Link>
                             </CardFooter>
                         </Card>
                     </div>

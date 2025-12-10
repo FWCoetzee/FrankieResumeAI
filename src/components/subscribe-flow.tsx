@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CheckCircle, ShieldCheck, UploadCloud, Lock } from 'lucide-react';
 import { StripeLogo, PaypalLogo } from './icons';
 import Link from 'next/link';
@@ -303,5 +302,3 @@ function SubscribeFlowResolver({ initialPlanId }: { initialPlanId: string }) {
 
   return <SubscribeFlowContent selectedPlanId={finalPlanId} />
 }
-
-    
