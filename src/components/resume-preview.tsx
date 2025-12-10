@@ -5,12 +5,15 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature, Link as LinkIcon, Phone, Mail } from "lucide-react";
+import { FileText, Wand2, Download, User, Briefcase, GraduationCap, Star, FolderGit, Award, Pencil, Bot, FileSignature } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { EditableField } from "./editable-field";
+import { ModernTemplate } from "./templates/modern-template";
+import { MinimalistTemplate } from "./templates/minimalist-template";
+
 
 interface ResumePreviewProps {
   result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
@@ -178,130 +181,27 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
   )
 }
 
-const GeneratedResume = ({ resume, onAcceptEdit, targetJob }: { resume: GeneratedResumeData; onAcceptEdit: (fieldPath: string, newValue: string) => void; targetJob: string | undefined; }) => {
-  const { header, summary, skills, experience, education, projects, headings } = resume;
+const TemplateRenderer = ({
+    resume,
+    onAcceptEdit,
+    targetJob,
+    style
+}: {
+    resume: GeneratedResumeData;
+    onAcceptEdit: (fieldPath: string, newValue: string) => void;
+    targetJob: string | undefined;
+    style: ResumeData['resume_style'];
+}) => {
+    const templateProps = { resume, onAcceptEdit, targetJob };
 
-  return (
-    <div className="bg-white text-black p-8 font-sans text-sm">
-      {/* Header */}
-      <div className="text-center border-b pb-4 mb-6">
-        <EditableField
-          as="h1"
-          fieldPath="header.name"
-          value={header.name}
-          onAccept={onAcceptEdit}
-          targetJob={targetJob}
-          className="text-4xl font-bold tracking-tight"
-        />
-        <div className="flex justify-center items-center gap-x-4 gap-y-1 text-xs text-gray-600 mt-2 flex-wrap">
-          <a href={`mailto:${header.email}`} className="flex items-center gap-1 hover:text-blue-600"><Mail className="h-3 w-3" />{header.email}</a>
-          <span className="text-gray-300 hidden md:inline">|</span>
-          <a href={`tel:${header.phone}`} className="flex items-center gap-1 hover:text-blue-600"><Phone className="h-3 w-3" />{header.phone}</a>
-          <span className="text-gray-300 hidden md:inline">|</span>
-          <p className="flex items-center gap-1">{header.location}</p>
-          {header.website && (
-            <>
-            <span className="text-gray-300 hidden md:inline">|</span>
-            <a href={header.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-600">
-                <LinkIcon className="h-3 w-3" />{header.website.replace(/https?:\/\//, '')}
-            </a>
-            </>
-          )}
-        </div>
-      </div>
-      
-      {/* Summary */}
-      <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.summary}</h2>
-        <EditableField
-          as="p"
-          fieldPath="summary"
-          value={summary}
-          onAccept={onAcceptEdit}
-          targetJob={targetJob}
-          className="text-gray-700 leading-relaxed"
-        />
-      </section>
-
-      {/* Skills */}
-      <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.skills}</h2>
-        <div className="flex flex-wrap items-center gap-y-2">
-          {skills.map((skill, index) => (
-              <React.Fragment key={index}>
-                  <EditableField
-                    as="span"
-                    fieldPath={`skills[${index}]`}
-                    value={skill}
-                    onAccept={onAcceptEdit}
-                    targetJob={targetJob}
-                    className="font-medium"
-                  />
-                  {index < skills.length - 1 && (
-                      <span className="text-gray-300 mx-2">|</span>
-                  )}
-              </React.Fragment>
-          ))}
-        </div>
-      </section>
-      
-      {/* Experience */}
-      <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.experience}</h2>
-        {experience.map((job, index) => (
-          <div key={index} className="mb-4 last:mb-0">
-            <div className="flex justify-between items-baseline mb-1">
-                <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-              <p className="text-xs text-gray-600">{job.dates}</p>
-            </div>
-            <p className="text-sm font-medium italic text-gray-800">{job.company}</p>
-            <ul className="mt-2 list-disc list-inside space-y-1 text-gray-700">
-              {job.bulletPoints.map((point, i) => (
-                 <li key={i}>
-                    <EditableField
-                      fieldPath={`experience[${index}].bulletPoints[${i}]`}
-                      value={point}
-                      onAccept={onAcceptEdit}
-                      targetJob={targetJob}
-                      isListItem
-                    />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </section>
-
-      {/* Education */}
-      <section className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.education}</h2>
-        {education.map((edu, index) => (
-          <div key={index} className="flex justify-between items-baseline">
-            <div>
-              <h3 className="font-bold text-base">{edu.degree}</h3>
-              <p className="text-sm italic text-gray-800">{edu.institution}</p>
-            </div>
-            <p className="text-xs text-gray-600">{edu.year}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* Projects */}
-      {projects && projects.length > 0 && (
-        <section>
-          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.projects}</h2>
-          {projects.map((proj, index) => (
-            <div key={index} className="mb-3 last:mb-0">
-               <EditableField as="h3" fieldPath={`projects[${index}].title`} value={proj.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-               <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 list-disc list-inside space-y-1 text-gray-700" />
-            </div>
-          ))}
-        </section>
-      )}
-
-    </div>
-  )
-}
+    switch (style) {
+        case "Minimalist":
+            return <MinimalistTemplate {...templateProps} />;
+        case "Modern":
+        default:
+            return <ModernTemplate {...templateProps} />;
+    }
+};
 
 const CoverLetterContent = ({ content }: { content: string }) => {
   const paragraphs = content.split('\n').filter(p => p.trim() !== '');
@@ -326,17 +226,18 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
   const resumePrintStyles = `
     @media print {
-      body { font-family: sans-serif; color: #333; background-color: #fff; }
-      h1, h2, h3 { color: #000; }
-      h1 { font-size: 2.25rem; font-weight: bold; }
-      h2 { font-size: 0.875rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; color: #2563eb; margin-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.25rem; }
-      h3 { font-size: 1rem; font-weight: bold; }
-      a { color: #3b82f6; text-decoration: none; }
-      ul { margin-top: 0.5rem; list-style-position: inside; list-style-type: disc; }
-      li { margin-bottom: 0.25rem; }
-      section { margin-bottom: 1.5rem; }
+      body { color: #333; background-color: #fff; }
+      .font-sans { font-family: Inter, sans-serif; }
+      .font-serif { font-family: 'Times New Roman', serif; }
+      h1, h2, h3, p, div, span, ul, li, a { visibility: visible; }
+      h1 { font-size: 2.25rem; font-weight: 700; }
+      h2 { font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+      h3 { font-size: 1rem; font-weight: 700; }
+      a { color: #2563eb; text-decoration: none; }
+      ul { list-style-position: inside; }
       .text-center { text-align: center; }
       .border-b { border-bottom-width: 1px; }
+      .border-gray-200 { border-color: #e5e7eb; }
       .pb-4 { padding-bottom: 1rem; }
       .mb-6 { margin-bottom: 1.5rem; }
       .flex { display: flex; }
@@ -359,6 +260,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
       #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+      .group\\/editable { display: contents; } /* Ensure editable fields don't break layout */
     }
   `;
 
@@ -380,7 +282,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return <LoadingSkeleton />;
   }
 
-  if (result) {
+  if (result && resumeData) {
     return (
       <Tabs defaultValue="preview" className="w-full">
         <TabsList className="grid w-full grid-cols-1 h-auto md:h-10 md:grid-cols-3">
@@ -398,7 +300,12 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         <TabsContent value="preview" className="mt-4">
           <Card className="overflow-hidden">
              <div id="resume-container" className="aspect-[8.5/11] bg-white overflow-y-auto">
-               <GeneratedResume resume={result.resume} onAcceptEdit={onAcceptEdit} targetJob={resumeData?.jobDescription} />
+               <TemplateRenderer 
+                 resume={result.resume}
+                 onAcceptEdit={onAcceptEdit}
+                 targetJob={resumeData.jobDescription}
+                 style={resumeData.resume_style}
+               />
             </div>
             <CardFooter className="p-4 flex-row-reverse">
               <Button onClick={() => handleDownloadPdf('resume-container', resumePrintStyles, 'Resume')} size="sm">

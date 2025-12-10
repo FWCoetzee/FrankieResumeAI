@@ -89,12 +89,11 @@ export function ResumeBuilder() {
   };
 
   const handleAcceptEdit = (fieldPath: string, newValue: string) => {
-    if (!result) return;
+    if (!result || !currentResume) return;
   
     setResult(prevResult => {
       if (!prevResult) return null;
       
-      // Use lodash's set to safely update the nested property
       const newResume = { ...prevResult.resume };
       set(newResume, fieldPath, newValue);
       
@@ -103,6 +102,12 @@ export function ResumeBuilder() {
         resume: newResume,
       };
     });
+
+    // Also update the source data `currentResume` so that if the user regenerates,
+    // the edits are not lost. This is a bit tricky as the paths don't match 1:1.
+    // For now, we'll just show the visual update.
+    // A more robust solution would map preview paths back to form data paths.
+  
     toast({
         title: "Content Updated",
         description: "Your resume has been updated with the AI's suggestion.",
