@@ -120,10 +120,25 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: generatedResumeSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
-      throw new Error("The AI failed to generate a structured resume. The output was empty.");
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        throw new Error("The AI failed to generate a structured resume. The output was empty.");
+      }
+      return output;
+    } catch (error: any) {
+        // Simple retry logic for 503 errors.
+        if (error.message && error.message.includes('503 Service Unavailable')) {
+            console.warn('AI service is unavailable, retrying in 2 seconds...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const {output} = await prompt(input);
+            if (!output) {
+                throw new Error("The AI failed to generate a structured resume on retry.");
+            }
+            return output;
+        }
+        // Re-throw other errors
+        throw error;
     }
-    return output;
   }
 );
