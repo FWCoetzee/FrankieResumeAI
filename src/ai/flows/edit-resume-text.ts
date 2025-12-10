@@ -24,7 +24,7 @@ const toneSchema = z.enum([
 
 const lengthSchema = z.enum(["short", "medium", "long"]);
 
-export const EditResumeTextInputSchema = z.object({
+const EditResumeTextInputSchema = z.object({
   mode: editModeSchema.describe("The editing command to apply."),
   content: z.string().describe("The text content to be edited."),
   targetJob: z.string().optional().describe("An optional job title or description to align the content with."),
@@ -34,7 +34,7 @@ export const EditResumeTextInputSchema = z.object({
 
 export type EditResumeTextInput = z.infer<typeof EditResumeTextInputSchema>;
 
-export const EditResumeTextOutputSchema = z.string().describe("The edited content, with no additional commentary or explanation.");
+const EditResumeTextOutputSchema = z.string().describe("The edited content, with no additional commentary or explanation.");
 
 export type EditResumeTextOutput = z.infer<typeof EditResumeTextOutputSchema>;
 
