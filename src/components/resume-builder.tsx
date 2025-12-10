@@ -142,7 +142,7 @@ export function ResumeBuilder() {
   }
 
   // On mobile, we only show one component at a time.
-  // The logic is: show the form and history, UNLESS we are reviewing or showing a result.
+  // The logic is: show the form, UNLESS we are reviewing or showing a result.
   if (isMobile) {
      if (isReviewing || result) {
       return (
@@ -160,7 +160,6 @@ export function ResumeBuilder() {
      return (
         <div className="space-y-8">
             <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
-            <ResumeHistory onSelectResume={handleLoadResume} onDeleteResume={handleDeleteResume} />
         </div>
      );
   }
@@ -170,7 +169,6 @@ export function ResumeBuilder() {
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="space-y-8">
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
-        <ResumeHistory onSelectResume={handleLoadResume} onDeleteResume={handleDeleteResume} />
       </div>
       <div className="lg:sticky top-24">
         <ResumePreview 
