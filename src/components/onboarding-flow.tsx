@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ArrowRight, Sparkles, Check, Briefcase, GraduationCap, Target, Upload, FilePlus, BrainCircuit, Bot, Info, CheckCircle } from 'lucide-react';
 import { ResumeBuilder } from './resume-builder';
 import { useResumeStore } from '@/hooks/use-resume-store';
