@@ -75,9 +75,9 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
         <SidebarSection title={headings.education}>
            {education.map((edu, index) => (
             <div key={index} className="mb-4 last:mb-0">
-              <h4 className="font-semibold text-white">{edu.degree}</h4>
-              <p className="text-sm text-gray-400">{edu.institution}</p>
-              <p className="text-xs text-gray-500">{edu.year}</p>
+              <EditableField as="h4" fieldPath={`education[${index}].degree`} value={edu.degree} onAccept={onAcceptEdit} targetJob={targetJob} className="font-semibold text-white" />
+              <EditableField as="p" fieldPath={`education[${index}].institution`} value={edu.institution} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm text-gray-400" />
+              <EditableField as="p" fieldPath={`education[${index}].year`} value={edu.year} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs text-gray-500" />
             </div>
           ))}
         </SidebarSection>
@@ -103,9 +103,9 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
             <div key={index} className="mb-6 last:mb-0 relative pl-6 before:absolute before:left-0 before:top-2 before:h-full before:w-px before:bg-gray-200 after:absolute after:left-[-2px] after:top-2 after:h-2.5 after:w-2.5 after:rounded-full after:bg-gray-800">
               <div className="flex justify-between items-baseline mb-1">
                 <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-lg" />
-                <p className="text-sm text-gray-500">{job.dates}</p>
+                <EditableField as="p" fieldPath={`experience[${index}].dates`} value={job.dates} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm text-gray-500" />
               </div>
-              <p className="text-base font-semibold text-gray-700">{job.company}</p>
+              <EditableField as="p" fieldPath={`experience[${index}].company`} value={job.company} onAccept={onAcceptEdit} targetJob={targetJob} className="text-base font-semibold text-gray-700" />
               <ul className="mt-2 space-y-1 text-sm text-gray-600">
                 {job.bulletPoints.map((point, i) => (
                   <li key={i}>

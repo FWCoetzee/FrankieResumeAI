@@ -85,9 +85,9 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, 
           <div key={index} className="mb-4 last:mb-0">
             <div className="flex justify-between items-baseline mb-1">
                 <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-              <p className="text-xs text-gray-600">{job.dates}</p>
+              <EditableField as="p" fieldPath={`experience[${index}].dates`} value={job.dates} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs text-gray-600" />
             </div>
-            <p className="text-sm font-medium italic text-gray-800">{job.company}</p>
+            <EditableField as="p" fieldPath={`experience[${index}].company`} value={job.company} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm font-medium italic text-gray-800" />
             <ul className="mt-2 list-disc list-inside space-y-1 text-gray-700">
               {job.bulletPoints.map((point, i) => (
                  <li key={i}>
@@ -111,10 +111,10 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, 
         {education.map((edu, index) => (
           <div key={index} className="flex justify-between items-baseline">
             <div>
-              <h3 className="font-bold text-base">{edu.degree}</h3>
-              <p className="text-sm italic text-gray-800">{edu.institution}</p>
+              <EditableField as="h3" fieldPath={`education[${index}].degree`} value={edu.degree} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
+              <EditableField as="p" fieldPath={`education[${index}].institution`} value={edu.institution} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm italic text-gray-800" />
             </div>
-            <p className="text-xs text-gray-600">{edu.year}</p>
+            <EditableField as="p" fieldPath={`education[${index}].year`} value={edu.year} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs text-gray-600" />
           </div>
         ))}
       </section>

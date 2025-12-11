@@ -67,9 +67,9 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
                 <div key={index} className="mb-4 last:mb-0">
                     <div className="flex justify-between items-baseline mb-1">
                         <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-                        <p className="text-xs font-sans text-gray-500">{job.dates}</p>
+                        <EditableField as="p" fieldPath={`experience[${index}].dates`} value={job.dates} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs font-sans text-gray-500" />
                     </div>
-                    <p className="text-sm font-bold">{job.company}</p>
+                    <EditableField as="p" fieldPath={`experience[${index}].company`} value={job.company} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm font-bold" />
                     <ul className="mt-1 space-y-1">
                         {job.bulletPoints.map((point, i) => (
                             <li key={i} className="flex">
@@ -118,10 +118,10 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
             <Section title={headings.education}>
                 {education.map((edu, index) => (
                     <div key={index} className="mb-2 last:mb-0">
-                        <h3 className="font-bold text-base">{edu.degree}</h3>
+                        <EditableField as="h3" fieldPath={`education[${index}].degree`} value={edu.degree} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
                         <div className="flex justify-between items-baseline">
-                            <p className="text-sm">{edu.institution}</p>
-                            <p className="text-xs font-sans text-gray-500">{edu.year}</p>
+                            <EditableField as="p" fieldPath={`education[${index}].institution`} value={edu.institution} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm" />
+                            <EditableField as="p" fieldPath={`education[${index}].year`} value={edu.year} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs font-sans text-gray-500" />
                         </div>
                     </div>
                 ))}
