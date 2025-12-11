@@ -210,7 +210,7 @@ export function LandingPage() {
                                 <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> ATS Optimization</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/#resume-builder" className="w-full"><Button variant="outline" className="w-full">Get Started</Button></Link>
+                                <Link href="/subscribe?plan=free" className="w-full"><Button variant="outline" className="w-full">Get Started</Button></Link>
                             </CardFooter>
                         </Card>
                         <Card className="border-2 border-primary flex flex-col h-full shadow-lg">

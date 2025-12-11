@@ -117,9 +117,12 @@ export function PricingPage() {
                         </Card>
 
                         {/* Pro Plan */}
-                        <Card className="flex flex-col">
+                        <Card className="border-2 border-primary flex flex-col shadow-lg">
                              <CardHeader className="flex-grow">
-                                <CardTitle>Pro</CardTitle>
+                                <div className="flex justify-between items-center">
+                                    <CardTitle>Pro</CardTitle>
+                                    <div className="text-sm font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full">Most Popular</div>
+                                </div>
                                 <div><span className="text-4xl font-bold">R99</span><span className="text-muted-foreground"> / month</span></div>
                                 <CardDescription>The essential toolkit for active job seekers.</CardDescription>
                             </CardHeader>
@@ -137,12 +140,9 @@ export function PricingPage() {
                         </Card>
 
                         {/* Lifetime Deal */}
-                        <Card className="border-2 border-primary flex flex-col shadow-lg">
+                        <Card className="flex flex-col">
                             <CardHeader className="flex-grow">
-                                <div className="flex justify-between items-center">
-                                    <CardTitle>Lifetime Deal</CardTitle>
-                                    <div className="text-sm font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full">Best Value</div>
-                                </div>
+                                <CardTitle>Lifetime Deal</CardTitle>
                                 <div><span className="text-4xl font-bold">R199</span><span className="text-muted-foreground"> once-off</span></div>
                                 <CardDescription>Pay once and own it forever. No subscriptions.</CardDescription>
                             </CardHeader>
@@ -154,7 +154,7 @@ export function PricingPage() {
                                 <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Priority Support</div></div>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button className="w-full">Choose Plan</Button></Link>
+                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button variant="outline" className="w-full">Choose Plan</Button></Link>
                             </CardFooter>
                         </Card>
                     </div>
