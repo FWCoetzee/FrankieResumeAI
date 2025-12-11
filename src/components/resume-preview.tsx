@@ -226,8 +226,6 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       ? <TemplateRenderer resume={result.resume} onAcceptEdit={() => {}} targetJob={undefined} style={resumeData.resume_style} />
       : <CoverLetterContent content={result.coverLetter} />;
 
-    // Use a timeout to ensure content is rendered before printing
-    // This is a common pattern for print in React
     root.render(contentToPrint);
 
     setTimeout(() => {
@@ -236,7 +234,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         if (printContainer) {
             printContainer.remove();
         }
-    }, 500); // 500ms delay
+    }, 500); // 500ms delay to ensure content is rendered before printing
   };
 
   const wrapperClasses = cn(
@@ -317,3 +315,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
