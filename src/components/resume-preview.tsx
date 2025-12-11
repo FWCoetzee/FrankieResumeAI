@@ -198,7 +198,7 @@ const TemplateRenderer = ({
 const CoverLetterContent = ({ content }: { content: string }) => {
   const paragraphs = content.split('\n').filter(p => p.trim() !== '');
   return (
-    <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert">
+    <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert p-8 md:p-12">
       {paragraphs.map((p, i) => (
         <p key={i}>{p}</p>
       ))}
@@ -208,9 +208,19 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
+  const [activeTab, setActiveTab] = React.useState("preview");
   
   const handlePrint = () => {
+    const body = document.body;
+    const previousClasses = body.className;
+    
+    // Add a class based on the active tab
+    body.className = `${previousClasses} ${activeTab === 'preview' ? 'resume-to-print' : 'cover-letter-to-print'}`;
+    
     window.print();
+    
+    // Clean up the class after printing
+    body.className = previousClasses;
   }
 
   const wrapperClasses = cn(
@@ -227,7 +237,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return (
       <>
         <div className={wrapperClasses}>
-            <Tabs defaultValue="preview" className="w-full">
+            <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
                 <TabsTrigger value="preview" className="gap-2 text-base">
                     <FileText /> Resume
@@ -242,12 +252,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                 <div className="p-2 sm:p-4">
                     <TabsContent value="preview">
                         <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                            <TemplateRenderer 
-                                resume={result.resume}
-                                onAcceptEdit={onAcceptEdit}
-                                targetJob={resumeData.jobDescription}
-                                style={resumeData.resume_style}
-                            />
+                             {/* This content is only for display, not for print */}
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
@@ -256,8 +261,8 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                     </TabsContent>
 
                     <TabsContent value="cover-letter">
-                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner p-8 md:p-12">
-                            <CoverLetterContent content={result.coverLetter} />
+                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                           {/* This content is only for display, not for print */}
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
@@ -284,13 +289,17 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                 </div>
             </Tabs>
         </div>
-        <div className="hidden print:block">
+        {/* These elements are hidden by default and only shown for printing */}
+        <div className="printable-content resume-to-print">
             <TemplateRenderer 
                 resume={result.resume}
                 onAcceptEdit={onAcceptEdit}
                 targetJob={resumeData.jobDescription}
                 style={resumeData.resume_style}
             />
+        </div>
+        <div className="printable-content cover-letter-to-print">
+            <CoverLetterContent content={result.coverLetter} />
         </div>
       </>
     );
@@ -302,5 +311,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    

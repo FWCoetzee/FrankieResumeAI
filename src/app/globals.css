@@ -59,18 +59,19 @@
 }
 
 @media print {
-  body, html {
+  body {
     background: #fff !important;
   }
-  header,
   .print-hidden {
     display: none !important;
   }
-  main {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
   .printable-content {
+    display: none;
+  }
+  body > div:first-child {
+    display: none;
+  }
+  .resume-to-print, .cover-letter-to-print {
     display: block !important;
     position: absolute;
     top: 0;
