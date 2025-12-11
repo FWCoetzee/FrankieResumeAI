@@ -240,7 +240,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                 </TabsTrigger>
                 </TabsList>
                 <div className="p-2 sm:p-4">
-                    <TabsContent value="preview" className="printable-content hidden">
+                    <TabsContent value="preview">
                         <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
                                 resume={result.resume}
@@ -255,7 +255,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="cover-letter" className="printable-content hidden">
+                    <TabsContent value="cover-letter">
                         <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner p-8 md:p-12">
                             <CoverLetterContent content={result.coverLetter} />
                         </div>
@@ -302,3 +302,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
