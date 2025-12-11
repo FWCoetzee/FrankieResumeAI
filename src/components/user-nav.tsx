@@ -21,6 +21,7 @@ import { useState, useRef } from "react";
 import { uploadAvatar } from "@/firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
 
 export function UserNav() {
   const { user, isUserLoading } = useUser();
@@ -28,8 +29,6 @@ export function UserNav() {
   const storage = useStorage();
   const { toast } = useToast();
 
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [authDialogMode, setAuthDialogMode] = useState<"login" | "signup">("login");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
@@ -42,11 +41,6 @@ export function UserNav() {
       setOptimisticAvatarUrl(null);
     }
   };
-  
-  const openAuthDialog = (mode: "login" | "signup") => {
-    setAuthDialogMode(mode);
-    setAuthDialogOpen(true);
-  }
 
   const handleAvatarChangeClick = () => {
     if (isUploading) return;
@@ -95,17 +89,14 @@ export function UserNav() {
 
   if (!user) {
      return (
-        <>
-            <AuthDialog 
-                open={authDialogOpen} 
-                onOpenChange={setAuthDialogOpen} 
-                initialMode={authDialogMode}
-            />
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => openAuthDialog('login')}>Log In</Button>
-                <Button onClick={() => openAuthDialog('signup')}>Sign Up</Button>
-            </div>
-        </>
+        <div className="flex items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/login">Log In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+        </div>
      )
   }
   
@@ -116,11 +107,6 @@ export function UserNav() {
 
   return (
     <>
-      <AuthDialog 
-        open={authDialogOpen} 
-        onOpenChange={setAuthDialogOpen} 
-        initialMode={authDialogMode}
-      />
        <input
         type="file"
         ref={fileInputRef}

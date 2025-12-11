@@ -13,6 +13,7 @@ import { ResumeHistory } from "./resume-history";
 import { set, cloneDeep } from "lodash";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { useEffect } from "react";
+import { AuthDialog } from "./auth-dialog";
 
 type GenerationResult = {
   resume: GeneratedResumeData;
@@ -28,6 +29,7 @@ export function ResumeBuilder() {
   const isMobile = useIsMobile();
   const { user } = useUser();
   const { currentResume, setCurrentResume, formActionData, setFormActionData } = useResumeStore();
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const handleDataForReview = (data: ResumeData) => {
     // When submitting the form, we only have form data.
@@ -42,11 +44,7 @@ export function ResumeBuilder() {
   
   const handleGenerate = async (data: ResumeData) => {
     if (!user) {
-        toast({
-            variant: 'destructive',
-            title: 'Not Logged In',
-            description: 'Please log in to generate and save your resume.',
-        });
+        setAuthDialogOpen(true);
         return;
     }
     
@@ -131,6 +129,7 @@ export function ResumeBuilder() {
      }
      return (
         <div className="space-y-8 print-hidden">
+            <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
             <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
             {user && <ResumeHistory />}
         </div>
@@ -140,6 +139,7 @@ export function ResumeBuilder() {
   // On desktop, we show both side-by-side.
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
+      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
       <div className="space-y-8 print-hidden">
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
         {user && <ResumeHistory />}
