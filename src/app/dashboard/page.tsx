@@ -1,3 +1,4 @@
+
 import { DashboardPage } from "@/components/dashboard-page";
 import type { Metadata } from 'next';
 
