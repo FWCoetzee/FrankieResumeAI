@@ -51,8 +51,8 @@ export const experienceLevelSchema = z.enum([
 export const resumeStyleSchema = z.enum([
   "Modern",
   "Minimalist",
-  "Corporate",
   "Creative",
+  "Corporate",
   "Clean ATS-Friendly",
 ]);
 

@@ -13,6 +13,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { ModernTemplate } from "./templates/modern-template";
 import { MinimalistTemplate } from "./templates/minimalist-template";
+import { CreativeTemplate } from "./templates/creative-template";
 import { cn } from "@/lib/utils";
 
 interface ResumePreviewProps {
@@ -190,6 +191,8 @@ const TemplateRenderer = ({
     switch (style) {
         case "Minimalist":
             return <MinimalistTemplate {...templateProps} />;
+        case "Creative":
+            return <CreativeTemplate {...templateProps} />;
         case "Modern":
         default:
             return <ModernTemplate {...templateProps} />;
