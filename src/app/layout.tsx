@@ -8,7 +8,7 @@ import { Providers } from '@/components/providers';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'DeepResumeAI',
+  title: 'DeepResume',
   description: 'Generate a professional resume with the power of AI',
 };
 
