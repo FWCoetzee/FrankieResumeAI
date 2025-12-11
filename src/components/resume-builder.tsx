@@ -130,7 +130,7 @@ export function ResumeBuilder() {
       )
      }
      return (
-        <div className="space-y-8">
+        <div className="space-y-8 print-hidden">
             <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
             {user && <ResumeHistory />}
         </div>
@@ -140,7 +140,7 @@ export function ResumeBuilder() {
   // On desktop, we show both side-by-side.
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
-      <div className="space-y-8">
+      <div className="space-y-8 print-hidden">
         <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
         {user && <ResumeHistory />}
       </div>

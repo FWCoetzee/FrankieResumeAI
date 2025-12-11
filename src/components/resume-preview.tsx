@@ -216,7 +216,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const wrapperClasses = cn(
     "transition-all duration-300",
     "bg-background/60 backdrop-blur-xl border rounded-xl shadow-lg",
-    "print:shadow-none print:border-none print:rounded-none print:bg-white print:backdrop-blur-none"
+    "print-hidden"
   );
   
   if (isLoading) {
@@ -225,64 +225,74 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
   if (result && resumeData) {
     return (
-      <div className={wrapperClasses}>
-        <Tabs defaultValue="preview" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
-            <TabsTrigger value="preview" className="gap-2 text-base">
-                <FileText /> Resume
-            </TabsTrigger>
-            <TabsTrigger value="cover-letter" className="gap-2 text-base">
-                <FileSignature /> Cover Letter
-            </TabsTrigger>
-            <TabsTrigger value="suggestions" className="gap-2 text-base">
-                <Wand2 /> AI Suggestions
-            </TabsTrigger>
-            </TabsList>
-            <div className="p-2 sm:p-4 print:p-0">
-                <TabsContent value="preview">
-                    <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                        <TemplateRenderer 
-                            resume={result.resume}
-                            onAcceptEdit={onAcceptEdit}
-                            targetJob={resumeData.jobDescription}
-                            style={resumeData.resume_style}
-                        />
-                    </div>
-                    <div className="mt-4 flex justify-end gap-2 print:hidden">
-                        <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
-                        <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                    </div>
-                </TabsContent>
+      <>
+        <div className={wrapperClasses}>
+            <Tabs defaultValue="preview" className="w-full">
+                <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+                <TabsTrigger value="preview" className="gap-2 text-base">
+                    <FileText /> Resume
+                </TabsTrigger>
+                <TabsTrigger value="cover-letter" className="gap-2 text-base">
+                    <FileSignature /> Cover Letter
+                </TabsTrigger>
+                <TabsTrigger value="suggestions" className="gap-2 text-base">
+                    <Wand2 /> AI Suggestions
+                </TabsTrigger>
+                </TabsList>
+                <div className="p-2 sm:p-4">
+                    <TabsContent value="preview" className="printable-content hidden">
+                        <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                            <TemplateRenderer 
+                                resume={result.resume}
+                                onAcceptEdit={onAcceptEdit}
+                                targetJob={resumeData.jobDescription}
+                                style={resumeData.resume_style}
+                            />
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                        </div>
+                    </TabsContent>
 
-                <TabsContent value="cover-letter">
-                    <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner p-8 md:p-12">
-                        <CoverLetterContent content={result.coverLetter} />
-                    </div>
-                     <div className="mt-4 flex justify-end gap-2 print:hidden">
-                        <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
-                        <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                    </div>
-                </TabsContent>
+                    <TabsContent value="cover-letter" className="printable-content hidden">
+                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner p-8 md:p-12">
+                            <CoverLetterContent content={result.coverLetter} />
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                        </div>
+                    </TabsContent>
 
-                <TabsContent value="suggestions">
-                    <Card className="bg-white">
-                        <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <Wand2 className="h-5 w-5" />
-                            AI Suggestions
-                        </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6">
-                        <div
-                            className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
-                            dangerouslySetInnerHTML={{ __html: result.suggestions }}
-                        />
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </div>
-        </Tabs>
-      </div>
+                    <TabsContent value="suggestions">
+                        <Card className="bg-white">
+                            <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <Wand2 className="h-5 w-5" />
+                                AI Suggestions
+                            </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                            <div
+                                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
+                                dangerouslySetInnerHTML={{ __html: result.suggestions }}
+                            />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </div>
+            </Tabs>
+        </div>
+        <div className="hidden print:block">
+            <TemplateRenderer 
+                resume={result.resume}
+                onAcceptEdit={onAcceptEdit}
+                targetJob={resumeData.jobDescription}
+                style={resumeData.resume_style}
+            />
+        </div>
+      </>
     );
   }
 
