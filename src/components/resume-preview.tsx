@@ -15,6 +15,7 @@ import { ModernTemplate } from "./templates/modern-template";
 import { MinimalistTemplate } from "./templates/minimalist-template";
 import { CreativeTemplate } from "./templates/creative-template";
 import { cn } from "@/lib/utils";
+import { EditableField } from "./editable-field";
 
 interface ResumePreviewProps {
   result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
@@ -199,16 +200,35 @@ const TemplateRenderer = ({
     }
 };
 
-const CoverLetterContent = ({ content }: { content: string }) => {
+const CoverLetterContent = ({
+  content,
+  onAcceptEdit,
+  targetJob,
+}: {
+  content: string;
+  onAcceptEdit: (fieldPath: string, newValue: string) => void;
+  targetJob?: string;
+}) => {
   const paragraphs = content.split('\n').filter(p => p.trim() !== '');
+
   return (
-    <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert p-8 md:p-12">
-      {paragraphs.map((p, i) => (
-        <p key={i}>{p}</p>
-      ))}
+    <div className="bg-white text-black p-8 font-sans text-sm">
+      <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert">
+        <EditableField
+          as="div"
+          value={content}
+          onAccept={(fieldPath, newValue) => onAcceptEdit('coverLetter', newValue)}
+          fieldPath="coverLetter" // This path corresponds to the `result` object key
+          targetJob={targetJob}
+          className="whitespace-pre-wrap font-serif"
+        >
+          {content}
+        </EditableField>
+      </div>
     </div>
   );
 };
+
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
   const [activeTab, setActiveTab] = React.useState("preview");
@@ -230,7 +250,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     const contentToPrint = activeTab === 'preview'
       ? <TemplateRenderer resume={result.resume} onAcceptEdit={printOnAcceptEdit} targetJob={undefined} style={resumeData.resume_style} />
-      : <CoverLetterContent content={result.coverLetter} />;
+      : <CoverLetterContent content={result.coverLetter} onAcceptEdit={printOnAcceptEdit} targetJob={undefined} />;
 
     root.render(contentToPrint);
 
@@ -285,7 +305,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
                   <TabsContent value="cover-letter">
                       <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                         <CoverLetterContent content={result.coverLetter} />
+                         <CoverLetterContent 
+                            content={result.coverLetter}
+                            onAcceptEdit={onAcceptEdit}
+                            targetJob={resumeData.jobDescription}
+                         />
                       </div>
                       <div className="mt-4 flex justify-end gap-2 print-hidden">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>

@@ -99,19 +99,19 @@ export function ResumeBuilder() {
   
     setResult(prevResult => {
       if (!prevResult) return null;
+
+      // Use lodash.cloneDeep to create a new object to avoid direct mutation
+      const newResult = cloneDeep(prevResult);
+
+      // Use lodash.set to safely update the nested property
+      set(newResult, fieldPath, newValue);
       
-      const newResume = cloneDeep(prevResult.resume);
-      set(newResume, fieldPath, newValue);
-      
-      return {
-        ...prevResult,
-        resume: newResume,
-      };
+      return newResult;
     });
   
     toast({
         title: "Content Updated",
-        description: "Your resume has been updated with the AI's suggestion.",
+        description: "Your document has been updated with the AI's suggestion.",
     })
   };
 
