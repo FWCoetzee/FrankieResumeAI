@@ -141,9 +141,11 @@ export function UserNav() {
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Change Avatar</span>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+            <DropdownMenuItem asChild>
+              <Link href="/account">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem disabled>
               <Wallet className="mr-2 h-4 w-4" />
