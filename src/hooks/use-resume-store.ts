@@ -12,6 +12,8 @@ interface ResumeStore {
   setFormActionData: (resume: ResumeData | null) => void;
   // A function to clear the current resume, optionally by ID.
   clearCurrentResume: (idToClear?: string) => void;
+  // New function to set initial data from onboarding
+  setInitialData: (data: ResumeData) => void;
 }
 
 export const useResumeStore = create<ResumeStore>()(
@@ -29,6 +31,13 @@ export const useResumeStore = create<ResumeStore>()(
         }
         // If no ID or a matching ID, clear the state.
         set({ currentResume: null, formActionData: null });
+      },
+      setInitialData: (data) => {
+        // This function should ONLY set the data if the store is currently empty
+        // to avoid overwriting a user's existing session.
+        if (!get().currentResume) {
+          set({ currentResume: data, formActionData: data });
+        }
       },
     }),
     {
