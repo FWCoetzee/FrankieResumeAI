@@ -68,6 +68,7 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, 
                     onAccept={onAcceptEdit}
                     targetJob={targetJob}
                     className="font-medium"
+                    isListItem
                   />
                   {index < skills.length - 1 && (
                       <span className="text-gray-300 mx-2">|</span>
@@ -125,7 +126,7 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, 
           {projects.map((proj, index) => (
             <div key={index} className="mb-3 last:mb-0">
                <EditableField as="h3" fieldPath={`projects[${index}].title`} value={proj.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-               <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 list-disc list-inside space-y-1 text-gray-700" />
+               <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 text-gray-700" />
             </div>
           ))}
         </section>

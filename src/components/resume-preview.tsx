@@ -225,8 +225,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     
     const root = createRoot(printContainer);
 
+    // For printing, we don't need the edit functionality
+    const printOnAcceptEdit = () => {};
+
     const contentToPrint = activeTab === 'preview'
-      ? <TemplateRenderer resume={result.resume} onAcceptEdit={() => {}} targetJob={undefined} style={resumeData.resume_style} />
+      ? <TemplateRenderer resume={result.resume} onAcceptEdit={printOnAcceptEdit} targetJob={undefined} style={resumeData.resume_style} />
       : <CoverLetterContent content={result.coverLetter} />;
 
     root.render(contentToPrint);
@@ -237,7 +240,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         if (printContainer) {
             printContainer.remove();
         }
-    }, 500); // 500ms delay to ensure content is rendered before printing
+    }, 500);
   };
 
   const wrapperClasses = cn(
@@ -318,5 +321,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    

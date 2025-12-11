@@ -31,9 +31,17 @@ export function ResumeBuilder() {
   const { currentResume, setCurrentResume, formActionData, setFormActionData } = useResumeStore();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
+  // When form is submitted, data goes into `formActionData` for review.
+  // We preserve the `id` from the loaded resume if it exists.
+  useEffect(() => {
+    if (currentResume) {
+        setFormActionData({
+            ...currentResume,
+        });
+    }
+  }, [currentResume, setFormActionData]);
+
   const handleDataForReview = (data: ResumeData) => {
-    // When submitting the form, we only have form data.
-    // Preserve the id from the currently loaded resume if it exists.
     setFormActionData({
       ...data,
       id: currentResume?.id, // Keep the existing ID
@@ -49,9 +57,8 @@ export function ResumeBuilder() {
     }
     
     setIsLoading(true);
-    // Set the state that is actually being generated
-    setFormActionData(data); 
-    setIsReviewing(false); // Move away from review screen to show loading state
+    setFormActionData(data); // The data being sent to the AI
+    setIsReviewing(false); 
     setResult(null);
     toast({
       title: "Generating your documents...",
@@ -66,7 +73,6 @@ export function ResumeBuilder() {
         title: "Generation Failed",
         description: response.error || "An unknown error occurred. Please check your input and try again.",
       });
-      // On failure, revert to the review screen with the data that was sent.
       setIsReviewing(true);
     } else {
       setResult({
@@ -74,8 +80,6 @@ export function ResumeBuilder() {
         suggestions: response.suggestions,
         coverLetter: response.coverLetter,
       });
-      // On success, we update the main `currentResume` with the data that was just saved.
-      // This ensures the form is now in sync with the saved version.
       setCurrentResume(data);
       toast({
         title: "Success!",
@@ -111,8 +115,6 @@ export function ResumeBuilder() {
     })
   };
 
-  // On mobile, we only show one component at a time.
-  // The logic is: show the form, UNLESS we are reviewing or showing a result.
   if (isMobile) {
      if (isReviewing || result) {
       return (
@@ -136,7 +138,6 @@ export function ResumeBuilder() {
      );
   }
 
-  // On desktop, we show both side-by-side.
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />

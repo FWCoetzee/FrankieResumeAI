@@ -102,6 +102,7 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
                                 onAccept={onAcceptEdit}
                                 targetJob={targetJob}
                                 className="font-sans"
+                                isListItem
                             />
                         </div>
                         {index < skills.length - 1 && (
