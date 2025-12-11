@@ -10,10 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/firebase";
 import { ResumeHistory } from "./resume-history";
-import { deleteResumeDataClient } from "@/lib/client-firestore";
-import { getFirestore } from "firebase/firestore";
-import { initializeFirebase } from "@/firebase";
-import { set } from "lodash";
+import { set, cloneDeep } from "lodash";
+import { useResumeStore } from "@/hooks/use-resume-store";
+import { useEffect } from "react";
 
 type GenerationResult = {
   resume: GeneratedResumeData;
@@ -24,19 +23,19 @@ type GenerationResult = {
 export function ResumeBuilder() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<GenerationResult | null>(null);
-  const [currentResume, setCurrentResume] = useState<ResumeData | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { user } = useUser();
+  const { currentResume, setCurrentResume, formActionData, setFormActionData } = useResumeStore();
 
   const handleDataForReview = (data: ResumeData) => {
     // When submitting the form, we only have form data.
     // Preserve the id from the currently loaded resume if it exists.
-    setCurrentResume(prev => ({
-        ...data,
-        id: prev?.id, // Keep the existing ID
-    }));
+    setFormActionData({
+      ...data,
+      id: currentResume?.id, // Keep the existing ID
+    });
     setResult(null); // Clear previous results
     setIsReviewing(true);
   };
@@ -52,7 +51,8 @@ export function ResumeBuilder() {
     }
     
     setIsLoading(true);
-    setCurrentResume(data); // Also update data on final generation
+    // Set the state that is actually being generated
+    setFormActionData(data); 
     setIsReviewing(false); // Move away from review screen to show loading state
     setResult(null);
     toast({
@@ -60,7 +60,6 @@ export function ResumeBuilder() {
       description: "The AI is working its magic. This may take a moment.",
     });
 
-    // Pass the user.uid and the current resume's ID (if it exists) to the action
     const response = await generateResumeAction(user.uid, data.id ?? null, data);
 
     if (response.error || !response.resume || !response.suggestions || !response.coverLetter) {
@@ -69,12 +68,17 @@ export function ResumeBuilder() {
         title: "Generation Failed",
         description: response.error || "An unknown error occurred. Please check your input and try again.",
       });
+      // On failure, revert to the review screen with the data that was sent.
+      setIsReviewing(true);
     } else {
       setResult({
         resume: response.resume,
         suggestions: response.suggestions,
         coverLetter: response.coverLetter,
       });
+      // On success, we update the main `currentResume` with the data that was just saved.
+      // This ensures the form is now in sync with the saved version.
+      setCurrentResume(data);
       toast({
         title: "Success!",
         description: data.id ? "Your resume has been updated." : "Your new resume has been saved and generated.",
@@ -89,12 +93,12 @@ export function ResumeBuilder() {
   };
 
   const handleAcceptEdit = (fieldPath: string, newValue: string) => {
-    if (!result || !currentResume) return;
+    if (!result || !formActionData) return;
   
     setResult(prevResult => {
       if (!prevResult) return null;
       
-      const newResume = { ...prevResult.resume };
+      const newResume = cloneDeep(prevResult.resume);
       set(newResume, fieldPath, newValue);
       
       return {
@@ -102,44 +106,12 @@ export function ResumeBuilder() {
         resume: newResume,
       };
     });
-
-    // Also update the source data `currentResume` so that if the user regenerates,
-    // the edits are not lost. This is a bit tricky as the paths don't match 1:1.
-    // For now, we'll just show the visual update.
-    // A more robust solution would map preview paths back to form data paths.
   
     toast({
         title: "Content Updated",
         description: "Your resume has been updated with the AI's suggestion.",
     })
   };
-
-  const handleLoadResume = (data: ResumeData) => {
-    setCurrentResume(data); // This now includes the ID
-    setIsReviewing(false);
-    setResult(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    toast({
-        title: "Resume Loaded",
-        description: "The selected resume data has been loaded into the form.",
-    });
-  }
-
-  const handleDeleteResume = (resumeId: string) => {
-    if (!user) return;
-    const { firestore } = initializeFirebase();
-    deleteResumeDataClient(firestore, user.uid, resumeId);
-    
-    // If the deleted resume is the one currently in the form, clear it
-    if (currentResume?.id === resumeId) {
-        setCurrentResume(null);
-    }
-    
-    toast({
-        title: "Resume Deleted",
-        description: "The selected resume has been removed from your history.",
-    });
-  }
 
   // On mobile, we only show one component at a time.
   // The logic is: show the form, UNLESS we are reviewing or showing a result.
@@ -149,7 +121,7 @@ export function ResumeBuilder() {
          <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={currentResume} 
+          resumeData={formActionData} 
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}
@@ -159,7 +131,8 @@ export function ResumeBuilder() {
      }
      return (
         <div className="space-y-8">
-            <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
+            <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
+            {user && <ResumeHistory />}
         </div>
      );
   }
@@ -168,13 +141,14 @@ export function ResumeBuilder() {
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="space-y-8">
-        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} initialData={currentResume} />
+        <ResumeForm onGenerate={handleDataForReview} isLoading={isLoading} />
+        {user && <ResumeHistory />}
       </div>
       <div className="lg:sticky top-24">
         <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={currentResume} 
+          resumeData={formActionData} 
           isReviewing={isReviewing}
           onEdit={handleEdit}
           onGenerate={handleGenerate}

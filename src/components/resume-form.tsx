@@ -26,13 +26,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, GraduationCap, Star } from "lucide-react";
-import { useAutosave } from "@/hooks/use-autosave";
 import { useEffect } from "react";
+import { useResumeStore } from "@/hooks/use-resume-store";
 
 interface ResumeFormProps {
   onGenerate: (data: ResumeData) => void;
   isLoading: boolean;
-  initialData: ResumeData | null;
 }
 
 const emptyValues: ResumeData = {
@@ -55,7 +54,6 @@ const emptyValues: ResumeData = {
   projects: [],
   certifications: [],
 };
-
 
 const sampleValues: ResumeData = {
   jobDescription: "We are seeking a highly motivated Senior Frontend Engineer with over 5 years of experience in building modern, responsive, and performant web applications. The ideal candidate will have a strong command of React, TypeScript, and the Next.js framework. You will be responsible for leading the development of our customer-facing dashboard, mentoring junior engineers, and working closely with our design and product teams to implement new features. Experience with data visualization libraries and a passion for beautiful UI/UX are major pluses.",
@@ -108,22 +106,20 @@ const sampleValues: ResumeData = {
   certifications: ["Certified React Developer", "AWS Certified Cloud Practitioner"],
 };
 
-export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormProps) {
+export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
+  const { currentResume, setCurrentResume } = useResumeStore();
+
   const form = useForm<ResumeData>({
     resolver: zodResolver(resumeFormSchema),
-    defaultValues: initialData || emptyValues,
+    defaultValues: currentResume || emptyValues,
     mode: "onBlur",
   });
   
-  useAutosave(form, "deep-resume-form", emptyValues);
-
   useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    } else {
-      form.reset(emptyValues);
-    }
-  }, [initialData, form]);
+    // When the currentResume from the global store changes (e.g., loaded from history),
+    // reset the form with the new data.
+    form.reset(currentResume || emptyValues);
+  }, [currentResume, form]);
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "work_experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "education" });
@@ -131,11 +127,12 @@ export function ResumeForm({ onGenerate, isLoading, initialData }: ResumeFormPro
 
   const handleFillSampleData = () => {
     form.reset(sampleValues);
+    setCurrentResume(sampleValues); // Also update the global store
   }
   
   const handleClearForm = () => {
     form.reset(emptyValues);
-    localStorage.removeItem("deep-resume-form");
+    setCurrentResume(null); // Clear the global store
   }
 
   const SectionHeader = ({ title, onAdd }: { title: string; onAdd: () => void }) => (

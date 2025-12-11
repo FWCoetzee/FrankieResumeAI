@@ -20,6 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useResumeStore } from "@/hooks/use-resume-store";
+import { deleteResumeDataClient } from "@/lib/client-firestore";
+import { initializeFirebase } from "@/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 // Firestore documents have Timestamps
 type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
@@ -28,20 +32,22 @@ type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
   updatedAt: Timestamp;
 };
 
-interface ResumeHistoryProps {
-    onSelectResume: (data: ResumeData) => void;
-    onDeleteResume: (id: string) => void;
-}
+const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, onDeleteClick: () => void }) => {
+  const { setCurrentResume } = useResumeStore();
+  const { toast } = useToast();
 
-const HistoryItem = ({ resume, onSelectResume, onDeleteClick }: { resume: FirestoreResumeData, onSelectResume: (data: ResumeData) => void, onDeleteClick: () => void }) => {
   const handleSelect = () => {
-    // Convert Timestamps to strings for form compatibility, and pass the whole object
     const formData: ResumeData = {
         ...resume,
         createdAt: resume.createdAt.toDate().toISOString(),
         updatedAt: resume.updatedAt.toDate().toISOString(),
     };
-    onSelectResume(formData);
+    setCurrentResume(formData);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast({
+        title: "Resume Loaded",
+        description: "The selected resume data has been loaded into the form.",
+    });
   }
 
   return (
@@ -67,10 +73,12 @@ const HistoryItem = ({ resume, onSelectResume, onDeleteClick }: { resume: Firest
   )
 }
 
-export function ResumeHistory({ onSelectResume, onDeleteResume }: ResumeHistoryProps) {
+export function ResumeHistory() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [deleteCandidate, setDeleteCandidate] = useState<FirestoreResumeData | null>(null);
+  const { clearCurrentResume } = useResumeStore();
+  const { toast } = useToast();
 
   const resumesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -83,8 +91,16 @@ export function ResumeHistory({ onSelectResume, onDeleteResume }: ResumeHistoryP
   const { data: resumes, isLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
 
   const handleConfirmDelete = () => {
-    if (deleteCandidate?.id) {
-        onDeleteResume(deleteCandidate.id);
+    if (deleteCandidate?.id && user?.uid) {
+        const { firestore } = initializeFirebase();
+        deleteResumeDataClient(firestore, user.uid, deleteCandidate.id);
+        
+        clearCurrentResume(deleteCandidate.id);
+        
+        toast({
+            title: "Resume Deleted",
+            description: "The resume has been successfully removed.",
+        });
     }
     setDeleteCandidate(null);
   }
@@ -131,7 +147,7 @@ export function ResumeHistory({ onSelectResume, onDeleteResume }: ResumeHistoryP
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.id} resume={resume} onSelectResume={onSelectResume} onDeleteClick={() => setDeleteCandidate(resume)} />
+                <HistoryItem key={resume.id} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
             ))}
         </div>
     );
@@ -154,7 +170,7 @@ export function ResumeHistory({ onSelectResume, onDeleteResume }: ResumeHistoryP
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="mt-8">
+      <Card>
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                   <History className="h-6 w-6" />
