@@ -59,35 +59,19 @@
 }
 
 @media print {
-  body {
-    background: white !important;
-  }
-  .print-hidden {
+  body > *:not(#printable-content) {
     display: none !important;
   }
-  body > *:not(.resume-to-print):not(.cover-letter-to-print) {
-    display: none;
-  }
-  .resume-to-print,
-  .cover-letter-to-print {
+  #printable-content {
     display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: auto;
+    background: white !important;
   }
-  .resume-to-print > div,
-  .cover-letter-to-print > div {
-    display: block !important;
-  }
-  .resume-to-print #resume-container,
-  .cover-letter-to-print #cover-letter-content {
-    box-shadow: none;
-    border: none;
-    height: auto;
-    width: 100%;
+  .print-hidden {
+    display: none !important;
   }
 }
-
-    

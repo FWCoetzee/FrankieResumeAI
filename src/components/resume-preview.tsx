@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { createRoot } from 'react-dom/client';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -206,18 +207,41 @@ const CoverLetterContent = ({ content }: { content: string }) => {
   );
 };
 
-
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
   const [activeTab, setActiveTab] = React.useState("preview");
-  
+
   const handlePrint = () => {
-    window.print();
-  }
+    if (!result || !resumeData) return;
+
+    let printContainer = document.getElementById('printable-content');
+    if (!printContainer) {
+      printContainer = document.createElement('div');
+      printContainer.id = 'printable-content';
+      document.body.appendChild(printContainer);
+    }
+    
+    const root = createRoot(printContainer);
+
+    const contentToPrint = activeTab === 'preview'
+      ? <TemplateRenderer resume={result.resume} onAcceptEdit={() => {}} targetJob={undefined} style={resumeData.resume_style} />
+      : <CoverLetterContent content={result.coverLetter} />;
+
+    // Use a timeout to ensure content is rendered before printing
+    // This is a common pattern for print in React
+    root.render(contentToPrint);
+
+    setTimeout(() => {
+        window.print();
+        root.unmount();
+        if (printContainer) {
+            printContainer.remove();
+        }
+    }, 500); // 500ms delay
+  };
 
   const wrapperClasses = cn(
     "transition-all duration-300",
     "bg-background/60 backdrop-blur-xl border rounded-xl shadow-lg",
-    "print-hidden"
   );
   
   if (isLoading) {
@@ -239,7 +263,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <Wand2 /> AI Suggestions
               </TabsTrigger>
               </TabsList>
-              <div className={cn("p-2 sm:p-4", activeTab === 'preview' ? 'resume-to-print' : '', activeTab === 'cover-letter' ? 'cover-letter-to-print' : '')}>
+              <div className="p-2 sm:p-4">
                   <TabsContent value="preview">
                       <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
@@ -249,7 +273,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                                 style={resumeData.resume_style}
                             />
                       </div>
-                      <div className="mt-4 flex justify-end gap-2">
+                      <div className="mt-4 flex justify-end gap-2 print-hidden">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
                       </div>
@@ -259,7 +283,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                       <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                          <CoverLetterContent content={result.coverLetter} />
                       </div>
-                      <div className="mt-4 flex justify-end gap-2">
+                      <div className="mt-4 flex justify-end gap-2 print-hidden">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
                       </div>
@@ -293,5 +317,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
