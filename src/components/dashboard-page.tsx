@@ -28,9 +28,11 @@ export function DashboardPage() {
                     <h1 className="text-3xl font-bold">Welcome back, {user?.displayName || 'builder'}!</h1>
                     <p className="text-muted-foreground mt-1">Here are your saved resumes. You can load one to edit it, or start fresh.</p>
                 </div>
-                <Button size="lg" className="w-full sm:w-auto" onClick={handleCreateNew}>
-                    <FilePlus className="mr-2 h-5 w-5"/>
-                    Create New Resume
+                <Button size="lg" className="w-full sm:w-auto" asChild>
+                    <Link href="/" onClick={clearCurrentResume}>
+                        <FilePlus className="mr-2 h-5 w-5"/>
+                        Create New Resume
+                    </Link>
                 </Button>
             </div>
             
