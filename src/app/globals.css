@@ -60,25 +60,34 @@
 
 @media print {
   body {
-    background: #fff !important;
+    background: white !important;
   }
   .print-hidden {
     display: none !important;
   }
-  .printable-content {
+  body > *:not(.resume-to-print):not(.cover-letter-to-print) {
     display: none;
   }
-  body > div:first-child {
-    display: none;
-  }
-  .resume-to-print, .cover-letter-to-print {
+  .resume-to-print,
+  .cover-letter-to-print {
     display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
+    height: auto;
+  }
+  .resume-to-print > div,
+  .cover-letter-to-print > div {
+    display: block !important;
+  }
+  .resume-to-print #resume-container,
+  .cover-letter-to-print #cover-letter-content {
+    box-shadow: none;
+    border: none;
+    height: auto;
+    width: 100%;
   }
 }
+
+    

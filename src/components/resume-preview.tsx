@@ -211,16 +211,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const [activeTab, setActiveTab] = React.useState("preview");
   
   const handlePrint = () => {
-    const body = document.body;
-    const previousClasses = body.className;
-    
-    // Add a class based on the active tab
-    body.className = `${previousClasses} ${activeTab === 'preview' ? 'resume-to-print' : 'cover-letter-to-print'}`;
-    
     window.print();
-    
-    // Clean up the class after printing
-    body.className = previousClasses;
   }
 
   const wrapperClasses = cn(
@@ -235,73 +226,64 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
   if (result && resumeData) {
     return (
-      <>
-        <div className={wrapperClasses}>
-            <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
-                <TabsTrigger value="preview" className="gap-2 text-base">
-                    <FileText /> Resume
-                </TabsTrigger>
-                <TabsTrigger value="cover-letter" className="gap-2 text-base">
-                    <FileSignature /> Cover Letter
-                </TabsTrigger>
-                <TabsTrigger value="suggestions" className="gap-2 text-base">
-                    <Wand2 /> AI Suggestions
-                </TabsTrigger>
-                </TabsList>
-                <div className="p-2 sm:p-4">
-                    <TabsContent value="preview">
-                        <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                             {/* This content is only for display, not for print */}
-                        </div>
-                        <div className="mt-4 flex justify-end gap-2">
-                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
-                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="cover-letter">
-                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                           {/* This content is only for display, not for print */}
-                        </div>
-                        <div className="mt-4 flex justify-end gap-2">
-                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
-                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="suggestions">
-                        <Card className="bg-white">
-                            <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <Wand2 className="h-5 w-5" />
-                                AI Suggestions
-                            </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-6">
-                            <div
-                                className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
-                                dangerouslySetInnerHTML={{ __html: result.suggestions }}
+      <div className={wrapperClasses}>
+          <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+              <TabsTrigger value="preview" className="gap-2 text-base">
+                  <FileText /> Resume
+              </TabsTrigger>
+              <TabsTrigger value="cover-letter" className="gap-2 text-base">
+                  <FileSignature /> Cover Letter
+              </TabsTrigger>
+              <TabsTrigger value="suggestions" className="gap-2 text-base">
+                  <Wand2 /> AI Suggestions
+              </TabsTrigger>
+              </TabsList>
+              <div className={cn("p-2 sm:p-4", activeTab === 'preview' ? 'resume-to-print' : '', activeTab === 'cover-letter' ? 'cover-letter-to-print' : '')}>
+                  <TabsContent value="preview">
+                      <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                            <TemplateRenderer 
+                                resume={result.resume}
+                                onAcceptEdit={onAcceptEdit}
+                                targetJob={resumeData.jobDescription}
+                                style={resumeData.resume_style}
                             />
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </div>
-            </Tabs>
-        </div>
-        {/* These elements are hidden by default and only shown for printing */}
-        <div className="printable-content resume-to-print">
-            <TemplateRenderer 
-                resume={result.resume}
-                onAcceptEdit={onAcceptEdit}
-                targetJob={resumeData.jobDescription}
-                style={resumeData.resume_style}
-            />
-        </div>
-        <div className="printable-content cover-letter-to-print">
-            <CoverLetterContent content={result.coverLetter} />
-        </div>
-      </>
+                      </div>
+                      <div className="mt-4 flex justify-end gap-2">
+                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                          <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                      </div>
+                  </TabsContent>
+
+                  <TabsContent value="cover-letter">
+                      <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                         <CoverLetterContent content={result.coverLetter} />
+                      </div>
+                      <div className="mt-4 flex justify-end gap-2">
+                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                          <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                      </div>
+                  </TabsContent>
+
+                  <TabsContent value="suggestions">
+                      <Card className="bg-white">
+                          <CardHeader>
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                              <Wand2 className="h-5 w-5" />
+                              AI Suggestions
+                          </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-6">
+                          <div
+                              className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-1"
+                              dangerouslySetInnerHTML={{ __html: result.suggestions }}
+                          />
+                          </CardContent>
+                      </Card>
+                  </TabsContent>
+              </div>
+          </Tabs>
+      </div>
     );
   }
 
@@ -311,3 +293,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
