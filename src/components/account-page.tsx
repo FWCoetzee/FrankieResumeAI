@@ -13,10 +13,10 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { updateProfile } from 'firebase/auth';
-import { Loader2, User as UserIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Loader2, User as UserIcon, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import Link from 'next/link';
 
 const profileSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -74,9 +74,13 @@ export function AccountPage() {
       </div>
     );
   }
+  
+  // Mock data for subscription
+  const currentPlan = "Pro Plan";
+  const renewalDate = "July 31, 2024";
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 max-w-2xl">
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-2xl space-y-8">
       <Card>
         <CardHeader>
           <CardTitle>Account Settings</CardTitle>
@@ -130,6 +134,31 @@ export function AccountPage() {
           </Form>
         </CardContent>
       </Card>
+      
+      <Card id="billing">
+        <CardHeader>
+            <CardTitle>Subscription</CardTitle>
+            <CardDescription>Manage your billing information and subscription plan.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label>Current Plan</Label>
+                <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
+                    <div>
+                        <p className="font-semibold">{currentPlan}</p>
+                        <p className="text-sm text-muted-foreground">Renews on {renewalDate}</p>
+                    </div>
+                    <CreditCard className="h-8 w-8 text-muted-foreground" />
+                </div>
+            </div>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+            <Button asChild variant="outline">
+                <Link href="/pricing">Manage Subscription</Link>
+            </Button>
+        </CardFooter>
+      </Card>
+
     </div>
   );
 }
