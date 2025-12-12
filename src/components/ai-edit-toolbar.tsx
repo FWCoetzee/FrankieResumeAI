@@ -82,35 +82,49 @@ export function AiEditToolbar({ originalContent, onAccept, targetJob }: AiEditTo
       handleAiAction(mode, selectedTone, selectedLength);
     };
 
+    if (config?.hasTone || config?.hasLength) {
+        return (
+            <div className="flex flex-col space-y-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={handleClick}
+                >
+                    {icon}
+                    {label}
+                </Button>
+                {config?.hasTone && (
+                    <Select value={selectedTone} onValueChange={(v) => setSelectedTone(v as Tone)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select tone..." /></SelectTrigger>
+                        <SelectContent>
+                            {tones.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+                {config?.hasLength && (
+                    <Select value={selectedLength} onValueChange={(v) => setSelectedLength(v as Length)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select length..." /></SelectTrigger>
+                        <SelectContent>
+                            {lengths.map(l => <SelectItem key={l} value={l} className="text-xs capitalize">{l}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                )}
+            </div>
+        );
+    }
+    
     return (
-        <div className="flex flex-col space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start gap-2"
-              onClick={handleClick}
+         <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={handleClick}
             >
-              {icon}
-              {label}
-            </Button>
-            {config?.hasTone && (
-                 <Select value={selectedTone} onValueChange={(v) => setSelectedTone(v as Tone)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select tone..." /></SelectTrigger>
-                    <SelectContent>
-                        {tones.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            )}
-             {config?.hasLength && (
-                <Select value={selectedLength} onValueChange={(v) => setSelectedLength(v as Length)}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select length..." /></SelectTrigger>
-                    <SelectContent>
-                        {lengths.map(l => <SelectItem key={l} value={l} className="text-xs capitalize">{l}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-            )}
-        </div>
-    );
+            {icon}
+            {label}
+        </Button>
+    )
   };
   
   const handleAccept = () => {
