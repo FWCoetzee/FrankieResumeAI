@@ -1,13 +1,10 @@
 
 import * as React from "react";
 import type { GeneratedResumeData } from "@/lib/schema";
-import { EditableField } from "../editable-field";
 import { Link as LinkIcon, Phone, Mail } from "lucide-react";
 
 interface TemplateProps {
   resume: GeneratedResumeData;
-  onAcceptEdit: (fieldPath: string, newValue: string) => void;
-  targetJob?: string;
 }
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -18,21 +15,14 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 
-export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, targetJob }) => {
+export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume }) => {
   const { header, summary, skills, experience, education, projects, headings } = resume;
 
   return (
     <div className="bg-white text-gray-800 p-10 font-serif text-sm leading-relaxed">
         {/* Header */}
         <header className="text-center mb-8">
-            <EditableField
-                as="h1"
-                fieldPath="header.name"
-                value={header.name}
-                onAccept={onAcceptEdit}
-                targetJob={targetJob}
-                className="text-3xl font-bold tracking-wider"
-            />
+            <h1 className="text-3xl font-bold tracking-wider">{header.name}</h1>
             <div className="flex justify-center items-center gap-x-3 text-xs text-gray-500 mt-2">
                 <p>{header.location}</p>
                 <span className="text-gray-300">|</span>
@@ -52,13 +42,7 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
 
         {/* Summary */}
         <Section title={headings.summary}>
-            <EditableField
-                as="p"
-                fieldPath="summary"
-                value={summary}
-                onAccept={onAcceptEdit}
-                targetJob={targetJob}
-            />
+            <p>{summary}</p>
         </Section>
 
         {/* Experience */}
@@ -66,22 +50,15 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
             {experience.map((job, index) => (
                 <div key={index} className="mb-4 last:mb-0">
                     <div className="flex justify-between items-baseline mb-1">
-                        <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-                        <EditableField as="p" fieldPath={`experience[${index}].dates`} value={job.dates} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs font-sans text-gray-500" />
+                        <h3 className="font-bold text-base">{job.title}</h3>
+                        <p className="text-xs font-sans text-gray-500">{job.dates}</p>
                     </div>
-                    <EditableField as="p" fieldPath={`experience[${index}].company`} value={job.company} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm font-bold" />
+                    <p className="text-sm font-bold">{job.company}</p>
                     <ul className="mt-1 space-y-1">
                         {job.bulletPoints.map((point, i) => (
                             <li key={i} className="flex">
                                 <span className="mr-2 text-gray-400">&#8211;</span>
-                                <EditableField
-                                    fieldPath={`experience[${index}].bulletPoints[${i}]`}
-                                    value={point}
-                                    onAccept={onAcceptEdit}
-                                    targetJob={targetJob}
-                                    isListItem
-                                    className="text-justify"
-                                />
+                                <span className="text-justify">{point}</span>
                             </li>
                         ))}
                     </ul>
@@ -95,15 +72,7 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
                 {skills.map((skill, index) => (
                     <React.Fragment key={index}>
                         <div className="px-2">
-                            <EditableField
-                                as="span"
-                                fieldPath={`skills[${index}]`}
-                                value={skill}
-                                onAccept={onAcceptEdit}
-                                targetJob={targetJob}
-                                className="font-sans"
-                                isListItem
-                            />
+                           <span className="font-sans">{skill}</span>
                         </div>
                         {index < skills.length - 1 && (
                             <span className="text-gray-300 font-sans">&bull;</span>
@@ -118,10 +87,10 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
             <Section title={headings.education}>
                 {education.map((edu, index) => (
                     <div key={index} className="mb-2 last:mb-0">
-                        <EditableField as="h3" fieldPath={`education[${index}].degree`} value={edu.degree} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
+                        <h3 className="font-bold text-base">{edu.degree}</h3>
                         <div className="flex justify-between items-baseline">
-                            <EditableField as="p" fieldPath={`education[${index}].institution`} value={edu.institution} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm" />
-                            <EditableField as="p" fieldPath={`education[${index}].year`} value={edu.year} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs font-sans text-gray-500" />
+                            <p className="text-sm">{edu.institution}</p>
+                            <p className="text-xs font-sans text-gray-500">{edu.year}</p>
                         </div>
                     </div>
                 ))}
@@ -132,8 +101,8 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEd
                 <Section title={headings.projects}>
                     {projects.map((proj, index) => (
                         <div key={index} className="mb-3 last:mb-0">
-                            <EditableField as="h3" fieldPath={`projects[${index}].title`} value={proj.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-                            <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 text-sm" />
+                            <h3 className="font-bold text-base">{proj.title}</h3>
+                            <p className="mt-1 text-sm">{proj.description}</p>
                         </div>
                     ))}
                 </Section>

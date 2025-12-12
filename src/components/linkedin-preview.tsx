@@ -3,18 +3,15 @@
 
 import * as React from "react";
 import type { GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
-import { EditableField } from "./editable-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Linkedin } from "lucide-react";
 
 interface LinkedInPreviewProps {
   content: GenerateLinkedInProfileOutput;
-  onAcceptEdit: (fieldPath: string, newValue: string) => void;
-  targetJob?: string;
 }
 
-export const LinkedInPreview: React.FC<LinkedInPreviewProps> = ({ content, onAcceptEdit, targetJob }) => {
+export const LinkedInPreview: React.FC<LinkedInPreviewProps> = ({ content }) => {
   const { summary, experience } = content;
 
   return (
@@ -29,14 +26,7 @@ export const LinkedInPreview: React.FC<LinkedInPreviewProps> = ({ content, onAcc
             <div className="space-y-2">
                 <h3 className="font-semibold text-base text-blue-700">About Section</h3>
                 <div className="prose prose-sm max-w-none prose-p:my-2 dark:prose-invert">
-                    <EditableField
-                        as="p"
-                        value={summary}
-                        onAccept={onAcceptEdit}
-                        fieldPath="linkedin.summary"
-                        targetJob={targetJob}
-                        className="whitespace-pre-wrap"
-                    />
+                    <p className="whitespace-pre-wrap">{summary}</p>
                 </div>
             </div>
             
@@ -49,14 +39,9 @@ export const LinkedInPreview: React.FC<LinkedInPreviewProps> = ({ content, onAcc
                         <p className="font-bold">{job.job_title}</p>
                         <p className="text-sm font-medium text-gray-700">{job.company}</p>
                         <div className="prose prose-sm max-w-none prose-p:my-2 dark:prose-invert">
-                             <EditableField
-                                as="div"
-                                value={job.description}
-                                onAccept={onAcceptEdit}
-                                fieldPath={`linkedin.experience[${index}].description`}
-                                targetJob={targetJob}
-                                className="whitespace-pre-wrap text-gray-600"
-                            />
+                             <div className="whitespace-pre-wrap text-gray-600">
+                                {job.description}
+                            </div>
                         </div>
                     </div>
                  ))}

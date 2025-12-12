@@ -97,7 +97,7 @@ export function ResumeBuilder() {
     setResult(null);
   };
 
-  const handleAcceptEdit = (fieldPath: string, newValue: string) => {
+  const handleAcceptEdit = (fieldPath: string, newValue: string | string[]) => {
     if (!result || !formActionData) return;
   
     setResult(prevResult => {

@@ -17,7 +17,8 @@ import { MinimalistTemplate } from "./templates/minimalist-template";
 import { CreativeTemplate } from "./templates/creative-template";
 import { LinkedInPreview } from "./linkedin-preview";
 import { cn } from "@/lib/utils";
-import { EditableField } from "./editable-field";
+import { AiEditor } from "./ai-editor";
+
 
 interface ResumePreviewProps {
   result: { 
@@ -31,7 +32,7 @@ interface ResumePreviewProps {
   isReviewing: boolean;
   onEdit: () => void;
   onGenerate: (data: ResumeData) => void;
-  onAcceptEdit: (fieldPath: string, newValue: string) => void;
+  onAcceptEdit: (fieldPath: string, newValue: string | string[]) => void;
 }
 
 const LoadingSkeleton = () => (
@@ -185,16 +186,12 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
 
 const TemplateRenderer = ({
     resume,
-    onAcceptEdit,
-    targetJob,
     style
 }: {
     resume: GeneratedResumeData;
-    onAcceptEdit: (fieldPath: string, newValue: string) => void;
-    targetJob: string | undefined;
     style: ResumeData['resume_style'];
 }) => {
-    const templateProps = { resume, onAcceptEdit, targetJob };
+    const templateProps = { resume };
 
     switch (style) {
         case "Minimalist":
@@ -207,30 +204,13 @@ const TemplateRenderer = ({
     }
 };
 
-const CoverLetterContent = ({
-  content,
-  onAcceptEdit,
-  targetJob,
-}: {
-  content: string;
-  onAcceptEdit: (fieldPath: string, newValue: string) => void;
-  targetJob?: string;
-}) => {
-  const paragraphs = content.split('\n').filter(p => p.trim() !== '');
-
+const CoverLetterContent = ({ content }: { content: string }) => {
   return (
     <div className="bg-white text-black p-8 font-sans text-sm">
       <div className="prose prose-sm max-w-none prose-p:mb-4 dark:prose-invert">
-        <EditableField
-          as="div"
-          value={content}
-          onAccept={(fieldPath, newValue) => onAcceptEdit('coverLetter', newValue)}
-          fieldPath="coverLetter" // This path corresponds to the `result` object key
-          targetJob={targetJob}
-          className="whitespace-pre-wrap font-serif"
-        >
-          {content}
-        </EditableField>
+        <div className="whitespace-pre-wrap font-serif">
+            {content}
+        </div>
       </div>
     </div>
   );
@@ -252,12 +232,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     
     const root = createRoot(printContainer);
 
-    // For printing, we don't need the edit functionality
-    const printOnAcceptEdit = () => {};
-
     const contentToPrint = activeTab === 'preview'
-      ? <TemplateRenderer resume={result.resume} onAcceptEdit={printOnAcceptEdit} targetJob={undefined} style={resumeData.resume_style} />
-      : <CoverLetterContent content={result.coverLetter} onAcceptEdit={printOnAcceptEdit} targetJob={undefined} />;
+      ? <TemplateRenderer resume={result.resume} style={resumeData.resume_style} />
+      : <CoverLetterContent content={result.coverLetter} />;
 
     root.render(contentToPrint);
 
@@ -283,7 +260,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return (
       <div className={wrapperClasses}>
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-4 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-5 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
               <TabsTrigger value="preview" className="gap-2 text-base">
                   <FileText /> Resume
               </TabsTrigger>
@@ -292,6 +269,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
               </TabsTrigger>
                <TabsTrigger value="linkedin" className="gap-2 text-base">
                   <Linkedin /> LinkedIn
+              </TabsTrigger>
+              <TabsTrigger value="ai-editor" className="gap-2 text-base">
+                <Wand2 /> AI Editor
               </TabsTrigger>
               <TabsTrigger value="suggestions" className="gap-2 text-base">
                   <Wand2 /> AI Suggestions
@@ -302,40 +282,38 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                       <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
                                 resume={result.resume}
-                                onAcceptEdit={onAcceptEdit}
-                                targetJob={resumeData.jobDescription}
                                 style={resumeData.resume_style}
                             />
                       </div>
                       <div className="mt-4 flex justify-end gap-2 print-hidden">
-                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
                       </div>
                   </TabsContent>
 
                   <TabsContent value="cover-letter">
                       <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                         <CoverLetterContent 
-                            content={result.coverLetter}
-                            onAcceptEdit={onAcceptEdit}
-                            targetJob={resumeData.jobDescription}
-                         />
+                         <CoverLetterContent content={result.coverLetter} />
                       </div>
                       <div className="mt-4 flex justify-end gap-2 print-hidden">
-                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
                       </div>
                   </TabsContent>
                   
                    <TabsContent value="linkedin">
-                        <LinkedInPreview
-                            content={result.linkedin}
-                            onAcceptEdit={onAcceptEdit}
-                            targetJob={resumeData.jobDescription}
-                        />
+                        <LinkedInPreview content={result.linkedin} />
                          <div className="mt-4 flex justify-end gap-2 print-hidden">
-                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                         </div>
+                  </TabsContent>
+
+                  <TabsContent value="ai-editor">
+                    <AiEditor 
+                        result={result}
+                        resumeData={resumeData}
+                        onAcceptEdit={onAcceptEdit}
+                    />
                   </TabsContent>
 
                   <TabsContent value="suggestions">

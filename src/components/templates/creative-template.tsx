@@ -1,13 +1,10 @@
 
 import * as React from "react";
 import type { GeneratedResumeData } from "@/lib/schema";
-import { EditableField } from "../editable-field";
 import { Link as LinkIcon, Phone, Mail, MapPin } from "lucide-react";
 
 interface TemplateProps {
   resume: GeneratedResumeData;
-  onAcceptEdit: (fieldPath: string, newValue: string) => void;
-  targetJob?: string;
 }
 
 const SidebarSection: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className }) => (
@@ -18,7 +15,7 @@ const SidebarSection: React.FC<{ title: string; children: React.ReactNode; class
 );
 
 
-export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit, targetJob }) => {
+export const CreativeTemplate: React.FC<TemplateProps> = ({ resume }) => {
   const { header, summary, skills, experience, education, projects, headings } = resume;
 
   return (
@@ -26,14 +23,7 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
       {/* Sidebar */}
       <aside className="w-1/3 bg-gray-800 text-white p-8">
         <div className="text-center mb-10">
-          <EditableField
-            as="h1"
-            fieldPath="header.name"
-            value={header.name}
-            onAccept={onAcceptEdit}
-            targetJob={targetJob}
-            className="text-3xl font-bold text-white tracking-tight"
-          />
+          <h1 className="text-3xl font-bold text-white tracking-tight">{header.name}</h1>
         </div>
 
         <SidebarSection title="Contact">
@@ -58,16 +48,7 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
         <SidebarSection title={headings.skills}>
           <ul className="space-y-1 text-sm text-gray-300">
             {skills.map((skill, index) => (
-              <li key={index}>
-                 <EditableField
-                    as="span"
-                    fieldPath={`skills[${index}]`}
-                    value={skill}
-                    onAccept={onAcceptEdit}
-                    targetJob={targetJob}
-                    isListItem
-                  />
-              </li>
+              <li key={index}>{skill}</li>
             ))}
           </ul>
         </SidebarSection>
@@ -75,9 +56,9 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
         <SidebarSection title={headings.education}>
            {education.map((edu, index) => (
             <div key={index} className="mb-4 last:mb-0">
-              <EditableField as="h4" fieldPath={`education[${index}].degree`} value={edu.degree} onAccept={onAcceptEdit} targetJob={targetJob} className="font-semibold text-white" />
-              <EditableField as="p" fieldPath={`education[${index}].institution`} value={edu.institution} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm text-gray-400" />
-              <EditableField as="p" fieldPath={`education[${index}].year`} value={edu.year} onAccept={onAcceptEdit} targetJob={targetJob} className="text-xs text-gray-500" />
+              <h4 className="font-semibold text-white">{edu.degree}</h4>
+              <p className="text-sm text-gray-400">{edu.institution}</p>
+              <p className="text-xs text-gray-500">{edu.year}</p>
             </div>
           ))}
         </SidebarSection>
@@ -87,14 +68,7 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
       <main className="w-2/3 p-8">
         <section className="mb-8">
             <h2 className="text-xl font-bold uppercase tracking-wider text-gray-500 mb-4">{headings.summary}</h2>
-            <EditableField
-                as="p"
-                fieldPath="summary"
-                value={summary}
-                onAccept={onAcceptEdit}
-                targetJob={targetJob}
-                className="text-base leading-relaxed text-gray-700"
-            />
+            <p className="text-base leading-relaxed text-gray-700">{summary}</p>
         </section>
 
         <section className="mb-8">
@@ -102,21 +76,13 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
           {experience.map((job, index) => (
             <div key={index} className="mb-6 last:mb-0 relative pl-6 before:absolute before:left-0 before:top-2 before:h-full before:w-px before:bg-gray-200 after:absolute after:left-[-2px] after:top-2 after:h-2.5 after:w-2.5 after:rounded-full after:bg-gray-800">
               <div className="flex justify-between items-baseline mb-1">
-                <EditableField as="h3" fieldPath={`experience[${index}].title`} value={job.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-lg" />
-                <EditableField as="p" fieldPath={`experience[${index}].dates`} value={job.dates} onAccept={onAcceptEdit} targetJob={targetJob} className="text-sm text-gray-500" />
+                <h3 className="font-bold text-lg">{job.title}</h3>
+                <p className="text-sm text-gray-500">{job.dates}</p>
               </div>
-              <EditableField as="p" fieldPath={`experience[${index}].company`} value={job.company} onAccept={onAcceptEdit} targetJob={targetJob} className="text-base font-semibold text-gray-700" />
+              <p className="text-base font-semibold text-gray-700">{job.company}</p>
               <ul className="mt-2 space-y-1 text-sm text-gray-600">
                 {job.bulletPoints.map((point, i) => (
-                  <li key={i}>
-                    <EditableField
-                      fieldPath={`experience[${index}].bulletPoints[${i}]`}
-                      value={point}
-                      onAccept={onAcceptEdit}
-                      targetJob={targetJob}
-                      isListItem
-                    />
-                  </li>
+                  <li key={i}>{point}</li>
                 ))}
               </ul>
             </div>
@@ -129,8 +95,8 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume, onAcceptEdit
             <div className="space-y-4">
               {projects.map((proj, index) => (
                 <div key={index}>
-                  <EditableField as="h3" fieldPath={`projects[${index}].title`} value={proj.title} onAccept={onAcceptEdit} targetJob={targetJob} className="font-bold text-base" />
-                  <EditableField as="p" fieldPath={`projects[${index}].description`} value={proj.description} onAccept={onAcceptEdit} targetJob={targetJob} className="mt-1 text-sm text-gray-600" />
+                  <h3 className="font-bold text-base">{proj.title}</h3>
+                  <p className="mt-1 text-sm text-gray-600">{proj.description}</p>
                 </div>
               ))}
             </div>
