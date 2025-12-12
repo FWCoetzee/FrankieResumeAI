@@ -4,6 +4,7 @@
 import { generateResumeFromData, type GenerateResumeFromDataInput, type GenerateResumeFromDataOutput } from "@/ai/flows/generate-resume-from-data";
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
+import { generateLinkedInProfile, type GenerateLinkedInProfileInput, type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { resumeFormSchema, type ResumeFormData } from "@/lib/schema";
 import { getFirestore } from "firebase/firestore";
 import { saveOrUpdateResumeDataClient } from "@/lib/client-firestore";
@@ -18,6 +19,7 @@ export async function generateResumeAction(
   resume?: GenerateResumeFromDataOutput;
   suggestions?: string;
   coverLetter?: string;
+  linkedin?: GenerateLinkedInProfileOutput;
 }> {
   if (!userId) {
     return { error: "You must be logged in to generate a resume." };
@@ -38,7 +40,7 @@ export async function generateResumeAction(
   const jobDescForAI = jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`;
 
   try {
-    const [resumeResult, suggestionsResult, coverLetterResult] = await Promise.all([
+    const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
       generateResumeFromData(aiPayload as GenerateResumeFromDataInput),
       provideResumeSuggestions({
         ...aiPayload,
@@ -47,7 +49,8 @@ export async function generateResumeAction(
       generateCoverLetterFromData({
         ...aiPayload,
         jobDescription: jobDescForAI,
-      } as GenerateCoverLetterFromDataInput)
+      } as GenerateCoverLetterFromDataInput),
+      generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput)
     ]);
     
     // Get firestore instance and save data on the client
@@ -58,6 +61,7 @@ export async function generateResumeAction(
       resume: resumeResult,
       suggestions: suggestionsResult.suggestions,
       coverLetter: coverLetterResult,
+      linkedin: linkedInResult,
     };
   } catch (error) {
     console.error("AI Generation or Firestore Error:", error);

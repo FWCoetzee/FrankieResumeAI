@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
+import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { generateResumeAction } from "@/app/actions";
 import { ResumeForm } from "./resume-form";
 import { ResumePreview } from "./resume-preview";
@@ -19,6 +20,7 @@ type GenerationResult = {
   resume: GeneratedResumeData;
   suggestions: string;
   coverLetter: string;
+  linkedin: GenerateLinkedInProfileOutput;
 };
 
 export function ResumeBuilder() {
@@ -67,7 +69,7 @@ export function ResumeBuilder() {
 
     const response = await generateResumeAction(user.uid, data.id ?? null, data);
 
-    if (response.error || !response.resume || !response.suggestions || !response.coverLetter) {
+    if (response.error || !response.resume || !response.suggestions || !response.coverLetter || !response.linkedin) {
       toast({
         variant: "destructive",
         title: "Generation Failed",
@@ -79,6 +81,7 @@ export function ResumeBuilder() {
         resume: response.resume,
         suggestions: response.suggestions,
         coverLetter: response.coverLetter,
+        linkedin: response.linkedin,
       });
       setCurrentResume(data);
       toast({

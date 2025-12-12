@@ -6,19 +6,26 @@ import { createRoot } from 'react-dom/client';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, Pencil, Bot, FileSignature } from "lucide-react";
+import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
+import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { ModernTemplate } from "./templates/modern-template";
 import { MinimalistTemplate } from "./templates/minimalist-template";
 import { CreativeTemplate } from "./templates/creative-template";
+import { LinkedInPreview } from "./linkedin-preview";
 import { cn } from "@/lib/utils";
 import { EditableField } from "./editable-field";
 
 interface ResumePreviewProps {
-  result: { resume: GeneratedResumeData; suggestions: string; coverLetter: string; } | null;
+  result: { 
+    resume: GeneratedResumeData; 
+    suggestions: string; 
+    coverLetter: string;
+    linkedin: GenerateLinkedInProfileOutput;
+  } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
   isReviewing: boolean;
@@ -276,12 +283,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return (
       <div className={wrapperClasses}>
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-3 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-4 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
               <TabsTrigger value="preview" className="gap-2 text-base">
                   <FileText /> Resume
               </TabsTrigger>
               <TabsTrigger value="cover-letter" className="gap-2 text-base">
                   <FileSignature /> Cover Letter
+              </TabsTrigger>
+               <TabsTrigger value="linkedin" className="gap-2 text-base">
+                  <Linkedin /> LinkedIn
               </TabsTrigger>
               <TabsTrigger value="suggestions" className="gap-2 text-base">
                   <Wand2 /> AI Suggestions
@@ -315,6 +325,17 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
                       </div>
+                  </TabsContent>
+                  
+                   <TabsContent value="linkedin">
+                        <LinkedInPreview
+                            content={result.linkedin}
+                            onAcceptEdit={onAcceptEdit}
+                            targetJob={resumeData.jobDescription}
+                        />
+                         <div className="mt-4 flex justify-end gap-2 print-hidden">
+                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit</Button>
+                        </div>
                   </TabsContent>
 
                   <TabsContent value="suggestions">
