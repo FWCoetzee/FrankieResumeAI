@@ -18,7 +18,7 @@ export function DashboardPage() {
 
     const handleCreateNew = () => {
         clearCurrentResume();
-        router.push('/');
+        router.push('/editor/new');
     }
 
     return (

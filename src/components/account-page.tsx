@@ -40,7 +40,7 @@ export function AccountPage() {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.replace('/login');
+      router.replace('/auth/login');
     }
     if (user) {
       form.reset({ displayName: user.displayName || '' });

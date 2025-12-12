@@ -91,10 +91,10 @@ export function UserNav() {
      return (
         <div className="flex items-center gap-2">
             <Button variant="ghost" asChild>
-              <Link href="/login">Log In</Link>
+              <Link href="/auth/login">Log In</Link>
             </Button>
             <Button asChild>
-              <Link href="/signup">Sign Up</Link>
+              <Link href="/auth/signup">Sign Up</Link>
             </Button>
         </div>
      )
@@ -142,13 +142,13 @@ export function UserNav() {
               <span>Change Avatar</span>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/account">
+              <Link href="/app/account">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/account#billing">
+              <Link href="/app/account#billing">
                 <Wallet className="mr-2 h-4 w-4" />
                 <span>Billing</span>
               </Link>

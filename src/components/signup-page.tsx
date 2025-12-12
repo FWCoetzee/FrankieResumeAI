@@ -42,7 +42,7 @@ export function SignUpPage() {
   useEffect(() => {
     // If user is already logged in, redirect them to the dashboard
     if (user) {
-      router.replace('/dashboard');
+      router.replace('/app/dashboard');
     }
   }, [user, router]);
   
@@ -59,7 +59,7 @@ export function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       await updateProfile(userCredential.user, { displayName: values.name });
       toast({ title: "Account Created", description: "Welcome! You've been successfully signed up." });
-      router.push('/dashboard');
+      router.push('/app/dashboard');
     } catch (err: any) {
        if (err.code === 'auth/email-already-in-use') {
         setError("An account with this email already exists. Please log in instead.");
@@ -100,7 +100,7 @@ export function SignUpPage() {
         </CardContent>
         <CardFooter className="flex-col gap-4 text-center text-sm">
             <p className="text-muted-foreground">
-                Already have an account? <Link href="/login" className="underline hover:text-primary">Log in</Link>
+                Already have an account? <Link href="/auth/login" className="underline hover:text-primary">Log in</Link>
             </p>
         </CardFooter>
       </Card>

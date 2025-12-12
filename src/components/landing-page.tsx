@@ -103,7 +103,7 @@ export function LandingPage() {
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary">Build Your Future, Faster Than Ever</h1>
                 <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
                 <div className="mt-8 flex justify-center gap-4 flex-wrap">
-                    <Link href="/#resume-builder"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
+                    <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
                     <Link href="/subscribe?plan=lifetime"><Button size="lg" variant="outline" className="w-full sm:w-auto">Get Lifetime Access for R199</Button></Link>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
@@ -299,7 +299,7 @@ export function LandingPage() {
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Ready to Land Your Dream Job?</h2>
                     <p className="max-w-xl mx-auto mt-4 text-lg text-muted-foreground">Stop wasting time on formatting and second-guessing. Start building a resume that gets results.</p>
-                    <Link href="/#resume-builder"><Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button></Link>
+                    <Link href="/editor/new"><Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button></Link>
                 </div>
             </section>
 

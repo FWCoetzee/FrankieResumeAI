@@ -41,7 +41,7 @@ export function LoginPage() {
   useEffect(() => {
     // If user is already logged in, redirect them to the dashboard
     if (user) {
-      router.replace('/dashboard');
+      router.replace('/app/dashboard');
     }
   }, [user, router]);
   
@@ -57,7 +57,7 @@ export function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: "Logged In", description: "Welcome back!" });
-      router.push('/dashboard');
+      router.push('/app/dashboard');
     } catch (err: any) {
       setError("Invalid email or password. Please try again.");
     } finally {
@@ -91,7 +91,7 @@ export function LoginPage() {
         </CardContent>
         <CardFooter className="flex-col gap-4 text-center text-sm">
             <p className="text-muted-foreground">
-                Don't have an account? <Link href="/signup" className="underline hover:text-primary">Sign up</Link>
+                Don't have an account? <Link href="/auth/signup" className="underline hover:text-primary">Sign up</Link>
             </p>
         </CardFooter>
       </Card>

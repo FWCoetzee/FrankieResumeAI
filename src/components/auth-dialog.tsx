@@ -33,10 +33,10 @@ export function AuthDialog({ open, onOpenChange, initialMode = 'login' }: AuthDi
         </DialogHeader>
         <DialogFooter className="flex-col !space-y-2 pt-4 sm:flex-col sm:!space-x-0">
             <Button asChild size="lg">
-                <Link href="/signup">Create an Account</Link>
+                <Link href="/auth/signup">Create an Account</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-                <Link href="/login">Log In to Existing Account</Link>
+                <Link href="/auth/login">Log In to Existing Account</Link>
             </Button>
         </DialogFooter>
       </DialogContent>
