@@ -188,7 +188,6 @@ export function OnboardingFlow() {
   };
 
   const handleFinish = () => {
-    // Merge the collected onboarding data with the empty form values
     const initialData = {
       ...emptyValues,
       ...onboardingData,

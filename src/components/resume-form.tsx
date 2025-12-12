@@ -116,8 +116,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   });
   
   useEffect(() => {
-    // When the currentResume from the global store changes (e.g., loaded from history),
-    // reset the form with the new data.
+    // When the currentResume from the global store changes, reset the form.
     form.reset(currentResume || emptyValues);
   }, [currentResume, form]);
 
@@ -127,7 +126,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
 
   const handleFillSampleData = () => {
     form.reset(sampleValues);
-    setCurrentResume(sampleValues); // Also update the global store
+    setCurrentResume(sampleValues); // Update the global store
   }
   
   const handleClearForm = () => {

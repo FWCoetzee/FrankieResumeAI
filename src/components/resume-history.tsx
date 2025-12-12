@@ -84,7 +84,7 @@ export function ResumeHistory() {
     if (!user || !firestore) return null;
     return query(
       collection(firestore, 'users', user.uid, 'resumeData'),
-      orderBy('updatedAt', 'desc') // Order by updated time to show recent edits first
+      orderBy('updatedAt', 'desc')
     );
   }, [user, firestore]);
   
