@@ -36,7 +36,7 @@ const features = [
     {
       icon: <Languages className="h-8 w-8 text-primary" />,
       title: "Multi-Language Export",
-      description: "Reach a wider audience by exporting your resume in any of South Africa's 11 official languages."
+      description: "Reach a wider audience by exporting your resume in all 11 of South Africa's official languages."
     },
     {
       icon: <Star className="h-8 w-8 text-primary" />,

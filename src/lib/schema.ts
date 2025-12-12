@@ -58,9 +58,16 @@ export const resumeStyleSchema = z.enum([
 
 export const languageSchema = z.enum([
     "English",
-    "isiZulu",
-    "isiXhosa",
     "Afrikaans",
+    "isiNdebele",
+    "isiXhosa",
+    "isiZulu",
+    "Sepedi",
+    "Sesotho",
+    "Setswana",
+    "siSwati",
+    "Tshivenda",
+    "Xitsonga",
 ]);
 
 
