@@ -35,8 +35,8 @@ const features = [
     },
     {
       icon: <Languages className="h-8 w-8 text-primary" />,
-      title: "Multi-Language Export",
-      description: "Reach a wider audience by exporting your resume in all 11 of South Africa's official languages."
+      title: "Multi-Language Support",
+      description: "Reach a wider audience by exporting your resume in multiple languages, including all 11 official languages of South Africa."
     },
     {
       icon: <Star className="h-8 w-8 text-primary" />,
@@ -145,7 +145,7 @@ export function LandingPage() {
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">ATS Optimization</h4><p className="text-sm text-muted-foreground">Our AI knows what recruiters' robots want to see.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Job-Tailored Rewrites</h4><p className="text-sm text-muted-foreground">Create unlimited, perfectly targeted resumes for every application.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Modern Design Themes</h4><p className="text-sm text-muted-foreground">Choose from a gallery of templates that are professional, not predictable.</p></div></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Multilingual Export</h4><p className="text-sm text-muted-foreground">Export your resume in all 11 official South African languages.</p></div></li>
+                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Multilingual Export</h4><p className="text-sm text-muted-foreground">Export your resume in all 11 official languages.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Your Data is Private</h4><p className="text-sm text-muted-foreground">We respect your privacy. Your data is secure and never shared.</p></div></li>
                     </ul>
                 </div>

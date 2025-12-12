@@ -70,7 +70,7 @@ const features = [
     },
     {
         icon: <Languages className="h-6 w-6 text-primary" />,
-        title: "SA Language Support",
+        title: "Multi-Language Support",
         description: "Reach a wider audience. Export your resume and cover letter in any of South Africa's 11 official languages with a single click."
     },
     {
