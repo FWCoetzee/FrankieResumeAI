@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useFirestore } from "@/firebase";
@@ -106,8 +107,8 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If we are still checking for a user, or if there is no user, do nothing.
-    // This guard prevents unauthorized queries.
+    // This effect now correctly handles all auth states.
+    // If we are loading or there's no user, we do nothing and ensure state is clean.
     if (isUserLoading || !user) {
       setIsLoading(false);
       setResumes(null);
@@ -148,7 +149,7 @@ export function ResumeHistory() {
       }
     );
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription on unmount or if user changes
     return () => unsubscribe();
   }, [user, firestore, isUserLoading]);
 
@@ -168,7 +169,6 @@ export function ResumeHistory() {
   }
 
   const renderContent = () => {
-    // Show loading indicator if the initial user check or the resume fetch is happening.
     if (isLoading || isUserLoading) {
       return (
         <div className="text-center text-muted-foreground p-8 flex items-center justify-center gap-2">
@@ -188,7 +188,6 @@ export function ResumeHistory() {
        );
     }
 
-    // If there is no user, they should not see the history.
     if (!user) {
         return (
              <div className="text-center text-muted-foreground p-8">
