@@ -2,7 +2,6 @@
 "use client";
 
 import { generateResumeFromData, type GenerateResumeFromDataInput, type GenerateResumeFromDataOutput } from "@/ai/flows/generate-resume-from-data";
-import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput, type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { type ResumeData } from "@/lib/schema";
@@ -23,11 +22,15 @@ export async function generateResumeAction(
     return { error: "You must be logged in to generate a resume." };
   }
 
+  // **THE FIX IS HERE**: Ensure the ownerId is correctly set on the data to be saved.
+  // This prevents an unauthorized write when creating a new resume after logging in.
+  const dataToSave: ResumeData = { ...resumeData, ownerId: userId };
+
   // The AI flows require a different data structure than our new resumeSchema.
   // We need to map the data from our new structure to the old structure the AI expects.
   // This is a temporary measure until the AI flows are updated.
   const aiPayload = {
-    target_job_title: resumeData.title,
+    target_job_title: dataToSave.title,
     // These fields are no longer in our new model but are required by the AI flows.
     // We provide sensible defaults.
     resume_intent: "Tech (ATS-Optimized)",
@@ -39,9 +42,9 @@ export async function generateResumeAction(
       email: "",
       phone: "",
       location: "",
-      summary: resumeData.sections.summary.content,
+      summary: dataToSave.sections.summary.content,
     },
-    work_experience: resumeData.sections.experience.map(exp => ({
+    work_experience: dataToSave.sections.experience.map(exp => ({
         job_title: exp.role,
         company: exp.company,
         start_date: exp.startDate,
@@ -50,12 +53,12 @@ export async function generateResumeAction(
         achievements: '',
     })),
     education: [],
-    skills: resumeData.sections.skills,
+    skills: dataToSave.sections.skills,
     projects: [],
     certifications: [],
   };
 
-  const jobDescForAI = `A generic role for a candidate with skills like ${resumeData.sections.skills.join(', ')}.`;
+  const jobDescForAI = `A generic role for a candidate with skills like ${dataToSave.sections.skills.join(', ')}.`;
 
   try {
     const [resumeResult, coverLetterResult, linkedInResult] = await Promise.all([
@@ -69,7 +72,7 @@ export async function generateResumeAction(
     
     // Save the complete resume data to Firestore.
     // The resumeId is now part of the resumeData object.
-    saveOrUpdateResumeDataClient(userId, resumeData);
+    saveOrUpdateResumeDataClient(userId, dataToSave);
     
     return {
       resume: resumeResult,
