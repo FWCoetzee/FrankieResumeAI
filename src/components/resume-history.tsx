@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser, useFirestore } from "@/firebase";
@@ -22,9 +23,10 @@ import {
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, type WithId } from "@/firebase/firestore/use-collection";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
+
+type WithId<T> = T & { id: string };
 
 // Firestore documents have Timestamps
 type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
@@ -100,15 +102,16 @@ export function ResumeHistory() {
   const { clearCurrentResume } = useResumeStore();
   const { toast } = useToast();
   
-  // useCollection now just provides state management
-  const { data: resumes, isLoading, error, setData, setIsLoading, setError } = useCollection<FirestoreResumeData>();
+  const [resumes, setResumes] = useState<WithId<FirestoreResumeData>[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<FirestoreError | Error | null>(null);
 
-  // useEffect now handles the subscription lifecycle
   useEffect(() => {
-    // Do not run if the user is loading or not logged in, or if firestore is not available.
+    // Do not run if the user is loading, not logged in, or firestore is not available.
     if (isUserLoading || !user || !firestore) {
-      setData(null);
-      setIsLoading(!user); // If there's no user, we are not loading. Otherwise, wait for user.
+      setIsLoading(false);
+      setResumes(null);
+      setError(null);
       return;
     }
 
@@ -128,7 +131,7 @@ export function ResumeHistory() {
         snapshot.forEach((doc) => {
           results.push({ ...(doc.data() as FirestoreResumeData), id: doc.id });
         });
-        setData(results);
+        setResumes(results);
         setError(null);
         setIsLoading(false);
       },
@@ -139,7 +142,7 @@ export function ResumeHistory() {
           path: 'resumes',
         });
         setError(contextualError);
-        setData(null);
+        setResumes(null);
         setIsLoading(false);
         errorEmitter.emit('permission-error', contextualError);
       }
@@ -147,7 +150,7 @@ export function ResumeHistory() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [user, firestore, isUserLoading, setData, setIsLoading, setError]);
+  }, [user, firestore, isUserLoading]);
 
 
   const handleConfirmDelete = () => {
