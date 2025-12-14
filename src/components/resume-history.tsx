@@ -107,8 +107,9 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // Do not run if the user is loading, not logged in, or firestore is not available.
-    if (isUserLoading || !user || !firestore) {
+    // If we are loading user auth state, or there is no authenticated user,
+    // we should not proceed. Also clear any existing data.
+    if (isUserLoading || !user) {
       setIsLoading(false);
       setResumes(null);
       setError(null);
