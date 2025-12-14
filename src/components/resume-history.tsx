@@ -1,14 +1,14 @@
 'use client';
 
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy, Timestamp } from "firebase/firestore";
+import { useUser, useFirestore, useCollection } from "@/firebase";
+import { collection, query, where, orderBy, Timestamp, onSnapshot, QuerySnapshot, DocumentData, FirestoreError } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { History, Loader2, ServerCrash, FileText, ArrowRight, Trash2 } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
 import { Button } from "./ui/button";
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from "./ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,9 @@ import {
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
+import type { WithId } from "@/firebase/firestore/use-collection";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { errorEmitter } from "@/firebase/error-emitter";
 
 // Firestore documents have Timestamps
 type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
@@ -37,7 +40,7 @@ type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'section
   }
 };
 
-const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, onDeleteClick: () => void }) => {
+const HistoryItem = ({ resume, onDeleteClick }: { resume: WithId<FirestoreResumeData>, onDeleteClick: () => void }) => {
   const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
 
@@ -93,29 +96,65 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, o
 export function ResumeHistory() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [deleteCandidate, setDeleteCandidate] = useState<FirestoreResumeData | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<WithId<FirestoreResumeData> | null>(null);
   const { clearCurrentResume } = useResumeStore();
   const { toast } = useToast();
+  
+  // useCollection now just provides state management
+  const { data: resumes, isLoading, error, setData, setIsLoading, setError } = useCollection<FirestoreResumeData>();
 
-  // This query will be null until the user and firestore objects are available.
-  const resumesQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(
+  // useEffect now handles the subscription lifecycle
+  useEffect(() => {
+    // Do not run if the user is loading or not logged in, or if firestore is not available.
+    if (isUserLoading || !user || !firestore) {
+      setData(null);
+      setIsLoading(!user); // If there's no user, we are not loading. Otherwise, wait for user.
+      return;
+    }
+
+    setIsLoading(true);
+
+    const q = query(
       collection(firestore, 'resumes'),
       where('ownerId', '==', user.uid),
       where('isDeleted', '==', false),
       orderBy('updatedAt', 'desc')
     );
-  }, [user, firestore]);
-  
-  // The hook will now correctly wait for a non-null query.
-  const { data: resumes, isLoading: isResumesLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        const results: WithId<FirestoreResumeData>[] = [];
+        snapshot.forEach((doc) => {
+          results.push({ ...(doc.data() as FirestoreResumeData), id: doc.id });
+        });
+        setData(results);
+        setError(null);
+        setIsLoading(false);
+      },
+      (err: FirestoreError) => {
+        console.error("ResumeHistory subscription error:", err);
+        const contextualError = new FirestorePermissionError({
+          operation: 'list',
+          path: 'resumes',
+        });
+        setError(contextualError);
+        setData(null);
+        setIsLoading(false);
+        errorEmitter.emit('permission-error', contextualError);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [user, firestore, isUserLoading, setData, setIsLoading, setError]);
+
 
   const handleConfirmDelete = () => {
-    if (deleteCandidate?.resumeId) {
-        deleteResumeDataClient(deleteCandidate.resumeId);
+    if (deleteCandidate?.id) {
+        deleteResumeDataClient(deleteCandidate.id);
         
-        clearCurrentResume(deleteCandidate.resumeId);
+        clearCurrentResume(deleteCandidate.id);
         
         toast({
             title: "Resume Deleted",
@@ -126,8 +165,8 @@ export function ResumeHistory() {
   }
 
   const renderContent = () => {
-    // Show loading indicator if either the user or the resumes are loading.
-    if (isUserLoading || (user && isResumesLoading)) {
+    // Show loading indicator if the initial user check or the resume fetch is happening.
+    if (isLoading) {
       return (
         <div className="text-center text-muted-foreground p-8 flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -169,7 +208,7 @@ export function ResumeHistory() {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.resumeId} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
+                <HistoryItem key={resume.id} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
             ))}
         </div>
     );
