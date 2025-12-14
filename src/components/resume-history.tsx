@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
@@ -92,12 +91,13 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, o
 }
 
 export function ResumeHistory() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [deleteCandidate, setDeleteCandidate] = useState<FirestoreResumeData | null>(null);
   const { clearCurrentResume } = useResumeStore();
   const { toast } = useToast();
 
+  // This query will be null until the user and firestore objects are available.
   const resumesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
@@ -108,7 +108,8 @@ export function ResumeHistory() {
     );
   }, [user, firestore]);
   
-  const { data: resumes, isLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
+  // The hook will now correctly wait for a non-null query.
+  const { data: resumes, isLoading: isResumesLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
 
   const handleConfirmDelete = () => {
     if (deleteCandidate?.resumeId) {
@@ -125,7 +126,8 @@ export function ResumeHistory() {
   }
 
   const renderContent = () => {
-    if (isLoading) {
+    // Show loading indicator if either the user or the resumes are loading.
+    if (isUserLoading || (user && isResumesLoading)) {
       return (
         <div className="text-center text-muted-foreground p-8 flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -144,6 +146,7 @@ export function ResumeHistory() {
        );
     }
 
+    // If there is no user, they should not see the history.
     if (!user) {
         return (
              <div className="text-center text-muted-foreground p-8">

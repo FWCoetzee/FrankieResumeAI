@@ -62,7 +62,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // This guard clause is the fix. If the query is null, do nothing.
+    // This guard clause is the fix. If the query is null or undefined, do nothing.
     if (!memoizedTargetRefOrQuery) {
       setIsLoading(false);
       setData(null);
