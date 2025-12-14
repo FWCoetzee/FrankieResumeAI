@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore, useCollection } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { collection, query, where, orderBy, Timestamp, onSnapshot, QuerySnapshot, DocumentData, FirestoreError } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { History, Loader2, ServerCrash, FileText, ArrowRight, Trash2 } from "lucide-react";
@@ -22,7 +22,7 @@ import {
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
-import type { WithId } from "@/firebase/firestore/use-collection";
+import { useCollection, type WithId } from "@/firebase/firestore/use-collection";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 
