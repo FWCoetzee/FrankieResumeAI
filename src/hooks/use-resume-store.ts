@@ -37,6 +37,24 @@ const initialState: ResumeState = {
   isReviewing: false,
 };
 
+const createNewBlankResume = (ownerId: string = ''): ResumeData => ({
+    resumeId: uuidv4(),
+    ownerId: ownerId,
+    title: 'New Resume',
+    templateId: 'modern',
+    status: 'draft',
+    sections: {
+        summary: { content: '', lastEdited: new Date().toISOString() },
+        experience: [],
+        education: [],
+        skills: [],
+    },
+    settings: { fontSize: 10, spacing: 'normal' },
+    isDeleted: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+});
+
 export const useResumeStore = create<ResumeState & ResumeActions>()(
   persist(
     (set, get) => ({
@@ -59,27 +77,13 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
         // If no ID or it matches, reset to a new blank state
         set({
             ...initialState,
-            currentResume: {
-                resumeId: uuidv4(),
-                ownerId: currentResume?.ownerId || '',
-                title: 'New Resume',
-                templateId: 'modern',
-                status: 'draft',
-                sections: {
-                    summary: { content: '', lastEdited: new Date().toISOString() },
-                    experience: [],
-                    education: [],
-                    skills: [],
-                },
-                settings: { fontSize: 10, spacing: 'normal' },
-                isDeleted: false,
-            }
+            currentResume: createNewBlankResume(currentResume?.ownerId),
         });
       },
       setFormForReview: (data) => {
         set({ 
           isReviewing: true, 
-          currentResume: { ...get().currentResume, ...data }, // Merge new data with existing
+          currentResume: { ...get().currentResume, ...data } as ResumeData, // Ensure data is a full ResumeData
           result: null,
         });
       },
@@ -125,6 +129,15 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
       name: 'resume-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ currentResume: state.currentResume }),
+      // On rehydration, ensure the blank state is valid.
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+            // If there's no resume on hydration, create a fresh blank one.
+            if (!state.currentResume) {
+                state.currentResume = createNewBlankResume();
+            }
+        }
+      },
     }
   )
 );
