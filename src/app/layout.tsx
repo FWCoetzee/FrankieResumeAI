@@ -6,7 +6,6 @@ import { AppLogo } from '@/components/icons';
 import { UserNav } from '@/components/user-nav';
 import { Providers } from '@/components/providers';
 import Link from 'next/link';
-import { ZustandAuthListener } from '@/components/ZustandAuthListener';
 
 export const metadata: Metadata = {
   title: 'DeepResume',
@@ -27,7 +26,6 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <Providers>
-          <ZustandAuthListener />
           <div className="relative min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container mx-auto flex h-16 items-center justify-between">

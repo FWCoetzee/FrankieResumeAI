@@ -75,10 +75,11 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
         if (idToClear && currentResume?.resumeId !== idToClear) {
           return;
         }
-        // If no ID or it matches, reset to a new blank state
+        // If no ID or it matches, reset to a new blank state. The ownerId will be updated
+        // when the new resume is actually saved.
         set({
             ...initialState,
-            currentResume: createNewBlankResume(currentResume?.ownerId || ''),
+            currentResume: createNewBlankResume(currentResume?.ownerId),
         });
       },
       setFormForReview: (data) => {
