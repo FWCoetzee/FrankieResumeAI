@@ -107,9 +107,11 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // This effect now correctly handles all auth states.
-    // If we are loading or there's no user, we do nothing and ensure state is clean.
-    if (isUserLoading || !user) {
+    if (isUserLoading) {
+      setIsLoading(true);
+      return;
+    }
+    if (!user) {
       setIsLoading(false);
       setResumes(null);
       setError(null);

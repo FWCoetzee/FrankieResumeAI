@@ -75,12 +75,7 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
         if (idToClear && currentResume?.resumeId !== idToClear) {
           return;
         }
-        // If no ID or it matches, reset to a new blank state. The ownerId will be updated
-        // when the new resume is actually saved.
-        set({
-            ...initialState,
-            currentResume: createNewBlankResume(currentResume?.ownerId),
-        });
+        set({ ...initialState });
       },
       setFormForReview: (data) => {
         set({ 
@@ -132,14 +127,8 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
     {
       name: 'resume-storage',
       storage: createJSONStorage(() => localStorage),
+      // We only persist the currentResume. Other state is transient.
       partialize: (state) => ({ currentResume: state.currentResume }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-            if (!state.currentResume) {
-                state.currentResume = createNewBlankResume();
-            }
-        }
-      },
     }
   )
 );
