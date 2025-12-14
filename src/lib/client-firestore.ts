@@ -4,7 +4,6 @@
 import {
   doc,
   serverTimestamp,
-  Firestore,
   writeBatch,
 } from 'firebase/firestore';
 import type { ResumeData } from '@/lib/schema';
@@ -45,8 +44,10 @@ export function saveOrUpdateResumeDataClient(
     };
     batch.set(docRef, { ...dataToSave, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
   } else {
+    // Ensure ownerId is not accidentally changed on update
+    const { ownerId, createdAt, ...restOfData } = data;
     const dataToUpdate = {
-      ...data,
+      ...restOfData,
       updatedAt: serverTimestamp(),
     };
     batch.update(docRef, dataToUpdate);
@@ -62,9 +63,11 @@ export function saveOrUpdateResumeDataClient(
 /**
  * Deletes a resume document from the /resumes collection.
  * This can be a soft delete by setting `isDeleted: true`.
+ * @param userId The ID of the current user.
  * @param resumeId The ID of the resume document to delete.
  */
 export function deleteResumeDataClient(
+  userId: string,
   resumeId: string
 ): void {
   const { firestore } = initializeFirebase();

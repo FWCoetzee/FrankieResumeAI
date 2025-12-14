@@ -26,25 +26,6 @@ import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 
-// This type represents the data structure as it comes from Firestore, with Timestamps.
-// It's defined to handle the nested structure correctly.
-type FirestoreResumeDoc = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
-    summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
-      lastEdited: Timestamp | string; // Can be either on its way in or out
-    };
-    experience: Array<
-      Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
-        startDate: Timestamp | string;
-        endDate: Timestamp | string | null;
-      }
-    >;
-  };
-};
-
-// This is the type we will use inside the component, with native JS Date objects.
 type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
   id: string; 
   createdAt: Date;
@@ -75,7 +56,6 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
   const { toast } = useToast();
 
   const handleSelect = () => {
-    // Convert Dates back to ISO strings for our app's internal schema (ResumeData)
     const resumeForStore: ResumeData = {
         ...resume,
         createdAt: resume.createdAt.toISOString(),
@@ -106,7 +86,6 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
       <div className="space-y-1">
         <p className="font-semibold">{resume.title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-            {/* formatDistanceToNow works correctly with Date objects */}
             <span>Updated {formatDistanceToNow(resume.updatedAt, { addSuffix: true })}</span>
             <Badge variant="outline">{resume.templateId}</Badge>
         </div>
@@ -136,13 +115,11 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If auth state is loading, do nothing yet.
     if (isUserLoading) {
       setIsLoading(true);
       return;
     }
     
-    // If there's no user, clear state and stop.
     if (!user) {
       setIsLoading(false);
       setResumes(null);
@@ -150,7 +127,6 @@ export function ResumeHistory() {
       return;
     }
 
-    // User is logged in, start loading and set up the query.
     setIsLoading(true);
 
     const q = query(
@@ -163,15 +139,10 @@ export function ResumeHistory() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ComponentResumeData[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data() as FirestoreResumeDoc;
-          
-          const startDate = toDate(data.sections.experience[0]?.startDate);
-          
-          if (!data.createdAt || !data.updatedAt) return;
-          
-          const componentData: ComponentResumeData = {
+        const results: ComponentResumeData[] = snapshot.docs.map(doc => {
+          const data = doc.data();
+
+          return {
             ...data,
             id: doc.id,
             createdAt: toDate(data.createdAt)!,
@@ -182,22 +153,21 @@ export function ResumeHistory() {
                 ...data.sections.summary,
                 lastEdited: toDate(data.sections.summary.lastEdited)!,
               },
-              experience: data.sections.experience.map(exp => ({
+              experience: (data.sections.experience || []).map((exp: any) => ({
                 ...exp,
                 startDate: toDate(exp.startDate)!,
                 endDate: toDate(exp.endDate),
               })),
             },
-          };
-          results.push(componentData);
+          } as ComponentResumeData;
         });
+
         setResumes(results);
         setError(null);
         setIsLoading(false);
       },
       (err: FirestoreError) => {
         console.error("ResumeHistory subscription error:", err);
-        // Create a detailed error for debugging and global handling
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path: `resumes where ownerId == ${user.uid}`,
@@ -205,19 +175,17 @@ export function ResumeHistory() {
         setError(contextualError);
         setResumes(null);
         setIsLoading(false);
-        // Emit the error to be caught by a global error boundary if needed
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
-    // Cleanup subscription on unmount or if user changes
     return () => unsubscribe();
   }, [user, firestore, isUserLoading]);
 
 
   const handleConfirmDelete = () => {
-    if (deleteCandidate?.id) {
-        deleteResumeDataClient(deleteCandidate.id);
+    if (deleteCandidate?.id && user) {
+        deleteResumeDataClient(user.uid, deleteCandidate.id);
         
         clearCurrentResume(deleteCandidate.id);
         
