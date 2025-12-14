@@ -27,30 +27,39 @@ import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 
 // This type represents the data structure as it comes from Firestore, with Timestamps.
+// It's defined to handle the nested structure correctly.
 type FirestoreResumeDoc = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
-    summary: { content: string; lastEdited: Timestamp };
-    experience: (Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
-      startDate: Timestamp;
-      endDate: Timestamp | null;
-    })[]
-  }
+    summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
+      lastEdited: Timestamp;
+    };
+    experience: Array<
+      Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
+        startDate: Timestamp;
+        endDate: Timestamp | null;
+      }
+    >;
+  };
 };
 
-// This type represents the data structure we use in the component, with Dates.
+// This is the type we will use inside the component, with native JS Date objects.
 type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
-  id: string; // Add id to the type
+  id: string; 
   createdAt: Date;
   updatedAt: Date;
   sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
-    summary: { content: string; lastEdited: Date };
-    experience: (Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
-      startDate: Date;
-      endDate: Date | null;
-    })[]
-  }
+    summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
+      lastEdited: Date;
+    };
+    experience: Array<
+      Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
+        startDate: Date;
+        endDate: Date | null;
+      }
+    >;
+  };
 };
 
 
@@ -60,14 +69,14 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
 
   const handleSelect = () => {
     // Convert Dates back to ISO strings for our app's internal schema (ResumeData)
-    const formData: ResumeData = {
+    const resumeForStore: ResumeData = {
         ...resume,
         createdAt: resume.createdAt.toISOString(),
         updatedAt: resume.updatedAt.toISOString(),
         sections: {
           ...resume.sections,
           summary: {
-            content: resume.sections.summary.content,
+            ...resume.sections.summary,
             lastEdited: resume.sections.summary.lastEdited.toISOString(),
           },
           experience: resume.sections.experience.map(exp => ({
@@ -77,7 +86,7 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
           })),
         }
     };
-    setCurrentResume(formData);
+    setCurrentResume(resumeForStore);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     toast({
         title: "Resume Loaded",
@@ -90,6 +99,7 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
       <div className="space-y-1">
         <p className="font-semibold">{resume.title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+            {/* formatDistanceToNow works correctly with Date objects */}
             <span>Updated {formatDistanceToNow(resume.updatedAt, { addSuffix: true })}</span>
             <Badge variant="outline">{resume.templateId}</Badge>
         </div>
@@ -145,24 +155,25 @@ export function ResumeHistory() {
         const results: ComponentResumeData[] = [];
         snapshot.forEach((doc) => {
           const data = doc.data() as FirestoreResumeDoc;
-          // ** THE FIX IS HERE **: Convert all Timestamps to Dates
+          
+          // ** THE FIX IS HERE **: Recursively convert all Timestamps to JS Dates
           const componentData: ComponentResumeData = {
             ...data,
             id: doc.id,
             createdAt: data.createdAt.toDate(),
             updatedAt: data.updatedAt.toDate(),
             sections: {
-                ...data.sections,
-                summary: {
-                    content: data.sections.summary.content,
-                    lastEdited: data.sections.summary.lastEdited.toDate(),
-                },
-                experience: data.sections.experience.map(exp => ({
-                    ...exp,
-                    startDate: exp.startDate.toDate(),
-                    endDate: exp.endDate ? exp.endDate.toDate() : null,
-                }))
-            }
+              ...data.sections,
+              summary: {
+                ...data.sections.summary,
+                lastEdited: data.sections.summary.lastEdited.toDate(),
+              },
+              experience: data.sections.experience.map(exp => ({
+                ...exp,
+                startDate: exp.startDate.toDate(),
+                endDate: exp.endDate ? exp.endDate.toDate() : null,
+              })),
+            },
           };
           results.push(componentData);
         });
