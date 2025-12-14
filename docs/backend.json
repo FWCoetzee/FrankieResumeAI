@@ -4,106 +4,170 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ResumeData",
       "type": "object",
-      "description": "Represents the structured data collected for generating a resume.",
+      "description": "Represents the structured data collected for generating a resume. This document stores the user's input and preferences for a single resume project.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the ResumeData entity."
+          "description": "Unique identifier for the ResumeData entity. Matches the Firestore document ID."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ResumeData)"
+          "description": "The UID of the user who owns this resume. (Relationship: UserProfile 1:N ResumeData)"
         },
-        "personalInformation": {
+        "jobDescription": {
           "type": "string",
-          "description": "JSON string representing the user's personal information, including name, contact details, and profile summary."
+          "description": "The full job description the user is targeting, used by the AI for tailoring."
         },
-        "experience": {
+        "target_job_title": {
           "type": "string",
-          "description": "JSON string representing the user's work experience, including job titles, companies, dates of employment, and descriptions of responsibilities."
+          "description": "The specific job title the user is targeting."
+        },
+        "resume_intent": {
+          "type": "string",
+          "enum": ["Professional Corporate", "Creative", "Tech (ATS-Optimized)", "Student / No Experience", "Career Switch"],
+          "description": "The user's primary goal for this resume."
+        },
+        "experience_level": {
+          "type": "string",
+          "enum": ["Entry-level", "Mid-level", "Senior", "Lead", "Executive"],
+          "description": "The user's self-reported experience level."
+        },
+        "resume_style": {
+          "type": "string",
+          "enum": ["Modern", "Minimalist", "Creative", "Corporate", "Clean ATS-Friendly"],
+          "description": "The selected visual template style for the resume."
+        },
+        "language": {
+          "type": "string",
+          "enum": ["English", "Afrikaans", "isiNdebele", "isiXhosa", "isiZulu", "Sepedi", "Sesotho", "Setswana", "siSwati", "Tshivenda", "Xitsonga"],
+          "description": "The language for the generated resume content."
+        },
+        "personal_info": {
+          "type": "object",
+          "properties": {
+            "full_name": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string" },
+            "location": { "type": "string" },
+            "summary": { "type": "string" }
+          },
+          "required": ["full_name", "email", "phone"]
+        },
+        "work_experience": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "job_title": { "type": "string" },
+              "company": { "type": "string" },
+              "start_date": { "type": "string" },
+              "end_date": { "type": "string" },
+              "responsibilities": { "type": "string" },
+              "achievements": { "type": "string" }
+            },
+            "required": ["job_title", "company"]
+          }
         },
         "education": {
-          "type": "string",
-          "description": "JSON string representing the user's education history, including degrees, institutions, and dates of attendance."
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "degree": { "type": "string" },
+              "institution": { "type": "string" },
+              "start_year": { "type": "string" },
+              "end_year": { "type": "string" }
+            },
+            "required": ["degree", "institution"]
+          }
         },
         "skills": {
-          "type": "string",
-          "description": "JSON string representing the user's skills, categorized as technical, soft, or other relevant areas."
+          "type": "array",
+          "items": { "type": "string" }
         },
         "projects": {
-          "type": "string",
-          "description": "JSON string representing the user's projects, including project names, descriptions, and relevant technologies or accomplishments."
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "technologies": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["title", "technologies"]
+          }
         },
-        "awards": {
-          "type": "string",
-          "description": "JSON string representing any awards or recognitions the user has received."
+        "certifications": {
+          "type": "array",
+          "items": { "type": "string" }
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the resume data was created.",
+          "description": "Server-side timestamp indicating when the resume was first created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating when the resume data was last updated.",
+          "description": "Server-side timestamp indicating when the resume was last updated.",
           "format": "date-time"
-        },
-        "templateType": {
-          "type": "string",
-          "description": "The selected resume template."
         }
       },
       "required": [
         "id",
         "userId",
-        "personalInformation",
-        "experience",
+        "target_job_title",
+        "resume_intent",
+        "experience_level",
+        "resume_style",
+        "language",
+        "personal_info",
+        "work_experience",
         "education",
         "skills",
+        "projects",
+        "certifications",
         "createdAt",
-        "updatedAt",
-        "templateType"
+        "updatedAt"
       ]
     },
     "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user profile within the application.",
+      "description": "Represents a user profile within the application. This document stores essential user information separate from authentication data.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
+          "description": "Unique identifier for the UserProfile entity. Must match the Firebase Auth UID and the document ID."
         },
         "email": {
           "type": "string",
           "description": "User's email address.",
           "format": "email"
         },
-        "firstName": {
+        "displayName": {
           "type": "string",
-          "description": "User's first name."
+          "description": "User's public display name."
         },
-        "lastName": {
+        "photoURL": {
           "type": "string",
-          "description": "User's last name."
+          "description": "URL for the user's avatar image.",
+          "format": "uri"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user profile was created.",
+          "description": "Server-side timestamp indicating when the user profile was created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user profile was last updated.",
+          "description": "Server-side timestamp indicating when the user profile was last updated.",
           "format": "date-time"
         }
       },
       "required": [
         "id",
         "email",
-        "firstName",
-        "lastName",
         "createdAt",
         "updatedAt"
       ]
@@ -122,13 +186,13 @@
         "definition": {
           "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/UserProfile"
+            "$ref": "#/entities/UserProfile"
           },
-          "description": "Stores user profile information. Path-based ownership ensures only the user can access their profile data.",
+          "description": "Stores user profile information. The document ID must match the Firebase Auth UID. Path-based ownership ensures only the user can access their profile data.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The unique identifier for the user (matches Firebase Auth UID)."
             }
           ]
         }
@@ -138,9 +202,9 @@
         "definition": {
           "entityName": "ResumeData",
           "schema": {
-            "$ref": "#/backend/entities/ResumeData"
+            "$ref": "#/entities/ResumeData"
           },
-          "description": "Stores resume data for a specific user. Path-based ownership guarantees only the user can access their resume data.",
+          "description": "Stores resume data for a specific user. Path-based ownership guarantees only the user can access their resume data. Stored in a subcollection under the user's document.",
           "params": [
             {
               "name": "userId",
@@ -154,6 +218,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, DBAC, and QAPs. User profiles and resume data are stored in separate collections with clear ownership, facilitating secure list operations and straightforward security rules. The design leverages path-based ownership for private user data (user profiles and resume data), ensuring data belonging to a user is stored under their user ID."
+    "reasoning": "The Firestore structure is designed for scalability and security. User data is strictly segregated by nesting it within a `/users/{userId}` path. This enables powerful and simple security rules based on `request.auth.uid`. Storing `resumeData` in a subcollection allows for efficient querying of a user's resumes without loading all resume data at once. This one-to-many relationship (user to resumes) is a standard and recommended Firestore pattern."
   }
 }
