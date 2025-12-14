@@ -107,8 +107,8 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If we are loading user auth state, or there is no authenticated user,
-    // we should not proceed. Also clear any existing data.
+    // If we are still checking for a user, or if there is no user, do nothing.
+    // The render function will show the correct UI state.
     if (isUserLoading || !user) {
       setIsLoading(false);
       setResumes(null);
@@ -170,7 +170,7 @@ export function ResumeHistory() {
 
   const renderContent = () => {
     // Show loading indicator if the initial user check or the resume fetch is happening.
-    if (isLoading) {
+    if (isLoading || isUserLoading) {
       return (
         <div className="text-center text-muted-foreground p-8 flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
