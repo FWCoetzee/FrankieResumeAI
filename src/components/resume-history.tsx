@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore } from "@/firebase";
@@ -108,7 +107,7 @@ export function ResumeHistory() {
 
   useEffect(() => {
     // If we are still checking for a user, or if there is no user, do nothing.
-    // The render function will show the correct UI state.
+    // This guard prevents unauthorized queries.
     if (isUserLoading || !user) {
       setIsLoading(false);
       setResumes(null);
