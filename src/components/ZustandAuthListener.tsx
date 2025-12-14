@@ -25,10 +25,11 @@ export function ZustandAuthListener() {
       // Clear the persisted storage and reset the store to its initial state.
       useResumeStore.persist.clearStorage();
       reset();
+      initialLoadDone.current = false; // Reset for next login
     } else {
       // User is logged in.
       // If this is the first load after authentication check,
-      // we might want to ensure the store is in a good state.
+      // we must ensure the store is in a valid state for this user.
       if (!initialLoadDone.current) {
         const current = useResumeStore.getState().currentResume;
         if (!current || !current.ownerId) {
@@ -36,7 +37,8 @@ export function ZustandAuthListener() {
             // set it to a new blank one for the current user.
             setCurrentResume(createNewBlankResume(user.uid));
         } else if (current.ownerId !== user.uid) {
-            // If the stored resume belongs to a different user, clear it.
+            // If the stored resume belongs to a different user, clear storage
+            // and create a new blank resume for the correct user.
             useResumeStore.persist.clearStorage();
             setCurrentResume(createNewBlankResume(user.uid));
         }
