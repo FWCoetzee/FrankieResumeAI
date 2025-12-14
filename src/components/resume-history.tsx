@@ -26,11 +26,8 @@ import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { errorEmitter } from "@/firebase/error-emitter";
 
-type WithId<T> = T & { id: string };
-
-// Firestore documents have Timestamps
-type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
-  resumeId: string;
+// This type represents the data structure as it comes from Firestore, with Timestamps.
+type FirestoreResumeDoc = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
@@ -42,26 +39,41 @@ type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'section
   }
 };
 
-const HistoryItem = ({ resume, onDeleteClick }: { resume: WithId<FirestoreResumeData>, onDeleteClick: () => void }) => {
+// This type represents the data structure we use in the component, with Dates.
+type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
+  id: string; // Add id to the type
+  createdAt: Date;
+  updatedAt: Date;
+  sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
+    summary: { content: string; lastEdited: Date };
+    experience: (Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
+      startDate: Date;
+      endDate: Date | null;
+    })[]
+  }
+};
+
+
+const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, onDeleteClick: () => void }) => {
   const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
 
   const handleSelect = () => {
-    // Convert Firestore Timestamps to ISO strings for our app's schema
+    // Convert Dates back to ISO strings for our app's internal schema (ResumeData)
     const formData: ResumeData = {
         ...resume,
-        createdAt: resume.createdAt.toDate().toISOString(),
-        updatedAt: resume.updatedAt.toDate().toISOString(),
+        createdAt: resume.createdAt.toISOString(),
+        updatedAt: resume.updatedAt.toISOString(),
         sections: {
           ...resume.sections,
           summary: {
             content: resume.sections.summary.content,
-            lastEdited: resume.sections.summary.lastEdited.toDate().toISOString(),
+            lastEdited: resume.sections.summary.lastEdited.toISOString(),
           },
           experience: resume.sections.experience.map(exp => ({
             ...exp,
-            startDate: exp.startDate.toDate().toISOString(),
-            endDate: exp.endDate ? exp.endDate.toDate().toISOString() : null,
+            startDate: exp.startDate.toISOString(),
+            endDate: exp.endDate ? exp.endDate.toISOString() : null,
           })),
         }
     };
@@ -78,7 +90,7 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: WithId<FirestoreResume
       <div className="space-y-1">
         <p className="font-semibold">{resume.title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-            <span>Updated {formatDistanceToNow(resume.updatedAt.toDate(), { addSuffix: true })}</span>
+            <span>Updated {formatDistanceToNow(resume.updatedAt, { addSuffix: true })}</span>
             <Badge variant="outline">{resume.templateId}</Badge>
         </div>
       </div>
@@ -98,11 +110,11 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: WithId<FirestoreResume
 export function ResumeHistory() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [deleteCandidate, setDeleteCandidate] = useState<WithId<FirestoreResumeData> | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<ComponentResumeData | null>(null);
   const { clearCurrentResume } = useResumeStore();
   const { toast } = useToast();
   
-  const [resumes, setResumes] = useState<WithId<FirestoreResumeData>[] | null>(null);
+  const [resumes, setResumes] = useState<ComponentResumeData[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
@@ -130,9 +142,29 @@ export function ResumeHistory() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: WithId<FirestoreResumeData>[] = [];
+        const results: ComponentResumeData[] = [];
         snapshot.forEach((doc) => {
-          results.push({ ...(doc.data() as FirestoreResumeData), id: doc.id });
+          const data = doc.data() as FirestoreResumeDoc;
+          // ** THE FIX IS HERE **: Convert all Timestamps to Dates
+          const componentData: ComponentResumeData = {
+            ...data,
+            id: doc.id,
+            createdAt: data.createdAt.toDate(),
+            updatedAt: data.updatedAt.toDate(),
+            sections: {
+                ...data.sections,
+                summary: {
+                    content: data.sections.summary.content,
+                    lastEdited: data.sections.summary.lastEdited.toDate(),
+                },
+                experience: data.sections.experience.map(exp => ({
+                    ...exp,
+                    startDate: exp.startDate.toDate(),
+                    endDate: exp.endDate ? exp.endDate.toDate() : null,
+                }))
+            }
+          };
+          results.push(componentData);
         });
         setResumes(results);
         setError(null);
