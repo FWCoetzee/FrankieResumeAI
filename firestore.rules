@@ -1,28 +1,17 @@
 /**
- * This ruleset enforces a strict user-ownership model for a resume-building application.
- * All user-generated data is private and can only be accessed by the user who created it.
+ * This ruleset is designed for the "AI Resume Builder" application and enforces a strict,
+ * user-centric security model. All user-generated content is private.
  *
  * Core Philosophy:
- * The security model is built on the principle of least privilege. By default, all access is
- * denied. Rules explicitly grant access only to authenticated users for their own data,
- * preventing any user from seeing or modifying another user's information.
+ * - Least Privilege: By default, all access is denied. Rules explicitly grant access.
+ * - User Ownership: The primary authorization mechanism is matching the authenticated
+ *   user's UID (`request.auth.uid`) with an `ownerId` or document ID.
+ * - Flat Hierarchy: Root-level collections are used to avoid deep nesting and simplify rules.
  *
  * Data Structure:
- * The data is organized hierarchically under a top-level `users` collection. Each user's
- * profile (`UserProfile`) is a document at `/users/{userId}`. All other data related to that
- * user, such as their resume data (`ResumeData`), is stored in subcollections under their
- * specific user document (e.g., `/users/{userId}/resumeData/{resumeDataId}`).
- *
- * Key Security Decisions:
- * - Path-Based Ownership: Authorization is primarily determined by matching the authenticated
- *   user's UID (`request.auth.uid`) with the `{userId}` wildcard in the document path.
- * - No Public Data: There are no publicly readable collections. All access requires authentication.
- * - User Privacy: Listing all users from the top-level `/users` collection is explicitly disallowed
- *   to protect user privacy and prevent data scraping.
- * - Strict Data Validation: On create and update, rules validate the shape and type of the
- *   incoming data (`request.resource.data`) to ensure data integrity and prevent malicious or malformed data.
- * - Immutability: On update, key fields like `id` and `userId` are enforced as immutable to
- *   prevent re-associating data with a different user or entity.
+ * - /users/{userId}: Public-facing user profile information.
+ * - /resumes/{resumeId}: Core resume documents, owned by a user.
+ * - Other collections for subscriptions, payments, etc., with specific access controls.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -31,7 +20,6 @@ service cloud.firestore {
     // ####################
     // ## Helper Functions
     // ####################
-
     function isSignedIn() {
       return request.auth != null;
     }
@@ -39,40 +27,79 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
-    // ####################
-    // ## UserProfile Rules
-    // ####################
 
+    // ####################
+    // ## /users Collection
+    // ####################
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // CRITICAL: Prevent enumeration of all users.
+      allow get: if isSignedIn();
+      allow list: if false; // Prevent enumeration of all users.
+      
+      // A user can create their own profile document.
       allow create: if isOwner(userId)
-                      && request.resource.data.id == userId // Enforce internal ID on create
-                      && request.resource.data.email == request.auth.token.email; // Email must match token
+                    && request.resource.data.userId == userId
+                    && request.resource.data.email == request.auth.token.email;
+      
+      // A user can update their own profile, but cannot change their email or userId.
       allow update: if isOwner(userId)
-                      && request.resource.data.id == resource.data.id // ID is immutable
-                      && request.resource.data.email == resource.data.email; // Email is immutable
+                    && request.resource.data.email == resource.data.email
+                    && request.resource.data.userId == resource.data.userId;
+    }
 
-      // ####################
-      // ## ResumeData Rules (Subcollection)
-      // ####################
+    // ####################
+    // ## /resumes Collection
+    // ####################
+    match /resumes/{resumeId} {
+      // Allow read/delete only if the user is the owner of the document.
+      allow get, delete: if isOwner(resource.data.ownerId);
 
-      match /resumeData/{resumeDataId} {
-        allow get, list: if isOwner(userId);
-        
-        allow create: if isOwner(userId)
-                       && request.resource.data.userId == userId // Enforce ownership link
-                       && request.resource.data.id == resumeDataId // Enforce internal ID
-                       && request.resource.data.target_job_title is string
-                       && request.resource.data.personal_info.full_name is string;
+      // Allow listing resumes only for queries that filter by the user's own `ownerId`.
+      allow list: if isSignedIn() && request.query.resource.data.ownerId == request.auth.uid;
+      
+      // Allow creating a resume if the user is signed in and sets themselves as the owner.
+      // Validate required fields on creation.
+      allow create: if isOwner(request.resource.data.ownerId)
+                    && request.resource.data.resumeId == resumeId
+                    && request.resource.data.title is string
+                    && request.resource.data.templateId is string;
 
-        allow update: if isOwner(userId)
-                       && request.resource.data.userId == resource.data.userId // userId is immutable
-                       && request.resource.data.id == resource.data.id; // id is immutable
+      // Allow updating a resume if the user is the owner.
+      // Critical fields like ownerId and resumeId are immutable.
+      allow update: if isOwner(resource.data.ownerId)
+                    && request.resource.data.ownerId == resource.data.ownerId
+                    && request.resource.data.resumeId == resource.data.resumeId;
+    }
 
-        allow delete: if isOwner(userId);
-      }
+    // ####################
+    // ## Read-Only Collections
+    // ####################
+    
+    // Templates are public and read-only for all users.
+    match /templates/{templateId} {
+      allow get: if true;
+      allow write: if false; // No one can write to templates.
+    }
+
+    // Global app config is public and read-only.
+    match /appConfig/global {
+        allow get: if true;
+        allow write: if false; // Only modifiable from the Firebase Console.
+    }
+
+    // ####################
+    // ## Restricted Collections
+    // ####################
+
+    // Subscriptions are read-only for the owner.
+    match /subscriptions/{userId} {
+        allow get: if isOwner(userId);
+        allow write: if false; // Writes should only happen from a trusted backend server.
+    }
+
+    // All other collections are locked down by default.
+    // (resumeVersions, payments, aiRequests, appLogs)
+    match /{collection}/{docId} {
+      allow read, write: if false;
     }
   }
 }

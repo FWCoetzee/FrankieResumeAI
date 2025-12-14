@@ -5,15 +5,13 @@ import { generateResumeFromData, type GenerateResumeFromDataInput, type Generate
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput, type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
-import { resumeFormSchema, type ResumeFormData } from "@/lib/schema";
-import { getFirestore } from "firebase/firestore";
+import { type ResumeData } from "@/lib/schema";
 import { saveOrUpdateResumeDataClient } from "@/lib/client-firestore";
-import { initializeFirebase } from "@/firebase";
 
+// This function now expects the full ResumeData object, including metadata like ownerId.
 export async function generateResumeAction(
   userId: string | null,
-  resumeId: string | null, // Added to know if we are updating
-  data: ResumeFormData
+  resumeData: ResumeData
 ): Promise<{
   error?: string;
   resume?: GenerateResumeFromDataOutput;
@@ -25,37 +23,57 @@ export async function generateResumeAction(
     return { error: "You must be logged in to generate a resume." };
   }
 
-  const validation = resumeFormSchema.safeParse(data);
-  if (!validation.success) {
-    console.error("Zod validation failed:", validation.error.flatten());
-    return { error: "Invalid data provided. Check the form for errors." };
-  }
-  
-  const { jobDescription, ...resumeCoreData } = validation.data;
-
+  // The AI flows require a different data structure than our new resumeSchema.
+  // We need to map the data from our new structure to the old structure the AI expects.
+  // This is a temporary measure until the AI flows are updated.
   const aiPayload = {
-    ...resumeCoreData,
+    target_job_title: resumeData.title,
+    // These fields are no longer in our new model but are required by the AI flows.
+    // We provide sensible defaults.
+    resume_intent: "Tech (ATS-Optimized)",
+    experience_level: "Mid-level",
+    resume_style: "Modern",
+    language: "English",
+    personal_info: {
+      full_name: "User", // This data is now in the /users collection, not on the resume object
+      email: "",
+      phone: "",
+      location: "",
+      summary: resumeData.sections.summary.content,
+    },
+    work_experience: resumeData.sections.experience.map(exp => ({
+        job_title: exp.role,
+        company: exp.company,
+        start_date: exp.startDate,
+        end_date: exp.endDate || undefined,
+        responsibilities: exp.bullets.join('\n'),
+        achievements: '',
+    })),
+    education: [],
+    skills: resumeData.sections.skills,
+    projects: [],
+    certifications: [],
   };
-  
-  const jobDescForAI = jobDescription || `A generic ${aiPayload.experience_level} ${aiPayload.target_job_title} role.`;
+
+  const jobDescForAI = `A generic role for a candidate with skills like ${resumeData.sections.skills.join(', ')}.`;
 
   try {
     const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
-      generateResumeFromData(aiPayload as GenerateResumeFromDataInput),
+      generateResumeFromData(aiPayload as unknown as GenerateResumeFromDataInput),
       provideResumeSuggestions({
         ...aiPayload,
         jobDescription: jobDescForAI,
-      } as ProvideResumeSuggestionsInput),
+      } as unknown as ProvideResumeSuggestionsInput),
       generateCoverLetterFromData({
         ...aiPayload,
         jobDescription: jobDescForAI,
-      } as GenerateCoverLetterFromDataInput),
-      generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput)
+      } as unknown as GenerateCoverLetterFromDataInput),
+      generateLinkedInProfile(aiPayload as unknown as GenerateLinkedInProfileInput)
     ]);
     
-    // Get firestore instance and save data on the client
-    const { firestore } = initializeFirebase();
-    saveOrUpdateResumeDataClient(firestore, userId, resumeId, validation.data);
+    // Save the complete resume data to Firestore.
+    // The resumeId is now part of the resumeData object.
+    saveOrUpdateResumeDataClient(userId, resumeData);
     
     return {
       resume: resumeResult,

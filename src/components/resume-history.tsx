@@ -2,7 +2,7 @@
 'use client';
 
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, where, orderBy, Timestamp } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { History, Loader2, ServerCrash, FileText, ArrowRight, Trash2 } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
@@ -22,14 +22,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
-import { initializeFirebase } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 // Firestore documents have Timestamps
-type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt'> & {
-  id: string;
+type FirestoreResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
+  resumeId: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
+    summary: { content: string; lastEdited: Timestamp };
+    experience: (Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
+      startDate: Timestamp;
+      endDate: Timestamp | null;
+    })[]
+  }
 };
 
 const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, onDeleteClick: () => void }) => {
@@ -37,10 +43,23 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, o
   const { toast } = useToast();
 
   const handleSelect = () => {
+    // Convert Firestore Timestamps to ISO strings for our app's schema
     const formData: ResumeData = {
         ...resume,
         createdAt: resume.createdAt.toDate().toISOString(),
         updatedAt: resume.updatedAt.toDate().toISOString(),
+        sections: {
+          ...resume.sections,
+          summary: {
+            content: resume.sections.summary.content,
+            lastEdited: resume.sections.summary.lastEdited.toDate().toISOString(),
+          },
+          experience: resume.sections.experience.map(exp => ({
+            ...exp,
+            startDate: exp.startDate.toDate().toISOString(),
+            endDate: exp.endDate ? exp.endDate.toDate().toISOString() : null,
+          })),
+        }
     };
     setCurrentResume(formData);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -53,11 +72,10 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: FirestoreResumeData, o
   return (
     <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors group">
       <div className="space-y-1">
-        <p className="font-semibold">{resume.target_job_title}</p>
+        <p className="font-semibold">{resume.title}</p>
         <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
             <span>Updated {formatDistanceToNow(resume.updatedAt.toDate(), { addSuffix: true })}</span>
-            <Badge variant="outline">{resume.experience_level}</Badge>
-            <Badge variant="outline">{resume.resume_style}</Badge>
+            <Badge variant="outline">{resume.templateId}</Badge>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -83,7 +101,9 @@ export function ResumeHistory() {
   const resumesQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return query(
-      collection(firestore, 'users', user.uid, 'resumeData'),
+      collection(firestore, 'resumes'),
+      where('ownerId', '==', user.uid),
+      where('isDeleted', '==', false),
       orderBy('updatedAt', 'desc')
     );
   }, [user, firestore]);
@@ -91,11 +111,10 @@ export function ResumeHistory() {
   const { data: resumes, isLoading, error } = useCollection<FirestoreResumeData>(resumesQuery);
 
   const handleConfirmDelete = () => {
-    if (deleteCandidate?.id && user?.uid) {
-        const { firestore } = initializeFirebase();
-        deleteResumeDataClient(firestore, user.uid, deleteCandidate.id);
+    if (deleteCandidate?.resumeId) {
+        deleteResumeDataClient(deleteCandidate.resumeId);
         
-        clearCurrentResume(deleteCandidate.id);
+        clearCurrentResume(deleteCandidate.resumeId);
         
         toast({
             title: "Resume Deleted",
@@ -147,7 +166,7 @@ export function ResumeHistory() {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.id} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
+                <HistoryItem key={resume.resumeId} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
             ))}
         </div>
     );
@@ -160,7 +179,7 @@ export function ResumeHistory() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the resume for "{deleteCandidate?.target_job_title}".
+              This action cannot be undone. This will permanently delete the resume for "{deleteCandidate?.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

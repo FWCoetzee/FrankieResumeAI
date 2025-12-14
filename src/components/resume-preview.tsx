@@ -76,7 +76,7 @@ const Placeholder = () => (
 );
 
 const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeData) => void, isLoading: boolean }) => {
-  const { personal_info, work_experience, education, skills, projects, certifications, target_job_title } = resumeData;
+  const { title, sections } = resumeData;
 
   return (
     <Card className="shadow-lg backdrop-blur-sm bg-card/80">
@@ -87,89 +87,44 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
       <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-muted/50 rounded-md border">
         
         <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold">{personal_info.full_name}</h2>
-            <p className="text-muted-foreground">{target_job_title}</p>
-            <div className="flex justify-center gap-4 text-xs mt-2 text-muted-foreground">
-                <span>{personal_info.email}</span>
-                <span>|</span>
-                <span>{personal_info.phone}</span>
-                {personal_info.location && <><span>|</span><span>{personal_info.location}</span></>}
-            </div>
+            <h2 className="text-2xl font-bold">{title}</h2>
         </div>
 
-        {personal_info.summary && (
+        {sections.summary.content && (
             <div className="space-y-2">
                 <h3 className="text-md font-semibold text-center uppercase tracking-wider text-muted-foreground">Summary</h3>
-                <p className="text-center text-sm text-pretty">{personal_info.summary}</p>
+                <p className="text-center text-sm text-pretty">{sections.summary.content}</p>
             </div>
         )}
         
         <Separator />
         
-        {Array.isArray(skills) && skills.length > 0 && (
+        {Array.isArray(sections.skills) && sections.skills.length > 0 && (
            <div className="space-y-2">
               <h3 className="font-semibold text-md">Skills</h3>
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
+                {sections.skills.map((skill, index) => <Badge key={index} variant="secondary">{skill}</Badge>)}
               </div>
             </div>
         )}
 
-        {work_experience.length > 0 && (
+        {sections.experience.length > 0 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-md">Work Experience</h3>
-            {work_experience.map((job, index) => (
+            {sections.experience.map((job, index) => (
               <div key={index} className="space-y-1.5 pl-4">
                 <div className="flex justify-between items-baseline">
-                    <p className="font-semibold">{job.job_title} at {job.company}</p>
-                    <p className="text-xs text-muted-foreground">{job.start_date} - {job.end_date}</p>
+                    <p className="font-semibold">{job.role} at {job.company}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(job.startDate).toLocaleDateString()} - {job.endDate ? new Date(job.endDate).toLocaleDateString() : 'Present'}</p>
                 </div>
-                {job.responsibilities && <p className="text-pretty text-muted-foreground"> {job.responsibilities}</p>}
-                {job.achievements && <p className="text-pretty"><strong>Achievements:</strong> {job.achievements}</p>}
+                 {job.bullets && job.bullets.length > 0 && 
+                    <ul className="list-disc pl-5">
+                      {job.bullets.map((bullet, i) => <li key={i} className="text-pretty">{bullet}</li>)}
+                    </ul>
+                  }
               </div>
             ))}
           </div>
-        )}
-        
-        {education.length > 0 && (
-           <div className="space-y-2">
-            <h3 className="font-semibold text-md">Education</h3>
-              {education.map((edu, index) => (
-                <div key={index} className="space-y-1 flex justify-between items-baseline pl-4">
-                  <div>
-                    <p className="font-semibold">{edu.degree}</p>
-                    <p className="text-muted-foreground">{edu.institution}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{edu.start_year} - {edu.end_year}</p>
-                </div>
-              ))}
-            </div>
-        )}
-
-        {Array.isArray(projects) && projects.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-md">Projects</h3>
-            {projects.map((proj, index) => (
-              <div key={index} className="space-y-1.5 pl-4">
-                <p className="font-semibold">{proj.title}</p>
-                {proj.description && <p className="text-pretty text-muted-foreground">{proj.description}</p>}
-                {Array.isArray(proj.technologies) && proj.technologies.length > 0 &&
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {proj.technologies.map((tech, i) => <Badge key={i} variant="outline">{tech}</Badge>)}
-                  </div>
-                }
-              </div>
-            ))}
-          </div>
-        )}
-
-        {Array.isArray(certifications) && certifications.length > 0 && (
-           <div className="space-y-2">
-            <h3 className="font-semibold text-md">Certifications</h3>
-              <div className="flex flex-wrap gap-2 pl-4">
-                {certifications.map((cert, index) => <Badge key={index} variant="secondary">{cert}</Badge>)}
-              </div>
-            </div>
         )}
 
       </CardContent>
@@ -189,16 +144,16 @@ const TemplateRenderer = ({
     style
 }: {
     resume: GeneratedResumeData;
-    style: ResumeData['resume_style'];
+    style: string;
 }) => {
     const templateProps = { resume };
 
     switch (style) {
-        case "Minimalist":
+        case "minimalist":
             return <MinimalistTemplate {...templateProps} />;
-        case "Creative":
+        case "creative":
             return <CreativeTemplate {...templateProps} />;
-        case "Modern":
+        case "modern":
         default:
             return <ModernTemplate {...templateProps} />;
     }
@@ -233,7 +188,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     const root = createRoot(printContainer);
 
     const contentToPrint = activeTab === 'preview'
-      ? <TemplateRenderer resume={result.resume} style={resumeData.resume_style} />
+      ? <TemplateRenderer resume={result.resume} style={resumeData.templateId} />
       : <CoverLetterContent content={result.coverLetter} />;
 
     root.render(contentToPrint);
@@ -282,7 +237,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                       <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
                                 resume={result.resume}
-                                style={resumeData.resume_style}
+                                style={resumeData.templateId}
                             />
                       </div>
                       <div className="mt-4 flex justify-end gap-2 print-hidden">

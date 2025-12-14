@@ -1,223 +1,92 @@
 {
   "entities": {
-    "ResumeData": {
+    "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ResumeData",
+      "title": "User",
+      "description": "Stores authentication-linked user profile data, preferences, onboarding progress, and plan status.",
       "type": "object",
-      "description": "Represents the structured data collected for generating a resume. This document stores the user's input and preferences for a single resume project.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ResumeData entity. Matches the Firestore document ID."
-        },
-        "userId": {
-          "type": "string",
-          "description": "The UID of the user who owns this resume. (Relationship: UserProfile 1:N ResumeData)"
-        },
-        "jobDescription": {
-          "type": "string",
-          "description": "The full job description the user is targeting, used by the AI for tailoring."
-        },
-        "target_job_title": {
-          "type": "string",
-          "description": "The specific job title the user is targeting."
-        },
-        "resume_intent": {
-          "type": "string",
-          "enum": ["Professional Corporate", "Creative", "Tech (ATS-Optimized)", "Student / No Experience", "Career Switch"],
-          "description": "The user's primary goal for this resume."
-        },
-        "experience_level": {
-          "type": "string",
-          "enum": ["Entry-level", "Mid-level", "Senior", "Lead", "Executive"],
-          "description": "The user's self-reported experience level."
-        },
-        "resume_style": {
-          "type": "string",
-          "enum": ["Modern", "Minimalist", "Creative", "Corporate", "Clean ATS-Friendly"],
-          "description": "The selected visual template style for the resume."
-        },
-        "language": {
-          "type": "string",
-          "enum": ["English", "Afrikaans", "isiNdebele", "isiXhosa", "isiZulu", "Sepedi", "Sesotho", "Setswana", "siSwati", "Tshivenda", "Xitsonga"],
-          "description": "The language for the generated resume content."
-        },
-        "personal_info": {
+        "userId": { "type": "string", "description": "Matches Firebase Auth UID." },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": ["string", "null"], "format": "uri" },
+        "plan": { "type": "string", "enum": ["free", "pro", "premium"] },
+        "onboardingStep": { "type": "number" },
+        "preferences": {
           "type": "object",
           "properties": {
-            "full_name": { "type": "string" },
-            "email": { "type": "string", "format": "email" },
-            "phone": { "type": "string" },
-            "location": { "type": "string" },
-            "summary": { "type": "string" }
-          },
-          "required": ["full_name", "email", "phone"]
-        },
-        "work_experience": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "job_title": { "type": "string" },
-              "company": { "type": "string" },
-              "start_date": { "type": "string" },
-              "end_date": { "type": "string" },
-              "responsibilities": { "type": "string" },
-              "achievements": { "type": "string" }
-            },
-            "required": ["job_title", "company"]
+            "theme": { "type": "string", "enum": ["hud", "light", "dark"] },
+            "language": { "type": "string" },
+            "notifications": { "type": "boolean" }
           }
         },
-        "education": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "degree": { "type": "string" },
-              "institution": { "type": "string" },
-              "start_year": { "type": "string" },
-              "end_year": { "type": "string" }
-            },
-            "required": ["degree", "institution"]
-          }
-        },
-        "skills": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "projects": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "title": { "type": "string" },
-              "description": { "type": "string" },
-              "technologies": { "type": "array", "items": { "type": "string" } }
-            },
-            "required": ["title", "technologies"]
-          }
-        },
-        "certifications": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Server-side timestamp indicating when the resume was first created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Server-side timestamp indicating when the resume was last updated.",
-          "format": "date-time"
-        }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "target_job_title",
-        "resume_intent",
-        "experience_level",
-        "resume_style",
-        "language",
-        "personal_info",
-        "work_experience",
-        "education",
-        "skills",
-        "projects",
-        "certifications",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["userId", "email", "displayName", "plan", "createdAt", "updatedAt"]
     },
-    "UserProfile": {
+    "Resume": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "UserProfile",
+      "title": "Resume",
+      "description": "Each resume is a standalone project owned by a user. Optimized for editing, versioning, and AI augmentation.",
       "type": "object",
-      "description": "Represents a user profile within the application. This document stores essential user information separate from authentication data.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity. Must match the Firebase Auth UID and the document ID."
+        "resumeId": { "type": "string" },
+        "ownerId": { "type": "string", "description": "Foreign key to the users collection." },
+        "title": { "type": "string" },
+        "templateId": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "completed"] },
+        "sections": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "object",
+              "properties": { "content": { "type": "string" }, "lastEdited": { "type": "string", "format": "date-time" } }
+            },
+            "experience": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string" },
+                  "company": { "type": "string" },
+                  "role": { "type": "string" },
+                  "startDate": { "type": "string", "format": "date-time" },
+                  "endDate": { "type": ["string", "null"], "format": "date-time" },
+                  "bullets": { "type": "array", "items": { "type": "string" } },
+                  "order": { "type": "number" }
+                }
+              }
+            },
+            "education": { "type": "array", "items": { "type": "object" } },
+            "skills": { "type": "array", "items": { "type": "string" } }
+          }
         },
-        "email": {
-          "type": "string",
-          "description": "User's email address.",
-          "format": "email"
+        "settings": {
+          "type": "object",
+          "properties": {
+            "fontSize": { "type": "number" },
+            "spacing": { "type": "string", "enum": ["normal", "compact"] }
+          }
         },
-        "displayName": {
-          "type": "string",
-          "description": "User's public display name."
-        },
-        "photoURL": {
-          "type": "string",
-          "description": "URL for the user's avatar image.",
-          "format": "uri"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Server-side timestamp indicating when the user profile was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Server-side timestamp indicating when the user profile was last updated.",
-          "format": "date-time"
-        }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "isDeleted": { "type": "boolean" }
       },
-      "required": [
-        "id",
-        "email",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["resumeId", "ownerId", "title", "templateId", "status", "sections", "createdAt", "updatedAt"]
     }
-  },
-  "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
   },
   "firestore": {
     "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/entities/UserProfile"
-          },
-          "description": "Stores user profile information. The document ID must match the Firebase Auth UID. Path-based ownership ensures only the user can access their profile data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user (matches Firebase Auth UID)."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/resumeData/{resumeDataId}",
-        "definition": {
-          "entityName": "ResumeData",
-          "schema": {
-            "$ref": "#/entities/ResumeData"
-          },
-          "description": "Stores resume data for a specific user. Path-based ownership guarantees only the user can access their resume data. Stored in a subcollection under the user's document.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "resumeDataId",
-              "description": "The unique identifier for the resume data."
-            }
-          ]
-        }
-      }
+      { "path": "/users/{userId}", "definition": { "entityName": "User", "schema": { "$ref": "#/entities/User" } } },
+      { "path": "/resumes/{resumeId}", "definition": { "entityName": "Resume", "schema": { "$ref": "#/entities/Resume" } } },
+      { "path": "/resumeVersions/{versionId}", "description": "Immutable snapshots of resume states for undo, restore, and AI comparison." },
+      { "path": "/subscriptions/{userId}", "description": "Tracks paid plans, feature access, and Stripe metadata." },
+      { "path": "/payments/{paymentId}", "description": "Audit trail for all payments." },
+      { "path": "/aiRequests/{requestId}", "description": "Logs AI interactions for debugging, analytics, and quality control." },
+      { "path": "/templates/{templateId}", "description": "Stores predefined resume templates." },
+      { "path": "/appConfig/global", "description": "Global application configuration and feature flags." }
     ],
-    "reasoning": "The Firestore structure is designed for scalability and security. User data is strictly segregated by nesting it within a `/users/{userId}` path. This enables powerful and simple security rules based on `request.auth.uid`. Storing `resumeData` in a subcollection allows for efficient querying of a user's resumes without loading all resume data at once. This one-to-many relationship (user to resumes) is a standard and recommended Firestore pattern."
+    "reasoning": "This Firestore structure uses root-level collections to maintain a shallow data hierarchy, which is optimal for performance and security rule simplicity. Relationships are managed via stored IDs (e.g., `ownerId` in resumes) rather than deep nesting, following Firebase-recommended patterns. This design is scalable, secure, and supports efficient querying for the application's primary use cases."
   }
 }

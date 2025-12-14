@@ -23,7 +23,7 @@ export function ResumeBuilder() {
 
   // Zustand store provides all the state and actions
   const {
-    formActionData,
+    currentResume,
     result,
     isLoading,
     isReviewing,
@@ -43,13 +43,16 @@ export function ResumeBuilder() {
       title: "Generating your documents...",
       description: "The AI is working its magic. This may take a moment.",
     });
+    
+    // Ensure the ownerId is set correctly before sending to the action.
+    const dataWithUser = { ...data, ownerId: user.uid };
 
-    const response = await generateResumeAction(user.uid, data.id ?? null, data);
-    generateAndSetResults(response, data); // This action is now in the store
+    const response = await generateResumeAction(user.uid, dataWithUser);
+    generateAndSetResults(response, dataWithUser); // This action is now in the store
   };
 
   const handleAcceptEdit = (fieldPath: string, newValue: string | string[]) => {
-    if (!result || !formActionData) return;
+    if (!result || !currentResume) return;
   
     // Use lodash.cloneDeep to create a new object to avoid direct mutation
     const newResult = cloneDeep(result);
@@ -71,7 +74,7 @@ export function ResumeBuilder() {
          <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={formActionData} 
+          resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
           onGenerate={handleGenerate}
@@ -99,7 +102,7 @@ export function ResumeBuilder() {
         <ResumePreview 
           result={result} 
           isLoading={isLoading} 
-          resumeData={formActionData} 
+          resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
           onGenerate={handleGenerate}

@@ -7,12 +7,11 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowRight, Sparkles, Check, Briefcase, GraduationCap, Target, Upload, FilePlus, BrainCircuit, Bot, Info, CheckCircle } from 'lucide-react';
+import { ArrowRight, Sparkles, FilePlus, Upload, Info } from 'lucide-react';
 import { ResumeBuilder } from './resume-builder';
 import { useResumeStore } from '@/hooks/use-resume-store';
-import { experienceLevelSchema, resumeIntentSchema, type ResumeData } from '@/lib/schema';
+import type { ResumeData } from '@/lib/schema';
+import { v4 as uuidv4 } from "uuid";
 
 const goals = [
   { id: 'Tech (ATS-Optimized)', title: 'Apply for my dream job', description: 'Tailor every detail for a specific role.' },
@@ -30,6 +29,24 @@ const experienceLevels = [
   { id: 'Executive', label: 'Executive', description: 'C-Suite or other top-level leadership.' },
 ];
 
+const emptyValues: Partial<ResumeData> = {
+  title: "",
+  templateId: "modern",
+  status: 'draft',
+  sections: {
+    summary: { content: "", lastEdited: new Date().toISOString() },
+    experience: [],
+    education: [],
+    skills: [],
+  },
+  settings: {
+    fontSize: 10,
+    spacing: 'normal',
+  },
+  isDeleted: false,
+};
+
+
 const StepWelcome = ({ onNext }: { onNext: () => void }) => (
   <Card className="text-center">
     <CardHeader>
@@ -46,14 +63,14 @@ const StepWelcome = ({ onNext }: { onNext: () => void }) => (
   </Card>
 );
 
-const StepGoal = ({ onNext, onSelect }: { onNext: () => void, onSelect: (goal: (typeof resumeIntentSchema.options)[number]) => void }) => (
+const StepGoal = ({ onNext, onSelect }: { onNext: () => void, onSelect: (val: string) => void }) => (
   <Card>
     <CardHeader>
       <CardTitle>What's the mission?</CardTitle>
       <CardDescription>Select your primary objective. This helps the AI calibrate its focus.</CardDescription>
     </CardHeader>
     <CardContent>
-      <RadioGroup onValueChange={(v) => onSelect(v as any)} className="space-y-4">
+      <RadioGroup onValueChange={onSelect} className="space-y-4">
         {goals.map(goal => (
           <Label key={goal.id} htmlFor={goal.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
             <RadioGroupItem value={goal.id} id={goal.id} />
@@ -71,14 +88,14 @@ const StepGoal = ({ onNext, onSelect }: { onNext: () => void, onSelect: (goal: (
   </Card>
 );
 
-const StepExperience = ({ onNext, onSelect }: { onNext: () => void, onSelect: (level: (typeof experienceLevelSchema.options)[number]) => void }) => (
+const StepExperience = ({ onNext, onSelect }: { onNext: () => void, onSelect: (val: string) => void }) => (
   <Card>
     <CardHeader>
       <CardTitle>Define Your Experience Level</CardTitle>
       <CardDescription>How many years have you been in the workforce? This sets the tone.</CardDescription>
     </CardHeader>
     <CardContent>
-      <RadioGroup onValueChange={(v) => onSelect(v as any)} className="grid md:grid-cols-2 gap-4">
+      <RadioGroup onValueChange={onSelect} className="grid md:grid-cols-2 gap-4">
         {experienceLevels.map(level => (
           <Label key={level.id} htmlFor={level.id} className="flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-muted has-[input:checked]:bg-muted has-[input:checked]:border-primary transition-colors">
             <RadioGroupItem value={level.id} id={level.id} />
@@ -126,21 +143,11 @@ const StepJobTarget = ({ onNext, onTargetChange }: { onNext: () => void, onTarge
   <Card>
     <CardHeader>
       <CardTitle>What Job Are You Targeting?</CardTitle>
-      <CardDescription>Specify the exact role you're aiming for. The more precise, the better the AI's output.</CardDescription>
+      <CardDescription>Specify the exact role you're aiming for. This sets the title of your new resume project.</CardDescription>
     </CardHeader>
     <CardContent>
       <div className="flex items-center gap-2">
         <Input placeholder="e.g., Senior Product Manager" onChange={(e) => onTargetChange(e.target.value)} />
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon"><Info className="h-4 w-4" /></Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>The AI uses this to select keywords and frame your experience.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
     </CardContent>
     <CardFooter>
@@ -149,35 +156,12 @@ const StepJobTarget = ({ onNext, onTargetChange }: { onNext: () => void, onTarge
   </Card>
 );
 
-const emptyValues: ResumeData = {
-  jobDescription: "",
-  target_job_title: "",
-  resume_intent: "Tech (ATS-Optimized)",
-  experience_level: "Mid-level",
-  resume_style: "Modern",
-  language: "English",
-  personal_info: {
-    full_name: "",
-    email: "",
-    phone: "",
-    location: "",
-    summary: ""
-  },
-  work_experience: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certifications: [],
-};
-
 
 export function OnboardingFlow() {
   const [step, setStep] = useState(0);
-  const { setInitialData } = useResumeStore();
+  const { setCurrentResume } = useResumeStore();
   const [onboardingData, setOnboardingData] = useState({
-    resume_intent: emptyValues.resume_intent,
-    experience_level: emptyValues.experience_level,
-    target_job_title: '',
+      title: ""
   });
   const [showBuilder, setShowBuilder] = useState(false);
 
@@ -190,9 +174,9 @@ export function OnboardingFlow() {
   const handleFinish = () => {
     const initialData = {
       ...emptyValues,
-      ...onboardingData,
-    };
-    setInitialData(initialData);
+      title: onboardingData.title || "My New Resume",
+    } as ResumeData;
+    setCurrentResume(initialData);
     setShowBuilder(true);
   };
 
@@ -205,15 +189,12 @@ export function OnboardingFlow() {
       case 0:
         return <StepWelcome onNext={handleNext} />;
       case 1:
-        return <StepGoal onNext={handleNext} onSelect={handleSelect('resume_intent')} />;
+        return <StepUpload onNext={() => setStep(3)} />; // Skip Goal and Experience for now
       case 2:
-        return <StepExperience onNext={handleNext} onSelect={handleSelect('experience_level')} />;
-      case 3:
-        return <StepUpload onNext={handleNext} />;
-      case 4:
-        return <StepJobTarget onNext={handleFinish} onTargetChange={handleSelect('target_job_title')} />;
+        return <StepJobTarget onNext={handleFinish} onTargetChange={handleSelect('title')} />;
       default:
-        return <StepWelcome onNext={() => setStep(1)} />;
+        // Default to job target step if flow is messed up
+        return <StepJobTarget onNext={handleFinish} onTargetChange={handleSelect('title')} />;
     }
   };
 

@@ -1,119 +1,120 @@
 import { z } from "zod";
 
 // ####################################
-// # Form & Core Data Schemas
+// # Base Enums
 // ####################################
 
-export const personalInfoSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone number is required"),
-  location: z.string().optional(),
-  summary: z.string().optional(),
+export const planSchema = z.enum(["free", "pro", "premium"]);
+export const resumeStatusSchema = z.enum(["draft", "completed"]);
+export const themeSchema = z.enum(["hud", "light", "dark"]);
+
+// ####################################
+// # User-related Schemas
+// ####################################
+
+export const userPreferencesSchema = z.object({
+  theme: themeSchema.default("hud"),
+  language: z.string().default("en"),
+  notifications: z.boolean().default(true),
 });
 
-export const workExperienceSchema = z.object({
-  job_title: z.string().min(1, "Job title is required"),
-  company: z.string().min(1, "Company is required"),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-  responsibilities: z.string().optional(),
-  achievements: z.string().optional(),
+export const userProfileSchema = z.object({
+  userId: z.string(),
+  email: z.string().email(),
+  displayName: z.string(),
+  photoURL: z.string().url().nullable(),
+  plan: planSchema.default("free"),
+  onboardingStep: z.number().default(0),
+  preferences: userPreferencesSchema,
+  createdAt: z.string().datetime().optional(), // Timestamps will be handled by Firestore
+  updatedAt: z.string().datetime().optional(),
+});
+export type UserProfile = z.infer<typeof userProfileSchema>;
+
+// ####################################
+// # Resume-related Schemas
+// ####################################
+
+export const resumeSectionSummarySchema = z.object({
+  content: z.string(),
+  lastEdited: z.string().datetime(),
 });
 
-export const educationSchema = z.object({
-  degree: z.string().min(1, "Degree is required"),
-  institution: z.string().min(1, "Institution is required"),
-  start_year: z.string().optional(),
-  end_year: z.string().optional(),
+export const resumeSectionExperienceSchema = z.object({
+  id: z.string(),
+  company: z.string(),
+  role: z.string(),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime().nullable(),
+  bullets: z.array(z.string()),
+  order: z.number(),
 });
 
-export const projectSchema = z.object({
-  title: z.string().min(1, "Project title is required"),
-  description: z.string().optional(),
-  technologies: z.array(z.string()),
+export const resumeSectionsSchema = z.object({
+  summary: resumeSectionSummarySchema,
+  experience: z.array(resumeSectionExperienceSchema),
+  education: z.array(z.any()), // Define if needed
+  skills: z.array(z.string()),
 });
 
-export const resumeIntentSchema = z.enum([
-  "Professional Corporate",
-  "Creative",
-  "Tech (ATS-Optimized)",
-  "Student / No Experience",
-  "Career Switch",
-]);
+export const resumeSettingsSchema = z.object({
+  fontSize: z.number().default(10),
+  spacing: z.enum(["normal", "compact"]).default("normal"),
+});
 
-export const experienceLevelSchema = z.enum([
-  "Entry-level",
-  "Mid-level",
-  "Senior",
-  "Lead",
-  "Executive",
-]);
+// This schema represents the full data structure stored in Firestore for a single resume.
+export const resumeSchema = z.object({
+  resumeId: z.string(),
+  ownerId: z.string(),
+  title: z.string(),
+  templateId: z.string(),
+  status: resumeStatusSchema.default("draft"),
+  sections: resumeSectionsSchema,
+  settings: resumeSettingsSchema,
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+  isDeleted: z.boolean().default(false),
+});
+export type ResumeData = z.infer<typeof resumeSchema>;
 
-export const resumeStyleSchema = z.enum([
-  "Modern",
-  "Minimalist",
-  "Creative",
-  "Corporate",
-  "Clean ATS-Friendly",
-]);
-
-export const languageSchema = z.enum([
-    "English",
-    "Afrikaans",
-    "isiNdebele",
-    "isiXhosa",
-    "isiZulu",
-    "Sepedi",
-    "Sesotho",
-    "Setswana",
-    "siSwati",
-    "Tshivenda",
-    "Xitsonga",
-]);
 
 // This schema represents the data collected from the form.
-// It is the source of truth for the client-side validation.
+// It's a subset of the full ResumeData, adapted for form handling.
 export const resumeFormSchema = z.object({
-  jobDescription: z.string().optional(),
-  target_job_title: z.string().min(1, "Target job title is required"),
-  resume_intent: resumeIntentSchema,
-  experience_level: experienceLevelSchema,
-  resume_style: resumeStyleSchema,
-  language: languageSchema,
-  personal_info: personalInfoSchema,
-  work_experience: z.array(workExperienceSchema),
-  education: z.array(educationSchema),
-  skills: z.array(z.string()),
-  projects: z.array(projectSchema),
-  certifications: z.array(z.string()),
+  title: z.string().min(1, "Resume title is required"),
+  templateId: z.string().default("modern"), // Default template
+  sections: z.object({
+    summary: z.object({
+      content: z.string().optional(),
+    }),
+    experience: z.array(z.object({
+        id: z.string(),
+        company: z.string().min(1, "Company is required"),
+        role: z.string().min(1, "Role is required"),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        bullets: z.array(z.string()).optional(),
+        order: z.number().optional(),
+      })
+    ),
+    education: z.array(z.any()).optional(),
+    skills: z.array(z.string()).optional(),
+  }),
 });
-
-// This is the type for the data that comes directly from the form.
 export type ResumeFormData = z.infer<typeof resumeFormSchema>;
-
-// This represents the full resume data structure, including optional database fields.
-// This is the primary type used for state management and Firestore operations within the app.
-export type ResumeData = ResumeFormData & {
-  id?: string;
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
 
 
 // ####################################
 // # AI-Generated Data Schemas
 // ####################################
 
-// This schema represents the structured, polished resume data as generated by the AI.
 export const generatedResumeSchema = z.object({
   headings: z.object({
-    summary: z.string().describe("Translated heading for 'Professional Summary'"),
-    skills: z.string().describe("Translated heading for 'Core Competencies' or 'Skills'"),
-    experience: z.string().describe("Translated heading for 'Professional Experience'"),
-    education: z.string().describe("Translated heading for 'Education'"),
-    projects: z.string().describe("Translated heading for 'Projects'"),
+    summary: z.string(),
+    skills: z.string(),
+    experience: z.string(),
+    education: z.string(),
+    projects: z.string(),
   }),
   header: z.object({
     name: z.string(),
@@ -122,23 +123,28 @@ export const generatedResumeSchema = z.object({
     location: z.string(),
     website: z.string().optional(),
   }),
-  summary: z.string().describe("The AI-rewritten professional summary."),
-  skills: z.array(z.string()).describe("A curated list of the most relevant skills."),
+  summary: z.string(),
+  skills: z.array(z.string()),
   experience: z.array(z.object({
     title: z.string(),
     company: z.string(),
-    dates: z.string().describe("e.g., 'Jan 2020 - Present'"),
-    bulletPoints: z.array(z.string()).describe("3-5 bullet points starting with action verbs."),
+    dates: z.string(),
+    bulletPoints: z.array(z.string()),
   })),
   education: z.array(z.object({
     degree: z.string(),
     institution: z.string(),
-    year: z.string().describe("e.g., 'Graduated May 2018'"),
+    year: z.string(),
   })),
   projects: z.array(z.object({
     title: z.string(),
     description: z.string(),
   })).optional(),
 });
-
 export type GeneratedResumeData = z.infer<typeof generatedResumeSchema>;
+
+// Sticking with the old schema names for compatibility until all flows are updated
+export const languageSchema = z.enum(["English", "Afrikaans", "isiNdebele", "isiXhosa", "isiZulu", "Sepedi", "Sesotho", "Setswana", "siSwati", "Tshivenda", "Xitsonga"]);
+export const resumeIntentSchema = z.enum(["Professional Corporate", "Creative", "Tech (ATS-Optimized)", "Student / No Experience", "Career Switch"]);
+export const experienceLevelSchema = z.enum(["Entry-level", "Mid-level", "Senior", "Lead", "Executive"]);
+export const resumeStyleSchema = z.enum(["Modern", "Minimalist", "Creative", "Corporate", "Clean ATS-Friendly"]);
