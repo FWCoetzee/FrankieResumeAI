@@ -33,12 +33,12 @@ type FirestoreResumeDoc = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections
   updatedAt: Timestamp;
   sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
     summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
-      lastEdited: Timestamp;
+      lastEdited: Timestamp | string; // Can be either on its way in or out
     };
     experience: Array<
       Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
-        startDate: Timestamp;
-        endDate: Timestamp | null;
+        startDate: Timestamp | string;
+        endDate: Timestamp | string | null;
       }
     >;
   };
@@ -62,6 +62,13 @@ type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'section
   };
 };
 
+const toDate = (timestamp: Timestamp | string | Date | null | undefined): Date | null => {
+    if (!timestamp) return null;
+    if (timestamp instanceof Date) return timestamp;
+    if (timestamp instanceof Timestamp) return timestamp.toDate();
+    if (typeof timestamp === 'string') return new Date(timestamp);
+    return null;
+}
 
 const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, onDeleteClick: () => void }) => {
   const { setCurrentResume } = useResumeStore();
@@ -129,10 +136,13 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    // If auth state is loading, do nothing yet.
     if (isUserLoading) {
       setIsLoading(true);
       return;
     }
+    
+    // If there's no user, clear state and stop.
     if (!user) {
       setIsLoading(false);
       setResumes(null);
@@ -140,6 +150,7 @@ export function ResumeHistory() {
       return;
     }
 
+    // User is logged in, start loading and set up the query.
     setIsLoading(true);
 
     const q = query(
@@ -156,22 +167,25 @@ export function ResumeHistory() {
         snapshot.forEach((doc) => {
           const data = doc.data() as FirestoreResumeDoc;
           
-          // ** THE FIX IS HERE **: Recursively convert all Timestamps to JS Dates
+          const startDate = toDate(data.sections.experience[0]?.startDate);
+          
+          if (!data.createdAt || !data.updatedAt) return;
+          
           const componentData: ComponentResumeData = {
             ...data,
             id: doc.id,
-            createdAt: data.createdAt.toDate(),
-            updatedAt: data.updatedAt.toDate(),
+            createdAt: toDate(data.createdAt)!,
+            updatedAt: toDate(data.updatedAt)!,
             sections: {
               ...data.sections,
               summary: {
                 ...data.sections.summary,
-                lastEdited: data.sections.summary.lastEdited.toDate(),
+                lastEdited: toDate(data.sections.summary.lastEdited)!,
               },
               experience: data.sections.experience.map(exp => ({
                 ...exp,
-                startDate: exp.startDate.toDate(),
-                endDate: exp.endDate ? exp.endDate.toDate() : null,
+                startDate: toDate(exp.startDate)!,
+                endDate: toDate(exp.endDate),
               })),
             },
           };
@@ -183,13 +197,15 @@ export function ResumeHistory() {
       },
       (err: FirestoreError) => {
         console.error("ResumeHistory subscription error:", err);
+        // Create a detailed error for debugging and global handling
         const contextualError = new FirestorePermissionError({
           operation: 'list',
-          path: 'resumes',
+          path: `resumes where ownerId == ${user.uid}`,
         });
         setError(contextualError);
         setResumes(null);
         setIsLoading(false);
+        // Emit the error to be caught by a global error boundary if needed
         errorEmitter.emit('permission-error', contextualError);
       }
     );
