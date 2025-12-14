@@ -58,12 +58,8 @@ export async function generateResumeAction(
   const jobDescForAI = `A generic role for a candidate with skills like ${resumeData.sections.skills.join(', ')}.`;
 
   try {
-    const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
+    const [resumeResult, coverLetterResult, linkedInResult] = await Promise.all([
       generateResumeFromData(aiPayload as unknown as GenerateResumeFromDataInput),
-      provideResumeSuggestions({
-        ...aiPayload,
-        jobDescription: jobDescForAI,
-      } as unknown as ProvideResumeSuggestionsInput),
       generateCoverLetterFromData({
         ...aiPayload,
         jobDescription: jobDescForAI,
@@ -77,7 +73,7 @@ export async function generateResumeAction(
     
     return {
       resume: resumeResult,
-      suggestions: suggestionsResult.suggestions,
+      suggestions: "<p>AI suggestions will be available here after the initial generation. You can use the AI Editor to refine your content now.</p>", // Provide a default placeholder
       coverLetter: coverLetterResult,
       linkedin: linkedInResult,
     };
