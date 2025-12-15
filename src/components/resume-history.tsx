@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useUser, useFirestore } from "@/firebase";
-import { collection, query, where, orderBy, Timestamp, onSnapshot, QuerySnapshot, DocumentData, FirestoreError } from "firebase/firestore";
+import { useUser } from "@/firebase/provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { History, Loader2, ServerCrash, FileText, ArrowRight, Trash2 } from "lucide-react";
 import type { ResumeData } from "@/lib/schema";
@@ -20,58 +19,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useResumeStore, createNewBlankResume } from "@/hooks/use-resume-store";
+import { useResumeStore } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
-import { FirestorePermissionError } from "@/firebase/errors";
-import { errorEmitter } from "@/firebase/error-emitter";
+import { useFirestore } from "@/firebase";
+import { collection, query, where, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 
-type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'sections'> & {
-  id: string; 
-  createdAt: Date;
-  updatedAt: Date;
-  sections: Omit<ResumeData['sections'], 'summary' | 'experience' | 'education'> & {
-    summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
-      lastEdited: Date;
-    };
-    experience: Array<
-      Omit<ResumeData['sections']['experience'][0], 'startDate' | 'endDate'> & {
-        startDate: Date;
-        endDate: Date | null;
-      }
-    >;
-    education: any[];
-  };
-};
-
-const toDate = (timestamp: Timestamp | string | Date | null | undefined): Date | null => {
-    if (!timestamp) return null;
-    if (timestamp instanceof Date) return timestamp;
-    if (timestamp instanceof Timestamp) return timestamp.toDate();
-    if (typeof timestamp === 'string') return new Date(timestamp);
-    return null;
-}
-
-const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, onDeleteClick: () => void }) => {
+const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
   const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const { user } = useUser();
 
   const handleSelect = () => {
+    // Convert all Timestamp objects back to ISO strings for form compatibility
     const resumeForStore: ResumeData = {
         ...resume,
-        createdAt: resume.createdAt.toISOString(),
-        updatedAt: resume.updatedAt.toISOString(),
+        createdAt: resume.createdAt ? new Date(resume.createdAt).toISOString() : new Date().toISOString(),
+        updatedAt: resume.updatedAt ? new Date(resume.updatedAt).toISOString() : new Date().toISOString(),
         sections: {
-          ...resume.sections,
-          summary: {
-            ...resume.sections.summary,
-            lastEdited: resume.sections.summary.lastEdited.toISOString(),
-          },
-          experience: resume.sections.experience.map(exp => ({
-            ...exp,
-            startDate: exp.startDate.toISOString(),
-            endDate: exp.endDate ? exp.endDate.toISOString() : null,
-          })),
+            ...resume.sections,
+            summary: {
+                ...resume.sections.summary,
+                lastEdited: resume.sections.summary.lastEdited ? new Date(resume.sections.summary.lastEdited).toISOString() : new Date().toISOString(),
+            },
+            experience: resume.sections.experience.map(exp => ({
+                ...exp,
+                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
+                endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null,
+            }))
         }
     };
     setCurrentResume(resumeForStore);
@@ -81,121 +58,10 @@ const HistoryItem = ({ resume, onDeleteClick }: { resume: ComponentResumeData, o
         description: "The selected resume data has been loaded into the form.",
     });
   }
-
-  return (
-    <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors group">
-      <div className="space-y-1">
-        <p className="font-semibold">{resume.title}</p>
-        <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-            <span>Updated {formatDistanceToNow(resume.updatedAt, { addSuffix: true })}</span>
-            <Badge variant="outline">{resume.templateId}</Badge>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDeleteClick}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-            <span className="sr-only">Delete</span>
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleSelect}>
-            Load <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-export function ResumeHistory() {
-  const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
-  const [deleteCandidate, setDeleteCandidate] = useState<ComponentResumeData | null>(null);
-  const { setCurrentResume } = useResumeStore();
-  const { toast } = useToast();
   
-  const [resumes, setResumes] = useState<ComponentResumeData[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<FirestoreError | Error | null>(null);
-
-  useEffect(() => {
-    // If the initial user check is still running, do nothing yet.
-    if (isUserLoading) {
-      setIsLoading(true);
-      return;
-    }
-    
-    // If there is no user, clear the state and stop.
-    if (!user) {
-      setIsLoading(false);
-      setResumes(null); // Clear any existing data
-      setError(null);
-      // Ensure the form is cleared as well by setting a new blank resume
-      setCurrentResume(createNewBlankResume(''));
-      return;
-    }
-
-    // At this point, we have a valid, authenticated user.
-    setIsLoading(true);
-
-    const q = query(
-      collection(firestore, 'resumes'),
-      where('ownerId', '==', user.uid),
-      where('isDeleted', '==', false),
-      orderBy('updatedAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ComponentResumeData[] = snapshot.docs.map(doc => {
-          const data = doc.data();
-
-          return {
-            ...data,
-            id: doc.id,
-            createdAt: toDate(data.createdAt)!,
-            updatedAt: toDate(data.updatedAt)!,
-            sections: {
-              ...data.sections,
-              summary: {
-                ...data.sections.summary,
-                lastEdited: toDate(data.sections.summary.lastEdited)!,
-              },
-              experience: (data.sections.experience || []).map((exp: any) => ({
-                ...exp,
-                startDate: toDate(exp.startDate)!,
-                endDate: toDate(exp.endDate),
-              })),
-              education: data.sections.education || [],
-            },
-          } as ComponentResumeData;
-        });
-
-        setResumes(results);
-        setError(null);
-        setIsLoading(false);
-      },
-      (err: FirestoreError) => {
-        console.error("ResumeHistory subscription error:", err);
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path: `resumes where ownerId == ${user.uid}`,
-        });
-        setError(contextualError);
-        setResumes(null);
-        setIsLoading(false);
-        errorEmitter.emit('permission-error', contextualError);
-      }
-    );
-
-    // Cleanup function to unsubscribe from the listener when the component unmounts
-    // or when the user's auth state changes.
-    return () => unsubscribe();
-  }, [user, firestore, isUserLoading, setCurrentResume]);
-
-
   const handleConfirmDelete = () => {
-    if (deleteCandidate?.id && user) {
-        deleteResumeDataClient(user.uid, deleteCandidate.id);
-        
+    if (deleteCandidate && user) {
+        deleteResumeDataClient(user.uid, deleteCandidate);
         toast({
             title: "Resume Deleted",
             description: "The resume has been successfully removed.",
@@ -203,6 +69,115 @@ export function ResumeHistory() {
     }
     setDeleteCandidate(null);
   }
+
+  const updatedAt = resume.updatedAt ? new Date(resume.updatedAt) : null;
+
+  return (
+    <>
+      <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the resume for "{resume.title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex items-center justify-between p-4 rounded-lg hover:bg-muted/50 transition-colors group">
+        <div className="space-y-1">
+          <p className="font-semibold">{resume.title}</p>
+          <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+              {updatedAt && <span>Updated {formatDistanceToNow(updatedAt, { addSuffix: true })}</span>}
+              <Badge variant="outline">{resume.templateId}</Badge>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDeleteCandidate(resume.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+              <span className="sr-only">Delete</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSelect}>
+              Load <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export function ResumeHistory() {
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const [resumes, setResumes] = useState<(ResumeData & { id: string })[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    // If we're still checking for a user, or if there's no user, don't do anything.
+    if (isUserLoading) {
+      setIsLoading(true);
+      return;
+    }
+    
+    if (!user) {
+      setResumes(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    const resumesRef = collection(firestore, 'resumes');
+    const q = query(
+      resumesRef, 
+      where("ownerId", "==", user.uid),
+      where("isDeleted", "==", false),
+      orderBy("updatedAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, 
+      (querySnapshot) => {
+        const resumesData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Deep conversion of Timestamps to JS Dates
+            const convertTimestamps = (obj: any): any => {
+              if (obj instanceof Timestamp) {
+                  return obj.toDate();
+              }
+              if (Array.isArray(obj)) {
+                  return obj.map(convertTimestamps);
+              }
+              if (obj !== null && typeof obj === 'object') {
+                  return Object.keys(obj).reduce((acc, key) => {
+                      acc[key] = convertTimestamps(obj[key]);
+                      return acc;
+                  }, {} as { [key: string]: any });
+              }
+              return obj;
+            };
+
+            return { id: doc.id, ...convertTimestamps(data) } as ResumeData & { id: string };
+        });
+        setResumes(resumesData);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.error("Firestore onSnapshot error:", err);
+        setError(err);
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [user, isUserLoading, firestore]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -246,43 +221,26 @@ export function ResumeHistory() {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.id} resume={resume} onDeleteClick={() => setDeleteCandidate(resume)} />
+                <HistoryItem key={resume.id} resume={resume} />
             ))}
         </div>
     );
   };
 
   return (
-    <>
-    <AlertDialog open={!!deleteCandidate} onOpenChange={(open) => !open && setDeleteCandidate(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the resume for "{deleteCandidate?.title}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Card>
-          <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                  <History className="h-6 w-6" />
-                  Resume History
-              </CardTitle>
-              <CardDescription>
-                  Your previously generated resumes are saved here. Load one to edit or delete it.
-              </CardDescription>
-          </CardHeader>
-          <CardContent>
-              {renderContent()}
-          </CardContent>
-      </Card>
-    </>
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <History className="h-6 w-6" />
+                Resume History
+            </CardTitle>
+            <CardDescription>
+                Your previously generated resumes are saved here. Load one to edit or delete it.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {renderContent()}
+        </CardContent>
+    </Card>
   )
 }

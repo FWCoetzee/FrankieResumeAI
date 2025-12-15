@@ -2,14 +2,15 @@
 "use client";
 
 import { generateResumeFromData, type GenerateResumeFromDataInput, type GenerateResumeFromDataOutput } from "@/ai/flows/generate-resume-from-data";
+import { provideResumeSuggestions, type ProvideResumeSuggestionsInput, type ProvideResumeSuggestionsOutput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput, type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
-import { type ResumeData } from "@/lib/schema";
+import type { ResumeData } from "@/lib/schema";
 import { saveOrUpdateResumeDataClient } from "@/lib/client-firestore";
 
 // This function now expects the full ResumeData object, including metadata like ownerId.
 export async function generateResumeAction(
-  userId: string | null,
+  userId: string,
   resumeData: ResumeData
 ): Promise<{
   error?: string;
@@ -18,19 +19,12 @@ export async function generateResumeAction(
   coverLetter?: string;
   linkedin?: GenerateLinkedInProfileOutput;
 }> {
-  if (!userId) {
-    return { error: "You must be logged in to generate a resume." };
-  }
-
-  // **THE FIX IS HERE**: Ensure the ownerId is correctly set on the data to be saved.
-  // This prevents an unauthorized write when creating a new resume after logging in.
-  const dataToSave: ResumeData = { ...resumeData, ownerId: userId };
 
   // The AI flows require a different data structure than our new resumeSchema.
   // We need to map the data from our new structure to the old structure the AI expects.
   // This is a temporary measure until the AI flows are updated.
   const aiPayload = {
-    target_job_title: dataToSave.title,
+    target_job_title: resumeData.title,
     // These fields are no longer in our new model but are required by the AI flows.
     // We provide sensible defaults.
     resume_intent: "Tech (ATS-Optimized)",
@@ -42,9 +36,9 @@ export async function generateResumeAction(
       email: "",
       phone: "",
       location: "",
-      summary: dataToSave.sections.summary.content,
+      summary: resumeData.sections.summary.content,
     },
-    work_experience: dataToSave.sections.experience.map(exp => ({
+    work_experience: resumeData.sections.experience.map(exp => ({
         job_title: exp.role,
         company: exp.company,
         start_date: exp.startDate,
@@ -53,16 +47,20 @@ export async function generateResumeAction(
         achievements: '',
     })),
     education: [],
-    skills: dataToSave.sections.skills,
+    skills: resumeData.sections.skills,
     projects: [],
     certifications: [],
   };
 
-  const jobDescForAI = `A generic role for a candidate with skills like ${dataToSave.sections.skills.join(', ')}.`;
+  const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills.join(', ')}.`;
 
   try {
-    const [resumeResult, coverLetterResult, linkedInResult] = await Promise.all([
+    const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
       generateResumeFromData(aiPayload as unknown as GenerateResumeFromDataInput),
+      provideResumeSuggestions({
+        ...aiPayload,
+        jobDescription: jobDescForAI,
+      } as unknown as ProvideResumeSuggestionsInput),
       generateCoverLetterFromData({
         ...aiPayload,
         jobDescription: jobDescForAI,
@@ -72,11 +70,11 @@ export async function generateResumeAction(
     
     // Save the complete resume data to Firestore.
     // The resumeId is now part of the resumeData object.
-    saveOrUpdateResumeDataClient(userId, dataToSave);
+    saveOrUpdateResumeDataClient(userId, resumeData);
     
     return {
       resume: resumeResult,
-      suggestions: "<p>AI suggestions will be available here after the initial generation. You can use the AI Editor to refine your content now.</p>", // Provide a default placeholder
+      suggestions: suggestionsResult.suggestions,
       coverLetter: coverLetterResult,
       linkedin: linkedInResult,
     };
