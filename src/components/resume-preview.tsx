@@ -2,12 +2,11 @@
 "use client";
 
 import * as React from "react";
-import { createRoot } from 'react-dom/client';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin } from "lucide-react";
-import type { ResumeData, GeneratedResumeData, ResumeFormData } from "@/lib/schema";
+import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -176,41 +175,52 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const [activeTab, setActiveTab] = React.useState("preview");
 
   const handlePrint = () => {
-    if (!result || !resumeData) return;
+    console.log("Download button clicked. Active tab:", activeTab);
+    if (!result) {
+        console.error("No result data to print.");
+        return;
+    }
 
-    let printContainer = document.getElementById('printable-content');
-    if (!printContainer) {
-      printContainer = document.createElement('div');
-      printContainer.id = 'printable-content';
-      // The element should be part of the body to be rendered, but can be visually hidden.
-      printContainer.className = "print-only-styles"; 
-      document.body.appendChild(printContainer);
+    const printableElementId = activeTab === 'preview' ? 'resume-printable-content' : 'cover-letter-printable-content';
+    const contentToPrint = document.getElementById(printableElementId);
+
+    if (!contentToPrint) {
+        console.error("Printable content not found for ID:", printableElementId);
+        return;
     }
     
-    const root = createRoot(printContainer);
+    console.log("Found printable content:", contentToPrint);
 
-    const contentToPrint = (activeTab === 'preview' && result.resume)
-      ? <TemplateRenderer resume={result.resume} style={resumeData.templateId} />
-      : (activeTab === 'cover-letter' && result.coverLetter ? <CoverLetterContent content={result.coverLetter} /> : null);
-      
-    if (!contentToPrint) {
-      // If there is no content for the current tab to print, do nothing.
-      console.warn("No printable content for the active tab.");
-      return;
-    }
-
-    // Render the component to the hidden div
-    root.render(contentToPrint);
-
-    // Use a short timeout to ensure the content is rendered before printing.
-    setTimeout(() => {
-        window.print();
-        // Clean up after printing
-        root.unmount();
-        if (printContainer) {
-            printContainer.remove();
+    // Create a style element to control what's visible for printing
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        /* Hide everything by default */
+        body > * {
+          display: none !important;
         }
-    }, 250);
+        /* Show only the printable container and its content */
+        #printable-content, #printable-content > * {
+          display: block !important;
+        }
+        /* Specifically show the active printable section */
+        #${printableElementId} {
+            display: block !important;
+        }
+        /* Hide the other non-active printable section */
+        #printable-content > div:not(#${printableElementId}) {
+            display: none !important;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+    console.log("Printing...");
+
+    window.print();
+
+    // Clean up the style element after printing
+    document.head.removeChild(style);
   };
 
   const wrapperClasses = cn(
@@ -225,6 +235,21 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   if (result && resumeData) {
     return (
       <div className={wrapperClasses}>
+          {/* This div holds the content that will be printed. It's hidden from view by default. */}
+          <div id="printable-content">
+            <div id="resume-printable-content">
+                {result.resume && (
+                     <TemplateRenderer 
+                        resume={result.resume}
+                        style={resumeData.templateId}
+                    />
+                )}
+            </div>
+            <div id="cover-letter-printable-content">
+                {result.coverLetter && <CoverLetterContent content={result.coverLetter} />}
+            </div>
+          </div>
+      
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-5 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
               <TabsTrigger value="preview" className="gap-2 text-base" disabled={!result.resume}>
@@ -264,7 +289,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
-                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                        <div id="cover-letter-content-display" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <CoverLetterContent content={result.coverLetter} />
                         </div>
                         <div className="mt-4 flex justify-end gap-2 print-hidden">
