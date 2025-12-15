@@ -132,10 +132,10 @@ export function ResumeHistory() {
     setIsLoading(true);
     setError(null);
 
-    const resumesRef = collection(firestore, 'resumes');
+    // Correct path: /users/{userId}/resumes
+    const resumesRef = collection(firestore, 'users', user.uid, 'resumes');
     const q = query(
       resumesRef, 
-      where("ownerId", "==", user.uid),
       where("isDeleted", "==", false),
       orderBy("updatedAt", "desc")
     );

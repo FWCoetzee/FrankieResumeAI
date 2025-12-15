@@ -6,12 +6,7 @@
  * - Least Privilege: By default, all access is denied. Rules explicitly grant access.
  * - User Ownership: The primary authorization mechanism is matching the authenticated
  *   user's UID (`request.auth.uid`) with an `ownerId` or document ID.
- * - Flat Hierarchy: Root-level collections are used to avoid deep nesting and simplify rules.
- *
- * Data Structure:
- * - /users/{userId}: Public-facing user profile information.
- * - /resumes/{resumeId}: Core resume documents, owned by a user.
- * - Other collections for subscriptions, payments, etc., with specific access controls.
+ * - Nested Data: User-specific data like resumes are stored in subcollections under the user's document.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -44,30 +39,14 @@ service cloud.firestore {
       allow update: if isOwner(userId)
                     && request.resource.data.email == resource.data.email
                     && request.resource.data.userId == resource.data.userId;
-    }
-
-    // ####################
-    // ## /resumes Collection
-    // ####################
-    match /resumes/{resumeId} {
-      // Allow read/delete only if the user is the owner of the document.
-      allow get, delete: if isOwner(resource.data.ownerId);
-
-      // Allow listing resumes only for queries that filter by the user's own `ownerId`.
-      allow list: if isSignedIn() && request.query.resource.data.ownerId == request.auth.uid;
       
-      // Allow creating a resume if the user is signed in and sets themselves as the owner.
-      // Validate required fields on creation.
-      allow create: if isOwner(request.resource.data.ownerId)
-                    && request.resource.data.resumeId == resumeId
-                    && request.resource.data.title is string
-                    && request.resource.data.templateId is string;
-
-      // Allow updating a resume if the user is the owner.
-      // Critical fields like ownerId and resumeId are immutable.
-      allow update: if isOwner(resource.data.ownerId)
-                    && request.resource.data.ownerId == resource.data.ownerId
-                    && request.resource.data.resumeId == resource.data.resumeId;
+      // ####################
+      // ## /users/{userId}/resumes Subcollection
+      // ####################
+      match /resumes/{resumeId} {
+        // A user can perform any operation on a resume within their own document.
+        allow read, write, delete: if isOwner(userId);
+      }
     }
 
     // ####################
@@ -96,8 +75,8 @@ service cloud.firestore {
         allow write: if false; // Writes should only happen from a trusted backend server.
     }
 
-    // All other collections are locked down by default.
-    // (resumeVersions, payments, aiRequests, appLogs)
+    // All other root collections are locked down by default.
+    // This now implicitly includes the old /resumes collection.
     match /{collection}/{docId} {
       allow read, write: if false;
     }

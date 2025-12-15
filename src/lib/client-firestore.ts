@@ -7,13 +7,14 @@ import {
   updateDoc,
   writeBatch,
   serverTimestamp,
+  collection,
 } from 'firebase/firestore';
 import type { ResumeData } from '@/lib/schema';
 import { v4 as uuidv4 } from "uuid";
 import { initializeFirebase } from '@/firebase';
 
 /**
- * Creates or updates a resume document in the root /resumes collection.
+ * Creates or updates a resume document in the /users/{userId}/resumes subcollection.
  * This is a non-blocking operation.
  * @param userId The ID of the current user.
  * @param data The full resume data object to save.
@@ -24,15 +25,21 @@ export function saveOrUpdateResumeDataClient(
 ): void {
   const { firestore } = initializeFirebase();
   const resumeId = data.resumeId || uuidv4();
-  const docRef = doc(firestore, 'resumes', resumeId);
+  // Correct path: /users/{userId}/resumes/{resumeId}
+  const docRef = doc(firestore, 'users', userId, 'resumes', resumeId);
 
   const isNew = !data.resumeId;
+
+  // We explicitly create the user document to ensure it exists before writing to a subcollection.
+  // This prevents certain edge-case security rule failures.
+  const userDocRef = doc(firestore, 'users', userId);
+  setDoc(userDocRef, { userId: userId }, { merge: true });
 
   if (isNew) {
     const dataToSave = {
       ...data,
       resumeId: resumeId,
-      ownerId: userId, // Ensure ownerId is set
+      ownerId: userId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -40,7 +47,6 @@ export function saveOrUpdateResumeDataClient(
         console.error("Firestore setDoc failed:", error);
     });
   } else {
-    // For updates, we merge to avoid overwriting fields, and update the timestamp
     const dataToUpdate = {
         ...data,
         updatedAt: serverTimestamp(),
@@ -56,7 +62,7 @@ export function saveOrUpdateResumeDataClient(
 }
 
 /**
- * Deletes a resume document from the /resumes collection.
+ * Deletes a resume document from the /users/{userId}/resumes subcollection.
  * This can be a soft delete by setting `isDeleted: true`.
  * @param userId The ID of the current user.
  * @param resumeId The ID of the resume document to delete.
@@ -66,7 +72,8 @@ export function deleteResumeDataClient(
   resumeId: string
 ): void {
   const { firestore } = initializeFirebase();
-  const docRef = doc(firestore, 'resumes', resumeId);
+  // Correct path: /users/{userId}/resumes/{resumeId}
+  const docRef = doc(firestore, 'users', userId, 'resumes', resumeId);
   
   // Perform a soft delete by updating the isDeleted flag
   const batch = writeBatch(firestore);
