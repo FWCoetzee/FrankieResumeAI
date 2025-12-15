@@ -14,9 +14,9 @@ export function initializeFirebase() {
   // Initialize App Check if it hasn't been already.
   // This is a crucial step for projects with App Check enforced.
   if (typeof window !== 'undefined') {
+    // Pass your reCAPTCHA v3 site key (public key) to activate.
+    // You can find this in your Firebase project settings -> App Check.
     initializeAppCheck(app, {
-      // IMPORTANT: Replace this with your actual reCAPTCHA v3 site key from the Firebase console.
-      // Go to Project Settings > App Check, select your web app, and find the reCAPTCHA v3 provider configuration.
       provider: new ReCaptchaV3Provider('6Lce_QsqAAAAALGEgX-2a5GEwJpT22sveiMoE65T'),
 
       // Optional: set to 'true' to allow app to function before token is retrieved.
