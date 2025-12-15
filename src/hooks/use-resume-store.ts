@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ResumeData, GeneratedResumeData } from '@/lib/schema';
+import type { ResumeData, GeneratedResumeData, ResumeFormData } from '@/lib/schema';
 import type { GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -12,6 +12,7 @@ export type GenerationResult = {
   coverLetter?: string;
   linkedin?: GenerateLinkedInProfileOutput;
   error?: string;
+  savedResumeId?: string;
 };
 
 interface ResumeState {
@@ -24,9 +25,9 @@ interface ResumeState {
 interface ResumeActions {
   setCurrentResume: (resume: ResumeData | null) => void;
   clearCurrentResume: () => void;
-  setFormForReview: (data: ResumeData) => void;
+  setFormForReview: (data: ResumeFormData) => void;
   setIsEditing: () => void;
-  generateAndSetResults: (response: GenerationResult, formData: ResumeData) => void;
+  generateAndSetResults: (response: GenerationResult, formData: ResumeFormData) => void;
   updateResult: (newResult: GenerationResult) => void;
   reset: () => void;
 }
@@ -73,9 +74,21 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
         set({ currentResume: null, result: null, isReviewing: false, isLoading: false });
       },
       setFormForReview: (data) => {
+        // Create a basic representation for review
+        const reviewData: Partial<ResumeData> = {
+            title: data.title,
+            templateId: data.templateId,
+            sections: {
+                summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
+                experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: new Date(exp.startDate || '').toISOString(), endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
+                education: [],
+                skills: data.sections.skills || [],
+            }
+        };
+
         set({ 
           isReviewing: true, 
-          currentResume: { ...get().currentResume, ...data } as ResumeData,
+          currentResume: { ...get().currentResume, ...reviewData } as ResumeData,
           result: null,
         });
       },
@@ -83,32 +96,22 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
         set({ isReviewing: false, result: null });
       },
       generateAndSetResults: (response, formData) => {
-        const { toast } = useToast();
         set({ isLoading: true, isReviewing: false, result: null });
 
         if (response.error || !response.resume) {
-          toast({
-            variant: "destructive",
-            title: "Generation Failed",
-            description: response.error || "An unknown error occurred.",
-          });
-          set({ isLoading: false, isReviewing: true, result: null });
+          set({ isLoading: false, isReviewing: true, result: response });
         } else {
-          toast({
-            title: "Success!",
-            description: formData.resumeId ? "Your resume has been updated." : "Your new resume has been saved and generated.",
-          });
-          
-          const newCurrentResume: ResumeData = {
-            ...formData,
-            resumeId: formData.resumeId || get().currentResume?.resumeId || uuidv4(),
-          };
-
+          // Update currentResume with the newly saved ID if it exists
+          if (response.savedResumeId) {
+            const updatedResume = { ...get().currentResume, resumeId: response.savedResumeId, ownerId: get().currentResume?.ownerId || '' };
+            set({
+                currentResume: updatedResume as ResumeData
+            });
+          }
           set({
             isLoading: false,
             isReviewing: false,
             result: response,
-            currentResume: newCurrentResume,
           });
         }
       },
@@ -122,7 +125,6 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
     {
       name: 'resume-storage',
       storage: createJSONStorage(() => localStorage),
-      // We only persist the currentResume. Other state is transient.
       partialize: (state) => ({ currentResume: state.currentResume }),
     }
   )

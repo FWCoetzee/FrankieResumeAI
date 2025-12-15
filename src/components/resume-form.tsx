@@ -18,13 +18,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, GraduationCap, Star } from "lucide-react";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star } from "lucide-react";
 import { useEffect } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
 
 interface ResumeFormProps {
-  onGenerate: (data: ResumeData) => void;
+  onGenerate: (data: ResumeFormData) => void;
   isLoading: boolean;
 }
 
@@ -87,7 +87,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   
   useEffect(() => {
     if (currentResume) {
-        // Map ResumeData to ResumeFormData
+        // Map ResumeData to ResumeFormData for form compatibility
         const formData: ResumeFormData = {
             title: currentResume.title,
             templateId: currentResume.templateId,
@@ -95,7 +95,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 summary: { content: currentResume.sections.summary.content },
                 experience: currentResume.sections.experience.map(exp => ({
                     ...exp,
-                    startDate: exp.startDate.split('T')[0], // Format for input[type=date]
+                    startDate: exp.startDate?.split('T')[0], // Format for input[type=date]
                     endDate: exp.endDate?.split('T')[0] || 'Present',
                 })),
                 education: currentResume.sections.education,
@@ -120,35 +120,8 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   }
   
   const onSubmit = (data: ResumeFormData) => {
-    // Convert form data back to the full ResumeData structure
-    const fullResumeData: ResumeData = {
-      ...currentResume, // carry over ids and metadata
-      resumeId: currentResume?.resumeId || '',
-      ownerId: currentResume?.ownerId || '',
-      title: data.title,
-      templateId: data.templateId,
-      status: 'draft',
-      sections: {
-        summary: {
-          content: data.sections.summary.content || '',
-          lastEdited: new Date().toISOString(),
-        },
-        experience: data.sections.experience.map((exp, index) => ({
-            id: exp.id || uuidv4(),
-            role: exp.role,
-            company: exp.company,
-            startDate: new Date(exp.startDate || '').toISOString(),
-            endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
-            bullets: exp.bullets || [],
-            order: index,
-        })),
-        education: [],
-        skills: data.sections.skills || [],
-      },
-      settings: currentResume?.settings || { fontSize: 10, spacing: 'normal' },
-      isDeleted: false,
-    };
-    onGenerate(fullResumeData);
+    // We now just pass the raw form data up. The action will handle conversion.
+    onGenerate(data);
   }
 
   const SectionHeader = ({ title, onAdd }: { title: string; onAdd: () => void }) => (

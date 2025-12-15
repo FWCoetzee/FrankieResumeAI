@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin } from "lucide-react";
-import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
+import type { ResumeData, GeneratedResumeData, ResumeFormData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -31,7 +31,7 @@ interface ResumePreviewProps {
   resumeData: ResumeData | null;
   isReviewing: boolean;
   onEdit: () => void;
-  onGenerate: (data: ResumeData) => void;
+  onGenerate: (data: ResumeFormData) => void;
   onAcceptEdit: (fieldPath: string, newValue: string | string[]) => void;
 }
 
@@ -75,8 +75,23 @@ const Placeholder = () => (
   </Card>
 );
 
-const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeData) => void, isLoading: boolean }) => {
+const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeFormData) => void, isLoading: boolean }) => {
   const { title, sections } = resumeData;
+
+  const formDataForGeneration: ResumeFormData = {
+    title: resumeData.title,
+    templateId: resumeData.templateId,
+    sections: {
+        summary: { content: resumeData.sections.summary.content },
+        experience: resumeData.sections.experience.map(exp => ({
+            ...exp,
+            startDate: exp.startDate?.split('T')[0],
+            endDate: exp.endDate?.split('T')[0] || 'Present',
+        })),
+        education: resumeData.sections.education,
+        skills: resumeData.sections.skills,
+    }
+  };
 
   return (
     <Card className="shadow-lg backdrop-blur-sm bg-card/80">
@@ -112,7 +127,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
           <div className="space-y-4">
             <h3 className="font-semibold text-md">Work Experience</h3>
             {sections.experience.map((job, index) => (
-              <div key={index} className="space-y-1.5 pl-4">
+              <div key={job.id || index} className="space-y-1.5 pl-4">
                 <div className="flex justify-between items-baseline">
                     <p className="font-semibold">{job.role} at {job.company}</p>
                     <p className="text-xs text-muted-foreground">{new Date(job.startDate).toLocaleDateString()} - {job.endDate ? new Date(job.endDate).toLocaleDateString() : 'Present'}</p>
@@ -130,7 +145,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
       </CardContent>
        <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-6">
           <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
-          <Button onClick={() => onGenerate(resumeData)} disabled={isLoading} className="w-full sm:w-auto">
+          <Button onClick={() => onGenerate(formDataForGeneration)} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
             Generate with AI
           </Button>
@@ -211,7 +226,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return <LoadingSkeleton />;
   }
 
-  if (result && resumeData) {
+  if (result && resumeData && result.resume) {
     return (
       <div className={wrapperClasses}>
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>

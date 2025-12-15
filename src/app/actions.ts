@@ -5,54 +5,55 @@ import { generateResumeFromData, type GenerateResumeFromDataInput, type Generate
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput, type ProvideResumeSuggestionsOutput } from "@/ai/flows/provide-resume-suggestions";
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from "@/ai/flows/generate-cover-letter-from-data";
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput, type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
-import type { ResumeData } from "@/lib/schema";
+import type { ResumeData, ResumeFormData } from "@/lib/schema";
 import { saveOrUpdateResumeDataClient } from "@/lib/client-firestore";
+import { v4 as uuidv4 } from "uuid";
 
-// This function now expects the full ResumeData object, including metadata like ownerId.
+// This function now expects the form data directly and the user ID.
 export async function generateResumeAction(
   userId: string,
-  resumeData: ResumeData
+  formData: ResumeFormData,
+  resumeId?: string // Pass existing resumeId if updating
 ): Promise<{
   error?: string;
   resume?: GenerateResumeFromDataOutput;
   suggestions?: string;
   coverLetter?: string;
   linkedin?: GenerateLinkedInProfileOutput;
+  savedResumeId?: string;
 }> {
 
-  // The AI flows require a different data structure than our new resumeSchema.
-  // We need to map the data from our new structure to the old structure the AI expects.
-  // This is a temporary measure until the AI flows are updated.
+  // This payload is a simplified version that directly uses form data.
+  // The AI flows are designed to handle this structure.
   const aiPayload = {
-    target_job_title: resumeData.title,
-    // These fields are no longer in our new model but are required by the AI flows.
-    // We provide sensible defaults.
+    target_job_title: formData.title,
+    // Provide sensible defaults for fields not in the simplified form.
     resume_intent: "Tech (ATS-Optimized)",
     experience_level: "Mid-level",
     resume_style: "Modern",
     language: "English",
     personal_info: {
-      full_name: "User", // This data is now in the /users collection, not on the resume object
+      full_name: "User", // This data would ideally come from the user's profile
       email: "",
       phone: "",
       location: "",
-      summary: resumeData.sections.summary.content,
+      summary: formData.sections.summary?.content || "",
     },
-    work_experience: resumeData.sections.experience.map(exp => ({
+    work_experience: formData.sections.experience.map(exp => ({
         job_title: exp.role,
         company: exp.company,
         start_date: exp.startDate,
         end_date: exp.endDate || undefined,
-        responsibilities: exp.bullets.join('\n'),
+        responsibilities: exp.bullets?.join('\n') || '',
         achievements: '',
     })),
     education: [],
-    skills: resumeData.sections.skills,
+    skills: formData.sections.skills || [],
     projects: [],
     certifications: [],
   };
 
-  const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills.join(', ')}.`;
+  const jobDescForAI = `A generic role for a candidate with skills like ${formData.sections.skills?.join(', ')}.`;
 
   try {
     const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
@@ -68,15 +69,43 @@ export async function generateResumeAction(
       generateLinkedInProfile(aiPayload as unknown as GenerateLinkedInProfileInput)
     ]);
     
-    // Save the complete resume data to Firestore.
-    // The resumeId is now part of the resumeData object.
-    saveOrUpdateResumeDataClient(userId, resumeData);
+    // Construct the full ResumeData object just before saving.
+    const finalResumeId = resumeId || uuidv4();
+    const resumeToSave: ResumeData = {
+        resumeId: finalResumeId,
+        ownerId: userId,
+        title: formData.title,
+        templateId: formData.templateId,
+        status: 'draft',
+        sections: {
+            summary: {
+                content: formData.sections.summary?.content || '',
+                lastEdited: new Date().toISOString(),
+            },
+            experience: (formData.sections.experience || []).map((exp, index) => ({
+                id: exp.id || uuidv4(),
+                role: exp.role,
+                company: exp.company,
+                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(),
+                endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
+                bullets: exp.bullets || [],
+                order: index,
+            })),
+            education: [],
+            skills: formData.sections.skills || [],
+        },
+        settings: { fontSize: 10, spacing: 'normal' },
+        isDeleted: false,
+    };
+
+    saveOrUpdateResumeDataClient(userId, resumeToSave);
     
     return {
       resume: resumeResult,
       suggestions: suggestionsResult.suggestions,
       coverLetter: coverLetterResult,
       linkedin: linkedInResult,
+      savedResumeId: finalResumeId,
     };
   } catch (error) {
     console.error("AI Generation or Firestore Error:", error);

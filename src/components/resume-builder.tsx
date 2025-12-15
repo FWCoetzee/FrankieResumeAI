@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
+import type { ResumeData, GeneratedResumeData, ResumeFormData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { generateResumeAction } from "@/app/actions";
 import { ResumeForm } from "./resume-form";
@@ -21,7 +21,6 @@ export function ResumeBuilder() {
   const isMobile = useIsMobile();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
-  // Zustand store provides all the state and actions
   const {
     currentResume,
     result,
@@ -33,7 +32,7 @@ export function ResumeBuilder() {
     updateResult,
   } = useResumeStore();
 
-  const handleGenerate = async (data: ResumeData) => {
+  const handleGenerate = async (data: ResumeFormData) => {
     if (!user) {
       setAuthDialogOpen(true);
       return;
@@ -43,21 +42,30 @@ export function ResumeBuilder() {
       title: "Generating your documents...",
       description: "The AI is working its magic. This may take a moment.",
     });
-    
-    // Ensure the ownerId is set correctly before sending to the action.
-    const dataWithUser = { ...data, ownerId: user.uid };
 
-    const response = await generateResumeAction(user.uid, dataWithUser);
-    generateAndSetResults(response, dataWithUser); // This action is now in the store
+    const response = await generateResumeAction(user.uid, data, currentResume?.resumeId);
+    
+    if(response.error) {
+         toast({
+            variant: "destructive",
+            title: "Generation Failed",
+            description: response.error,
+          });
+    } else {
+        toast({
+            title: "Success!",
+            description: currentResume?.resumeId ? "Your resume has been updated." : "Your new resume has been saved and generated.",
+          });
+    }
+
+    generateAndSetResults(response, data);
   };
 
   const handleAcceptEdit = (fieldPath: string, newValue: string | string[]) => {
     if (!result || !currentResume) return;
   
-    // Use lodash.cloneDeep to create a new object to avoid direct mutation
     const newResult = cloneDeep(result);
   
-    // Use lodash.set to safely update the nested property
     set(newResult, fieldPath, newValue);
       
     updateResult(newResult);
@@ -77,7 +85,7 @@ export function ResumeBuilder() {
           resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
-          onGenerate={handleGenerate}
+          onGenerate={() => handleGenerate(currentResume as unknown as ResumeFormData)}
           onAcceptEdit={handleAcceptEdit}
         />
       )
@@ -95,7 +103,7 @@ export function ResumeBuilder() {
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
       <div className="space-y-8 print-hidden">
-        <ResumeForm onGenerate={setFormForReview} isLoading={isLoading} />
+        <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
         {user && <ResumeHistory />}
       </div>
       <div className="lg:sticky top-24">
@@ -105,7 +113,7 @@ export function ResumeBuilder() {
           resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
-          onGenerate={handleGenerate}
+          onGenerate={() => handleGenerate(currentResume as unknown as ResumeFormData)}
           onAcceptEdit={handleAcceptEdit}
         />
       </div>
