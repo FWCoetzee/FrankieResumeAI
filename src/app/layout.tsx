@@ -48,8 +48,6 @@ export default function RootLayout({
             <main>
               {children}
             </main>
-            {/* This div is required for Firebase App Check with reCAPTCHA v2 */}
-            <div id="recaptcha-container" className="fixed bottom-4 right-4 z-50"></div>
           </div>
         </Providers>
         <Toaster />
