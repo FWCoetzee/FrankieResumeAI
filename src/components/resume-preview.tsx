@@ -180,15 +180,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const { toast } = useToast();
 
   const handleDownloadPdf = async () => {
-    const elementIdToCapture = activeTab === 'preview' ? 'resume-container-for-pdf' : 'cover-letter-container-for-pdf';
-    const input = document.getElementById(elementIdToCapture);
+    const elementToCapture = document.getElementById(
+      activeTab === 'preview' ? 'resume-content' : 'cover-letter-content'
+    );
 
-    if (!input) {
-      console.error(`Error: Element with ID '${elementIdToCapture}' not found.`);
+    if (!elementToCapture) {
       toast({
         variant: "destructive",
         title: "Download Failed",
-        description: "Could not find the content to download. Please try switching tabs.",
+        description: "Could not find the content to download.",
       });
       return;
     }
@@ -200,16 +200,18 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     });
 
     try {
-      // Use html2canvas to render the element to a canvas
-      const canvas = await html2canvas(input, {
-        scale: 2, // Increase scale for better resolution
+      const canvas = await html2canvas(elementToCapture, {
+        scale: 2, // Higher scale for better resolution
         useCORS: true,
         logging: false,
+        // Allow the canvas to expand to the full height of the content
+        height: elementToCapture.scrollHeight,
+        width: elementToCapture.scrollWidth,
+        windowHeight: elementToCapture.scrollHeight,
+        windowWidth: elementToCapture.scrollWidth,
       });
 
       const imgData = canvas.toDataURL('image/png');
-
-      // Use jsPDF to create a PDF from the canvas image
       const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
@@ -218,19 +220,27 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasHeight / canvasWidth;
-      const imgHeight = pdfWidth * ratio;
-      
-      let height = imgHeight;
-      if(height > pdfHeight) {
-        height = pdfHeight;
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = imgHeight / imgWidth;
+      const finalImgHeight = pdfWidth * ratio;
+
+      let position = 0;
+      let heightLeft = finalImgHeight;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - finalImgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
+        heightLeft -= pdfHeight;
       }
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height);
-      
-      const fileName = activeTab === 'preview' ? `${resumeData?.title || 'resume'}.pdf` : `cover-letter.pdf`;
+      const fileName = activeTab === 'preview' 
+        ? `${resumeData?.title?.replace(/ /g, '_') || 'resume'}.pdf` 
+        : `cover-letter.pdf`;
       pdf.save(fileName);
 
     } catch (error) {
@@ -279,11 +289,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="preview">
                     {result.resume && (
                         <>
-                        <div id="resume-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                            <TemplateRenderer 
-                                resume={result.resume}
-                                style={resumeData.templateId}
-                            />
+                        <div className="bg-gray-200 p-4 rounded-lg">
+                          <div id="resume-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-[8.5in]">
+                              <div id="resume-content">
+                                <TemplateRenderer 
+                                    resume={result.resume}
+                                    style={resumeData.templateId}
+                                />
+                              </div>
+                          </div>
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
@@ -299,8 +313,12 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
-                        <div id="cover-letter-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                            <CoverLetterContent content={result.coverLetter} />
+                        <div className="bg-gray-200 p-4 rounded-lg">
+                          <div id="cover-letter-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-[8.5in]">
+                              <div id="cover-letter-content">
+                                <CoverLetterContent content={result.coverLetter} />
+                              </div>
+                          </div>
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
@@ -358,3 +376,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
