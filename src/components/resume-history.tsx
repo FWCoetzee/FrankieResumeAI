@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useResumeStore } from "@/hooks/use-resume-store";
+import { useResumeStore, createNewBlankResume } from "@/hooks/use-resume-store";
 import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -30,7 +30,7 @@ type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'section
   id: string; 
   createdAt: Date;
   updatedAt: Date;
-  sections: Omit<ResumeData['sections'], 'summary' | 'experience'> & {
+  sections: Omit<ResumeData['sections'], 'summary' | 'experience' | 'education'> & {
     summary: Omit<ResumeData['sections']['summary'], 'lastEdited'> & {
       lastEdited: Date;
     };
@@ -40,6 +40,7 @@ type ComponentResumeData = Omit<ResumeData, 'createdAt' | 'updatedAt' | 'section
         endDate: Date | null;
       }
     >;
+    education: any[];
   };
 };
 
@@ -107,7 +108,7 @@ export function ResumeHistory() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [deleteCandidate, setDeleteCandidate] = useState<ComponentResumeData | null>(null);
-  const { clearCurrentResume } = useResumeStore();
+  const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
   
   const [resumes, setResumes] = useState<ComponentResumeData[] | null>(null);
@@ -115,18 +116,23 @@ export function ResumeHistory() {
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    // If the initial user check is still running, do nothing yet.
     if (isUserLoading) {
       setIsLoading(true);
       return;
     }
     
+    // If there is no user, clear the state and stop.
     if (!user) {
       setIsLoading(false);
-      setResumes(null);
+      setResumes(null); // Clear any existing data
       setError(null);
+      // Ensure the form is cleared as well by setting a new blank resume
+      setCurrentResume(createNewBlankResume(''));
       return;
     }
 
+    // At this point, we have a valid, authenticated user.
     setIsLoading(true);
 
     const q = query(
@@ -158,6 +164,7 @@ export function ResumeHistory() {
                 startDate: toDate(exp.startDate)!,
                 endDate: toDate(exp.endDate),
               })),
+              education: data.sections.education || [],
             },
           } as ComponentResumeData;
         });
@@ -179,15 +186,15 @@ export function ResumeHistory() {
       }
     );
 
+    // Cleanup function to unsubscribe from the listener when the component unmounts
+    // or when the user's auth state changes.
     return () => unsubscribe();
-  }, [user, firestore, isUserLoading]);
+  }, [user, firestore, isUserLoading, setCurrentResume]);
 
 
   const handleConfirmDelete = () => {
     if (deleteCandidate?.id && user) {
         deleteResumeDataClient(user.uid, deleteCandidate.id);
-        
-        clearCurrentResume(deleteCandidate.id);
         
         toast({
             title: "Resume Deleted",
@@ -198,7 +205,7 @@ export function ResumeHistory() {
   }
 
   const renderContent = () => {
-    if (isLoading || isUserLoading) {
+    if (isLoading) {
       return (
         <div className="text-center text-muted-foreground p-8 flex items-center justify-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />

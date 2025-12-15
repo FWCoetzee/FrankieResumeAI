@@ -23,7 +23,7 @@ interface ResumeState {
 
 interface ResumeActions {
   setCurrentResume: (resume: ResumeData | null) => void;
-  clearCurrentResume: (idToClear?: string) => void;
+  clearCurrentResume: () => void;
   setFormForReview: (data: ResumeData) => void;
   setIsEditing: () => void;
   generateAndSetResults: (response: GenerationResult, formData: ResumeData) => void;
@@ -69,13 +69,8 @@ export const useResumeStore = create<ResumeState & ResumeActions>()(
           isLoading: false,
         });
       },
-      clearCurrentResume: (idToClear) => {
-        const { currentResume } = get();
-        // If an ID is provided, only clear if it matches the current resume
-        if (idToClear && currentResume?.resumeId !== idToClear) {
-          return;
-        }
-        set({ ...initialState });
+      clearCurrentResume: () => {
+        set({ currentResume: null, result: null, isReviewing: false, isLoading: false });
       },
       setFormForReview: (data) => {
         set({ 
