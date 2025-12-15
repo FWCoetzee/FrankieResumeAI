@@ -93,7 +93,7 @@ export function ResumeBuilder() {
      return (
         <div className="space-y-8 print-hidden">
             <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
-            <ResumeForm onGenerate={setFormForReview} isLoading={isLoading} />
+            <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
             {user && <ResumeHistory />}
         </div>
      );

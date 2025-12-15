@@ -3,8 +3,10 @@
 
 import {
   doc,
-  serverTimestamp,
+  setDoc,
+  updateDoc,
   writeBatch,
+  serverTimestamp,
 } from 'firebase/firestore';
 import type { ResumeData } from '@/lib/schema';
 import { v4 as uuidv4 } from "uuid";
@@ -20,44 +22,37 @@ export function saveOrUpdateResumeDataClient(
   userId: string,
   data: ResumeData
 ): void {
-  const { firestore } = initializeFirebase(); // Get firestore instance
-  let resumeId = data.resumeId;
-  let isNew = false;
-
-  if (!resumeId) {
-    // If it's a new resume, generate an ID.
-    resumeId = uuidv4();
-    isNew = true;
-  }
-
+  const { firestore } = initializeFirebase();
+  const resumeId = data.resumeId || uuidv4();
   const docRef = doc(firestore, 'resumes', resumeId);
-  const batch = writeBatch(firestore);
+
+  const isNew = !data.resumeId;
 
   if (isNew) {
-    const dataToSave: ResumeData = {
+    const dataToSave = {
       ...data,
       resumeId: resumeId,
-      ownerId: userId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: "draft",
-    };
-    batch.set(docRef, { ...dataToSave, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-  } else {
-    // Ensure ownerId is not accidentally changed on update
-    const { ownerId, createdAt, ...restOfData } = data;
-    const dataToUpdate = {
-      ...restOfData,
+      ownerId: userId, // Ensure ownerId is set
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    batch.update(docRef, dataToUpdate);
-  }
+    setDoc(docRef, dataToSave).catch(error => {
+        console.error("Firestore setDoc failed:", error);
+    });
+  } else {
+    // For updates, we merge to avoid overwriting fields, and update the timestamp
+    const dataToUpdate = {
+        ...data,
+        updatedAt: serverTimestamp(),
+    };
+    // Ensure critical fields are not changed on update
+    delete (dataToUpdate as any).ownerId;
+    delete (dataToUpdate as any).createdAt;
 
-  // Commit the batch
-  batch.commit().catch(error => {
-    console.error("Failed to save resume data:", error);
-    // Here you could emit a global error event if needed
-  });
+    updateDoc(docRef, dataToUpdate).catch(error => {
+        console.error("Firestore updateDoc failed:", error);
+    });
+  }
 }
 
 /**
