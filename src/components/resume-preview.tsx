@@ -115,7 +115,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
               <div key={job.id || index} className="space-y-1.5 pl-4">
                 <div className="flex justify-between items-baseline">
                     <p className="font-semibold">{job.role} at {job.company}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(job.startDate).toLocaleDateString()} - {job.endDate ? new Date(job.endDate).toLocaleDateString() : 'Present'}</p>
+                    <p className="text-xs text-muted-foreground">{job.startDate ? new Date(job.startDate).toLocaleDateString() : ''} - {job.endDate ? new Date(job.endDate).toLocaleDateString() : 'Present'}</p>
                 </div>
                  {job.bullets && job.bullets.length > 0 && 
                     <ul className="list-disc pl-5">
@@ -182,6 +182,8 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     if (!printContainer) {
       printContainer = document.createElement('div');
       printContainer.id = 'printable-content';
+      // The element should be part of the body to be rendered, but can be visually hidden.
+      printContainer.className = "print-only-styles"; 
       document.body.appendChild(printContainer);
     }
     
@@ -189,19 +191,26 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     const contentToPrint = (activeTab === 'preview' && result.resume)
       ? <TemplateRenderer resume={result.resume} style={resumeData.templateId} />
-      : (result.coverLetter ? <CoverLetterContent content={result.coverLetter} /> : null);
+      : (activeTab === 'cover-letter' && result.coverLetter ? <CoverLetterContent content={result.coverLetter} /> : null);
       
-    if (!contentToPrint) return;
+    if (!contentToPrint) {
+      // If there is no content for the current tab to print, do nothing.
+      console.warn("No printable content for the active tab.");
+      return;
+    }
 
+    // Render the component to the hidden div
     root.render(contentToPrint);
 
+    // Use a short timeout to ensure the content is rendered before printing.
     setTimeout(() => {
         window.print();
+        // Clean up after printing
         root.unmount();
         if (printContainer) {
             printContainer.remove();
         }
-    }, 500);
+    }, 250);
   };
 
   const wrapperClasses = cn(

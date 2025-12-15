@@ -58,20 +58,38 @@
   }
 }
 
+/* Print-specific styles */
 @media print {
+  /* Hide everything except the printable content and its children */
   body > *:not(#printable-content) {
     display: none !important;
   }
+  
+  /* Ensure the printable container is visible and occupies the full page */
   #printable-content {
     display: block !important;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: auto;
+    height: 100%;
     background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
+  
+  /* Hide elements specifically marked as non-printable */
   .print-hidden {
     display: none !important;
   }
+}
+
+/* Styles for the container when not printing, to keep it out of the layout flow */
+.print-only-styles {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
 }
