@@ -5,7 +5,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV2Provider } from 'firebase/app-check';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -14,10 +14,11 @@ export function initializeFirebase() {
   // Initialize App Check if it hasn't been already.
   // This is a crucial step for projects with App Check enforced.
   if (typeof window !== 'undefined') {
-    // Pass your reCAPTCHA v3 site key (public key) to activate.
-    // You can find this in your Firebase project settings -> App Check.
+    // Pass your reCAPTCHA v2 site key (public key) to activate.
+    // You can find this in your Firebase project settings -> App Check -> Apps -> Your Web App.
+    // Make sure you have selected "reCAPTCHA v2" in the console.
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_QsqAAAAALGEgX-2a5GEwJpT22sveiMoE65T'),
+      provider: new ReCaptchaV2Provider('recaptcha-container', '6LeIxAcpAAAAAJu-5A_PM_T2W_x8S9vYgBfub2k6'),
 
       // Optional: set to 'true' to allow app to function before token is retrieved.
       isTokenAutoRefreshEnabled: true
