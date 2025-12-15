@@ -14,6 +14,7 @@ import { ResumeHistory } from "./resume-history";
 import { set, cloneDeep } from "lodash";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { AuthDialog } from "./auth-dialog";
+import { v4 as uuidv4 } from "uuid";
 
 export function ResumeBuilder() {
   const { user } = useUser();
@@ -23,6 +24,7 @@ export function ResumeBuilder() {
 
   const {
     currentResume,
+    setCurrentResume,
     result,
     isLoading,
     isReviewing,
@@ -35,9 +37,21 @@ export function ResumeBuilder() {
   const handleGenerate = async (data: ResumeFormData) => {
     if (!user) {
       setAuthDialogOpen(true);
+      // Persist form data to the store even if not logged in
+      const reviewData: Partial<ResumeData> = {
+          resumeId: currentResume?.resumeId || undefined,
+          title: data.title,
+          templateId: data.templateId,
+          sections: {
+              summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
+              experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: new Date(exp.startDate || '').toISOString(), endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
+              education: [],
+              skills: data.sections.skills || [],
+          }
+      };
+      setCurrentResume({ ...currentResume, ...reviewData } as ResumeData);
       return;
     }
-    
     setFormForReview(data);
   };
   
@@ -71,7 +85,8 @@ export function ResumeBuilder() {
         }
     };
 
-    const response = await generateResumeAction(user.uid, formData as ResumeFormData, currentResume?.resumeId);
+    // Use currentResume's resumeId if it exists
+    const response = await generateResumeAction(user.uid, formData as ResumeFormData, currentResume.resumeId);
     
     if(response.error) {
          toast({

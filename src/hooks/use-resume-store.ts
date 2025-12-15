@@ -43,7 +43,7 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   setCurrentResume: (resume) => {
     set({
       currentResume: resume,
-      result: null,
+      result: null, // Clear previous results when a new resume is loaded
       isReviewing: false,
       isLoading: false,
     });
@@ -54,12 +54,16 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   setFormForReview: (data) => {
+     // Get existing resumeId if available
+     const existingResumeId = get().currentResume?.resumeId;
+
      const reviewData: Partial<ResumeData> = {
+        resumeId: existingResumeId, // Preserve existing ID
         title: data.title,
         templateId: data.templateId,
         sections: {
             summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-            experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: new Date(exp.startDate || '').toISOString(), endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
+            experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: new Date(exp.startDate || '').toISOString(), endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
             education: [],
             skills: data.sections.skills || [],
         }
@@ -77,6 +81,7 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
 
   generateAndSetResults: (response, formData) => {
     set({ isLoading: true });
+    // When generation is successful, update the current resume in the store with the saved ID
     if (response.savedResumeId && get().currentResume) {
         set({ currentResume: { ...get().currentResume!, resumeId: response.savedResumeId } });
     }

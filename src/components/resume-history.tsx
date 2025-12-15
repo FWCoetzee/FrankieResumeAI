@@ -118,7 +118,6 @@ export function ResumeHistory() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If we're still checking for a user, or if there's no user, don't do anything.
     if (isUserLoading) {
       setIsLoading(true);
       return;
@@ -174,7 +173,6 @@ export function ResumeHistory() {
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [user, isUserLoading, firestore]);
 
@@ -196,15 +194,6 @@ export function ResumeHistory() {
             <p className="text-sm">{error.message}</p>
         </div>
        );
-    }
-
-    if (!user) {
-        return (
-             <div className="text-center text-muted-foreground p-8">
-                <FileText className="mx-auto h-8 w-8 mb-2" />
-                <p>Log in to see your resume history.</p>
-            </div>
-        )
     }
 
     if (!resumes || resumes.length === 0) {
