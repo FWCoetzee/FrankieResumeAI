@@ -22,16 +22,16 @@ import { AiEditor } from "./ai-editor";
 
 interface ResumePreviewProps {
   result: { 
-    resume: GeneratedResumeData; 
-    suggestions: string; 
-    coverLetter: string;
-    linkedin: GenerateLinkedInProfileOutput;
+    resume?: GeneratedResumeData; 
+    suggestions?: string; 
+    coverLetter?: string;
+    linkedin?: GenerateLinkedInProfileOutput;
   } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
   isReviewing: boolean;
   onEdit: () => void;
-  onGenerate: (data: ResumeFormData) => void;
+  onGenerate: () => void;
   onAcceptEdit: (fieldPath: string, newValue: string | string[]) => void;
 }
 
@@ -75,23 +75,8 @@ const Placeholder = () => (
   </Card>
 );
 
-const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: (data: ResumeFormData) => void, isLoading: boolean }) => {
+const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: () => void, isLoading: boolean }) => {
   const { title, sections } = resumeData;
-
-  const formDataForGeneration: ResumeFormData = {
-    title: resumeData.title,
-    templateId: resumeData.templateId,
-    sections: {
-        summary: { content: resumeData.sections.summary.content },
-        experience: resumeData.sections.experience.map(exp => ({
-            ...exp,
-            startDate: exp.startDate?.split('T')[0],
-            endDate: exp.endDate?.split('T')[0] || 'Present',
-        })),
-        education: resumeData.sections.education,
-        skills: resumeData.sections.skills,
-    }
-  };
 
   return (
     <Card className="shadow-lg backdrop-blur-sm bg-card/80">
@@ -145,7 +130,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
       </CardContent>
        <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-6">
           <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
-          <Button onClick={() => onGenerate(formDataForGeneration)} disabled={isLoading} className="w-full sm:w-auto">
+          <Button onClick={onGenerate} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
             Generate with AI
           </Button>
@@ -202,9 +187,11 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     
     const root = createRoot(printContainer);
 
-    const contentToPrint = activeTab === 'preview'
+    const contentToPrint = (activeTab === 'preview' && result.resume)
       ? <TemplateRenderer resume={result.resume} style={resumeData.templateId} />
-      : <CoverLetterContent content={result.coverLetter} />;
+      : (result.coverLetter ? <CoverLetterContent content={result.coverLetter} /> : null);
+      
+    if (!contentToPrint) return;
 
     root.render(contentToPrint);
 
@@ -226,53 +213,61 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return <LoadingSkeleton />;
   }
 
-  if (result && resumeData && result.resume) {
+  if (result && resumeData) {
     return (
       <div className={wrapperClasses}>
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-5 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
-              <TabsTrigger value="preview" className="gap-2 text-base">
+              <TabsTrigger value="preview" className="gap-2 text-base" disabled={!result.resume}>
                   <FileText /> Resume
               </TabsTrigger>
-              <TabsTrigger value="cover-letter" className="gap-2 text-base">
+              <TabsTrigger value="cover-letter" className="gap-2 text-base" disabled={!result.coverLetter}>
                   <FileSignature /> Cover Letter
               </TabsTrigger>
-               <TabsTrigger value="linkedin" className="gap-2 text-base">
+               <TabsTrigger value="linkedin" className="gap-2 text-base" disabled={!result.linkedin}>
                   <Linkedin /> LinkedIn
               </TabsTrigger>
               <TabsTrigger value="ai-editor" className="gap-2 text-base">
                 <Wand2 /> AI Editor
               </TabsTrigger>
-              <TabsTrigger value="suggestions" className="gap-2 text-base">
+              <TabsTrigger value="suggestions" className="gap-2 text-base" disabled={!result.suggestions}>
                   <Wand2 /> AI Suggestions
               </TabsTrigger>
               </TabsList>
               <div className="p-2 sm:p-4">
                   <TabsContent value="preview">
-                      <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                    {result.resume && (
+                        <>
+                        <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
                                 resume={result.resume}
                                 style={resumeData.templateId}
                             />
-                      </div>
-                      <div className="mt-4 flex justify-end gap-2 print-hidden">
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2 print-hidden">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                           <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                      </div>
+                        </div>
+                        </>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="cover-letter">
-                      <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
-                         <CoverLetterContent content={result.coverLetter} />
-                      </div>
-                      <div className="mt-4 flex justify-end gap-2 print-hidden">
-                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
-                          <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
-                      </div>
+                    {result.coverLetter && (
+                        <>
+                        <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                            <CoverLetterContent content={result.coverLetter} />
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2 print-hidden">
+                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
+                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                        </div>
+                        </>
+                    )}
                   </TabsContent>
                   
                    <TabsContent value="linkedin">
-                        <LinkedInPreview content={result.linkedin} />
+                        {result.linkedin && <LinkedInPreview content={result.linkedin} />}
                          <div className="mt-4 flex justify-end gap-2 print-hidden">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                         </div>
@@ -280,13 +275,14 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
                   <TabsContent value="ai-editor">
                     <AiEditor 
-                        result={result}
+                        result={result as any}
                         resumeData={resumeData}
                         onAcceptEdit={onAcceptEdit}
                     />
                   </TabsContent>
 
                   <TabsContent value="suggestions">
+                    {result.suggestions && (
                       <Card className="bg-white">
                           <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-lg">
@@ -301,6 +297,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                           />
                           </CardContent>
                       </Card>
+                    )}
                   </TabsContent>
               </div>
           </Tabs>

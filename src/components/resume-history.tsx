@@ -28,7 +28,6 @@ import { collection, query, where, onSnapshot, orderBy, Timestamp } from "fireba
 const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
   const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
-  const [isDeleting, setIsDeleting] = useState(false);
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const { user } = useUser();
 

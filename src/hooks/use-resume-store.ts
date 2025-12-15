@@ -17,7 +17,7 @@ interface ResumeState {
   currentResume: ResumeData | null;
   result: GenerationResult | null;
   isLoading: boolean;
-  isReviewing: boolean; // Managed locally or via simpler state if needed
+  isReviewing: boolean;
 }
 
 interface ResumeActions {

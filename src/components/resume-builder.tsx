@@ -38,12 +38,40 @@ export function ResumeBuilder() {
       return;
     }
     
+    setFormForReview(data);
+  };
+  
+  const handleConfirmGenerate = async () => {
+    if (!user || !currentResume) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "You must be logged in and have resume data to generate.",
+        });
+        return;
+    }
+
     toast({
       title: "Generating your documents...",
       description: "The AI is working its magic. This may take a moment.",
     });
 
-    const response = await generateResumeAction(user.uid, data, currentResume?.resumeId);
+    const formData = {
+        title: currentResume.title,
+        templateId: currentResume.templateId,
+        sections: {
+            summary: { content: currentResume.sections.summary.content },
+            experience: currentResume.sections.experience.map(exp => ({
+                ...exp,
+                startDate: exp.startDate?.split('T')[0],
+                endDate: exp.endDate?.split('T')[0] || 'Present',
+            })),
+            education: [],
+            skills: currentResume.sections.skills,
+        }
+    };
+
+    const response = await generateResumeAction(user.uid, formData as ResumeFormData, currentResume?.resumeId);
     
     if(response.error) {
          toast({
@@ -58,8 +86,8 @@ export function ResumeBuilder() {
           });
     }
 
-    generateAndSetResults(response, data);
-  };
+    generateAndSetResults(response, formData as ResumeFormData);
+  }
 
   const handleAcceptEdit = (fieldPath: string, newValue: string | string[]) => {
     if (!result || !currentResume) return;
@@ -85,7 +113,7 @@ export function ResumeBuilder() {
           resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
-          onGenerate={() => handleGenerate(currentResume as unknown as ResumeFormData)}
+          onGenerate={handleConfirmGenerate}
           onAcceptEdit={handleAcceptEdit}
         />
       )
@@ -113,7 +141,7 @@ export function ResumeBuilder() {
           resumeData={currentResume} 
           isReviewing={isReviewing}
           onEdit={setIsEditing}
-          onGenerate={() => handleGenerate(currentResume as unknown as ResumeFormData)}
+          onGenerate={handleConfirmGenerate}
           onAcceptEdit={handleAcceptEdit}
         />
       </div>
