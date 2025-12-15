@@ -5,7 +5,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin } from "lucide-react";
+import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2 } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
@@ -17,6 +17,9 @@ import { CreativeTemplate } from "./templates/creative-template";
 import { LinkedInPreview } from "./linkedin-preview";
 import { cn } from "@/lib/utils";
 import { AiEditor } from "./ai-editor";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { useToast } from "@/hooks/use-toast";
 
 
 interface ResumePreviewProps {
@@ -173,54 +176,73 @@ const CoverLetterContent = ({ content }: { content: string }) => {
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
   const [activeTab, setActiveTab] = React.useState("preview");
+  const [isDownloading, setIsDownloading] = React.useState(false);
+  const { toast } = useToast();
 
-  const handlePrint = () => {
-    console.log("Download button clicked. Active tab:", activeTab);
-    if (!result) {
-        console.error("No result data to print.");
-        return;
+  const handleDownloadPdf = async () => {
+    const elementIdToCapture = activeTab === 'preview' ? 'resume-container-for-pdf' : 'cover-letter-container-for-pdf';
+    const input = document.getElementById(elementIdToCapture);
+
+    if (!input) {
+      console.error(`Error: Element with ID '${elementIdToCapture}' not found.`);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Could not find the content to download. Please try switching tabs.",
+      });
+      return;
     }
 
-    const printableElementId = activeTab === 'preview' ? 'resume-printable-content' : 'cover-letter-printable-content';
-    const contentToPrint = document.getElementById(printableElementId);
+    setIsDownloading(true);
+    toast({
+      title: "Generating PDF...",
+      description: "Please wait while your document is being prepared.",
+    });
 
-    if (!contentToPrint) {
-        console.error("Printable content not found for ID:", printableElementId);
-        return;
-    }
-    
-    console.log("Found printable content:", contentToPrint);
+    try {
+      // Use html2canvas to render the element to a canvas
+      const canvas = await html2canvas(input, {
+        scale: 2, // Increase scale for better resolution
+        useCORS: true,
+        logging: false,
+      });
 
-    // Create a style element to control what's visible for printing
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @media print {
-        /* Hide everything by default */
-        body > * {
-          display: none !important;
-        }
-        /* Show only the printable container and its content */
-        #printable-content, #printable-content > * {
-          display: block !important;
-        }
-        /* Specifically show the active printable section */
-        #${printableElementId} {
-            display: block !important;
-        }
-        /* Hide the other non-active printable section */
-        #printable-content > div:not(#${printableElementId}) {
-            display: none !important;
-        }
+      const imgData = canvas.toDataURL('image/png');
+
+      // Use jsPDF to create a PDF from the canvas image
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasHeight / canvasWidth;
+      const imgHeight = pdfWidth * ratio;
+      
+      let height = imgHeight;
+      if(height > pdfHeight) {
+        height = pdfHeight;
       }
-    `;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, height);
+      
+      const fileName = activeTab === 'preview' ? `${resumeData?.title || 'resume'}.pdf` : `cover-letter.pdf`;
+      pdf.save(fileName);
 
-    document.head.appendChild(style);
-    console.log("Printing...");
-
-    window.print();
-
-    // Clean up the style element after printing
-    document.head.removeChild(style);
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred during PDF generation.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const wrapperClasses = cn(
@@ -235,21 +257,6 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   if (result && resumeData) {
     return (
       <div className={wrapperClasses}>
-          {/* This div holds the content that will be printed. It's hidden from view by default. */}
-          <div id="printable-content">
-            <div id="resume-printable-content">
-                {result.resume && (
-                     <TemplateRenderer 
-                        resume={result.resume}
-                        style={resumeData.templateId}
-                    />
-                )}
-            </div>
-            <div id="cover-letter-printable-content">
-                {result.coverLetter && <CoverLetterContent content={result.coverLetter} />}
-            </div>
-          </div>
-      
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-5 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
               <TabsTrigger value="preview" className="gap-2 text-base" disabled={!result.resume}>
@@ -272,15 +279,18 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="preview">
                     {result.resume && (
                         <>
-                        <div id="resume-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                        <div id="resume-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <TemplateRenderer 
                                 resume={result.resume}
                                 style={resumeData.templateId}
                             />
                         </div>
-                        <div className="mt-4 flex justify-end gap-2 print-hidden">
+                        <div className="mt-4 flex justify-end gap-2">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
-                          <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                          <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
+                            {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+                            {isDownloading ? "Downloading..." : "Download PDF"}
+                          </Button>
                         </div>
                         </>
                     )}
@@ -289,12 +299,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
-                        <div id="cover-letter-content-display" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
+                        <div id="cover-letter-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner">
                             <CoverLetterContent content={result.coverLetter} />
                         </div>
-                        <div className="mt-4 flex justify-end gap-2 print-hidden">
+                        <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
-                            <Button onClick={handlePrint} size="sm"><Download /> Download PDF</Button>
+                            <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
+                                {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+                                {isDownloading ? "Downloading..." : "Download PDF"}
+                            </Button>
                         </div>
                         </>
                     )}
@@ -302,7 +315,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   
                    <TabsContent value="linkedin">
                         {result.linkedin && <LinkedInPreview content={result.linkedin} />}
-                         <div className="mt-4 flex justify-end gap-2 print-hidden">
+                         <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                         </div>
                   </TabsContent>
