@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from "uuid";
 // This function now expects the form data directly and the user ID.
 export async function generateResumeAction(
   userId: string,
+  userName: string | null,
+  userEmail: string | null,
   formData: ResumeFormData,
   resumeId?: string // Pass existing resumeId if updating
 ): Promise<{
@@ -33,8 +35,8 @@ export async function generateResumeAction(
     resume_style: "Modern",
     language: "English",
     personal_info: {
-      full_name: "User", // This data would ideally come from the user's profile
-      email: "",
+      full_name: userName || "User", // This data would ideally come from the user's profile
+      email: userEmail || "",
       phone: "",
       location: "",
       summary: formData.sections.summary?.content || "",
@@ -71,12 +73,14 @@ export async function generateResumeAction(
     
     // Construct the full ResumeData object just before saving.
     const finalResumeId = resumeId || uuidv4();
-    const resumeToSave: ResumeData = {
+    const resumeToSave: ResumeData & { userName: string | null; userEmail: string | null } = {
         resumeId: finalResumeId,
         ownerId: userId,
         title: formData.title,
         templateId: formData.templateId,
         status: 'draft',
+        userName,
+        userEmail,
         sections: {
             summary: {
                 content: formData.sections.summary?.content || '',

@@ -86,7 +86,7 @@ export function ResumeBuilder() {
     };
 
     // Use currentResume's resumeId if it exists
-    const response = await generateResumeAction(user.uid, formData as ResumeFormData, currentResume.resumeId);
+    const response = await generateResumeAction(user.uid, user.displayName, user.email, formData as ResumeFormData, currentResume.resumeId);
     
     if(response.error) {
          toast({

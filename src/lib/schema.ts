@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 // ####################################
@@ -71,8 +72,8 @@ export const resumeSchema = z.object({
   status: resumeStatusSchema.default("draft"),
   sections: resumeSectionsSchema,
   settings: resumeSettingsSchema,
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
+  createdAt: z.any().optional(),
+  updatedAt: z.any().optional(),
   isDeleted: z.boolean().default(false),
 });
 export type ResumeData = z.infer<typeof resumeSchema>;

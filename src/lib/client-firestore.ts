@@ -7,7 +7,6 @@ import {
   updateDoc,
   writeBatch,
   serverTimestamp,
-  collection,
 } from 'firebase/firestore';
 import type { ResumeData } from '@/lib/schema';
 import { v4 as uuidv4 } from "uuid";
@@ -26,14 +25,9 @@ export function saveOrUpdateResumeDataClient(
   const { firestore } = initializeFirebase();
   const resumeId = data.resumeId || uuidv4();
   // Correct path: /users/{userId}/resumes/{resumeId}
-  const docRef = doc(firestore, 'users', userId, 'resumes', resumeId);
+  const resumeDocRef = doc(firestore, 'users', userId, 'resumes', resumeId);
 
   const isNew = !data.resumeId;
-
-  // We explicitly create the user document to ensure it exists before writing to a subcollection.
-  // This prevents certain edge-case security rule failures.
-  const userDocRef = doc(firestore, 'users', userId);
-  setDoc(userDocRef, { userId: userId }, { merge: true });
 
   if (isNew) {
     const dataToSave = {
@@ -43,9 +37,27 @@ export function saveOrUpdateResumeDataClient(
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    setDoc(docRef, dataToSave).catch(error => {
-        console.error("Firestore setDoc failed:", error);
+
+    // Use a write batch to ensure atomic creation of user and resume docs
+    const batch = writeBatch(firestore);
+    
+    // 1. Ensure the parent user document exists.
+    const userDocRef = doc(firestore, 'users', userId);
+    batch.set(userDocRef, { 
+        userId: userId, 
+        email: data.userEmail, // Assuming userEmail is passed in data for creation
+        displayName: data.userName, // Assuming userName is passed
+        updatedAt: serverTimestamp() 
+    }, { merge: true });
+
+    // 2. Create the new resume document in the subcollection.
+    batch.set(resumeDocRef, dataToSave);
+
+    // Commit the batch
+    batch.commit().catch(error => {
+        console.error("Firestore batch write failed for new resume:", error);
     });
+
   } else {
     const dataToUpdate = {
         ...data,
@@ -55,7 +67,7 @@ export function saveOrUpdateResumeDataClient(
     delete (dataToUpdate as any).ownerId;
     delete (dataToUpdate as any).createdAt;
 
-    updateDoc(docRef, dataToUpdate).catch(error => {
+    updateDoc(resumeDocRef, dataToUpdate).catch(error => {
         console.error("Firestore updateDoc failed:", error);
     });
   }
@@ -76,10 +88,7 @@ export function deleteResumeDataClient(
   const docRef = doc(firestore, 'users', userId, 'resumes', resumeId);
   
   // Perform a soft delete by updating the isDeleted flag
-  const batch = writeBatch(firestore);
-  batch.update(docRef, { isDeleted: true, updatedAt: serverTimestamp() });
-
-  batch.commit().catch(error => {
+  updateDoc(docRef, { isDeleted: true, updatedAt: serverTimestamp() }).catch(error => {
     console.error("Failed to delete resume:", error);
   });
 }
