@@ -18,7 +18,7 @@ export function initializeFirebase() {
     // You can find this in your Firebase project settings -> App Check -> Apps -> Your Web App.
     // Make sure you have selected "reCAPTCHA v2" in the console.
     initializeAppCheck(app, {
-      provider: new ReCaptchaV2Provider('recaptcha-container', '6LeIxAcpAAAAAJu-5A_PM_T2W_x8S9vYgBfub2k6'),
+      provider: new ReCaptchaV2Provider('6LeIxAcpAAAAAJu-5A_PM_T2W_x8S9vYgBfub2k6'),
 
       // Optional: set to 'true' to allow app to function before token is retrieved.
       isTokenAutoRefreshEnabled: true
