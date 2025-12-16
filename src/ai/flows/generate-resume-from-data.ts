@@ -144,12 +144,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
           
           const {output} = await ai.run(
               {name: 'primaryModelGeneration', labels: {model: primaryModel.name}},
-              () => prompt({
-                  prompt: prompt.prompt,
-                  input: payload,
-                  model: primaryModel,
-                  output: {schema: generatedResumeSchema},
-              })
+              () => prompt(payload, { model: primaryModel })
           );
           
           const latency = Date.now() - startTime;
@@ -192,12 +187,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
         
         const {output} = await ai.run(
             {name: 'fallbackModelGeneration', labels: {model: fallbackModel.name}},
-            () => prompt({
-                prompt: prompt.prompt,
-                input: payload,
-                model: fallbackModel,
-                output: {schema: generatedResumeSchema},
-            })
+            () => prompt(payload, { model: fallbackModel })
         );
         
         const latency = Date.now() - startTime;
