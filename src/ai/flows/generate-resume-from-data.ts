@@ -10,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, generatedResumeSchema, type GeneratedResumeData, languageSchema } from '@/lib/schema';
 
@@ -120,25 +121,126 @@ const generateResumeFromDataFlow = ai.defineFlow(
     outputSchema: generatedResumeSchema,
   },
   async (input) => {
-    try {
-      const {output} = await prompt(input);
-      if (!output) {
-        throw new Error("The AI failed to generate a structured resume. The output was empty.");
-      }
-      return output;
-    } catch (error: any) {
-        // Simple retry logic for 503 errors.
-        if (error.message && error.message.includes('503 Service Unavailable')) {
-            console.warn('AI service is unavailable, retrying in 2 seconds...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            const {output} = await prompt(input);
-            if (!output) {
-                throw new Error("The AI failed to generate a structured resume on retry.");
-            }
-            return output;
+    /**
+     * Generates a resume with a fallback mechanism.
+     * It first tries the primary, faster model (gemini-2.5-flash).
+     * If it fails due to overload or rate limiting, it retries with exponential backoff.
+     * If all retries fail, it falls back to a more powerful secondary model (gemini-1.5-pro).
+     * @param payload The input data for the resume generation prompt.
+     * @returns The generated and validated resume data.
+     */
+    async function generateWithFallback(payload: GenerateResumeFromDataInput): Promise<GeneratedResumeData> {
+      const primaryModel = googleAI.model('gemini-2.5-flash');
+      const fallbackModel = googleAI.model('gemini-1.5-pro-preview-0514');
+      const maxRetries = 2;
+      let attempt = 0;
+      let backoff = 1000; // Initial backoff in ms
+
+      while (attempt <= maxRetries) {
+        attempt++;
+        try {
+          console.log(`[LLM Router] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          const startTime = Date.now();
+          
+          const {output} = await ai.run(
+              {name: 'primaryModelGeneration', labels: {model: primaryModel.name}},
+              () => prompt({
+                  prompt: prompt.prompt,
+                  input: payload,
+                  model: primaryModel,
+                  output: {schema: generatedResumeSchema},
+              })
+          );
+          
+          const latency = Date.now() - startTime;
+          console.log(`[LLM Router] Primary model success. Latency: ${latency}ms.`);
+
+          if (!output) {
+            throw new Error("Primary model returned empty output.");
+          }
+          
+          // Validate output against schema
+          const validation = generatedResumeSchema.safeParse(output);
+          if (!validation.success) {
+              console.error("[LLM Router] Primary model output failed Zod validation.", validation.error);
+              // For future: Could attempt to repair the JSON here or just failover.
+              throw new Error("Invalid output schema from primary model.");
+          }
+
+          return validation.data;
+
+        } catch (error: any) {
+          const isOverloaded = error.message && (error.message.includes('429') || error.message.includes('503'));
+          
+          if (isOverloaded && attempt <= maxRetries) {
+            console.warn(`[LLM Router] Primary model failed (overloaded/rate-limited). Retrying in ${backoff}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            backoff *= 2; // Exponential backoff
+            continue; // Retry the loop
+          }
+
+          console.error(`[LLM Router] Primary model failed permanently after ${attempt} attempt(s). Error: ${error.message}. Failing over to fallback model.`);
+          break; // Exit loop to proceed to fallback
         }
-        // Re-throw other errors
-        throw error;
+      }
+
+      // If the loop completes without returning, it means the primary model failed.
+      // Now, try the fallback model.
+      try {
+        console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel.name}).`);
+        const startTime = Date.now();
+        
+        const {output} = await ai.run(
+            {name: 'fallbackModelGeneration', labels: {model: fallbackModel.name}},
+            () => prompt({
+                prompt: prompt.prompt,
+                input: payload,
+                model: fallbackModel,
+                output: {schema: generatedResumeSchema},
+            })
+        );
+        
+        const latency = Date.now() - startTime;
+        console.log(`[LLM Router] Fallback model success. Latency: ${latency}ms.`);
+
+        if (!output) {
+          throw new Error("Fallback model returned empty output.");
+        }
+        
+        // Validate fallback output against schema
+        const validation = generatedResumeSchema.safeParse(output);
+        if (!validation.success) {
+            console.error("[LLM Router] Fallback model output failed Zod validation.", validation.error);
+            // If the fallback also fails validation, we have a bigger problem.
+            throw new Error("Invalid output schema from fallback model.");
+        }
+
+        return validation.data;
+      } catch (fallbackError: any) {
+        console.error(`[LLM Router] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);
+        // This is a hard failure. The user will see an error.
+        throw new Error("The AI service is currently unavailable. Please try again later.");
+      }
     }
+
+    return await generateWithFallback(input);
   }
 );
+
+/*
+### Suggestions for Future Improvements ###
+
+1.  **More LLMs**: The `generateWithFallback` function can be extended into a "chain of responsibility".
+    Instead of a primary and a single fallback, we could have a list of models to try in order:
+    `const modelsToTry = [ 'gemini-2.5-flash', 'gemini-1.5-pro', 'gpt-4o-mini', 'claude-3.5-sonnet' ]`.
+    The function would iterate through this list until one succeeds. This would require adding the respective Genkit plugins.
+
+2.  **Cost-Based Routing**: The model list could be an array of objects `{ name: '...', costPerToken: 0.001 }`.
+    The router could dynamically choose the cheapest model that is currently available and meets a certain quality bar,
+    or allow users to select a "Quality vs. Speed/Cost" preference.
+
+3.  **A/B Testing**: We could randomly route a small percentage of traffic (e.g., 5%) to a new or different model
+    to compare its performance, cost, and output quality against our primary model. This can be done by adding a
+    `if (Math.random() < 0.05) { useTestModel() }` block in the router logic. The results, latency, and user feedback
+    can be logged for analysis.
+*/
