@@ -52,7 +52,7 @@ const sampleValues: ResumeFormData = {
         id: uuidv4(),
         role: "Senior Frontend Engineer",
         company: "Innovate Inc.",
-        startDate: "2020-01",
+        startDate: "2020-01-01",
         endDate: "Present",
         bullets: [
             "Improved application load times by 40% by implementing code splitting and lazy loading.",
@@ -64,8 +64,8 @@ const sampleValues: ResumeFormData = {
         id: uuidv4(),
         role: "Software Engineer",
         company: "Tech Solutions LLC",
-        startDate: "2018-06",
-        endDate: "2020-01",
+        startDate: "2018-06-01",
+        endDate: "2020-01-01",
         bullets: [
             "Successfully migrated legacy class components to modern functional components with Hooks, improving code readability and maintainability.",
             "Contributed to a 20% increase in conversion rates by optimizing the checkout flow."
@@ -190,7 +190,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 </TabsContent>
 
                 <TabsContent value="experience" className="m-0 space-y-4">
-                    <SectionHeader title="Your Experience" onAdd={() => appendExp({ id: uuidv4(), role: "", company: ""})} />
+                    <SectionHeader title="Your Experience" onAdd={() => appendExp({ role: "", company: ""})} />
                     {expFields.map((field, index) => (
                         <Card key={field.id} className="relative bg-muted/50 p-4">
                             <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeExp(index)}><Trash2 className="h-4 w-4" /></Button>
@@ -198,7 +198,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                             <FormField name={`sections.experience.${index}.company`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Company</FormLabel><FormControl><Input placeholder="Acme Inc." {...field} /></FormControl><FormMessage /></FormItem> )} />
                             <div className="grid md:grid-cols-2 gap-4 mt-4">
                                 <FormField name={`sections.experience.${index}.startDate`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                                <FormField name={`sections.experience.${index}.endDate`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField name={`sections.experience.${index}.endDate`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date (leave blank if current)</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
                              <FormField name={`sections.experience.${index}.bullets`} control={form.control} render={({ field }) => ( 
                                 <FormItem className="mt-4">
@@ -220,7 +220,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 </TabsContent>
 
                 <TabsContent value="education" className="m-0 space-y-4">
-                    <SectionHeader title="Your Education" onAdd={() => appendEdu({ id: uuidv4(), degree: "", institution: "" })} />
+                    <SectionHeader title="Your Education" onAdd={() => appendEdu({ degree: "", institution: "" })} />
                     {eduFields.map((field, index) => (
                         <Card key={field.id} className="relative bg-muted/50 p-4">
                             <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeEdu(index)}><Trash2 className="h-4 w-4" /></Button>
@@ -235,7 +235,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 </TabsContent>
 
                 <TabsContent value="projects" className="m-0 space-y-4">
-                    <SectionHeader title="Projects / Leadership" onAdd={() => appendProj({ id: uuidv4(), title: "", description: "" })} />
+                    <SectionHeader title="Projects / Leadership" onAdd={() => appendProj({ title: "", description: "" })} />
                     {projFields.map((field, index) => (
                         <Card key={field.id} className="relative bg-muted/50 p-4">
                             <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeProj(index)}><Trash2 className="h-4 w-4" /></Button>

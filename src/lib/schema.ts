@@ -73,7 +73,7 @@ export const resumeSectionsSchema = z.object({
   experience: z.array(resumeSectionExperienceSchema),
   education: z.array(resumeSectionEducationSchema),
   skills: z.array(z.string()),
-  projects: z.array(resumeSectionProjectSchema),
+  projects: z.array(resumeSectionProjectSchema).optional(),
 });
 
 export const resumeSettingsSchema = z.object({
@@ -107,7 +107,7 @@ export const resumeFormSchema = z.object({
       content: z.string().optional(),
     }),
     experience: z.array(z.object({
-        id: z.string(),
+        id: z.string().optional(),
         company: z.string().min(1, "Company is required"),
         role: z.string().min(1, "Role is required"),
         startDate: z.string().optional(),
@@ -117,7 +117,7 @@ export const resumeFormSchema = z.object({
       })
     ).optional(),
     education: z.array(z.object({
-        id: z.string(),
+        id: z.string().optional(),
         degree: z.string().min(1, "Degree is required"),
         institution: z.string().min(1, "Institution is required"),
         startYear: z.string().optional(),
@@ -126,7 +126,7 @@ export const resumeFormSchema = z.object({
     })).optional(),
     skills: z.array(z.string()).optional(),
     projects: z.array(z.object({
-        id: z.string(),
+        id: z.string().optional(),
         title: z.string().min(1, "Project title is required"),
         description: z.string().optional(),
         order: z.number().optional(),

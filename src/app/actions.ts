@@ -59,7 +59,7 @@ export async function generateResumeAction(
     projects: formData.sections.projects?.map(proj => ({
         title: proj.title,
         description: proj.description,
-        technologies: [], // Assuming technologies are part of description for now
+        technologies: [],
     })) || [],
     certifications: [],
   };
