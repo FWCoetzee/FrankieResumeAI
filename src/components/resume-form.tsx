@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star } from "lucide-react";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb } from "lucide-react";
 import { useEffect } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
@@ -36,6 +36,7 @@ const emptyValues: ResumeFormData = {
     experience: [],
     education: [],
     skills: [],
+    projects: [],
   },
 };
 
@@ -71,8 +72,23 @@ const sampleValues: ResumeFormData = {
         ],
       }
     ],
-    education: [],
+    education: [
+      {
+        id: uuidv4(),
+        degree: "B.Sc. in Computer Science",
+        institution: "University of Technology",
+        startYear: "2014",
+        endYear: "2018",
+      }
+    ],
     skills: ["React", "TypeScript", "Next.js", "JavaScript (ES6+)", "HTML5 & CSS3", "Tailwind CSS", "State Management (Zustand, Redux)", "Testing (Jest, React Testing Library)"],
+    projects: [
+        {
+            id: uuidv4(),
+            title: "Personal Portfolio Website",
+            description: "Developed and deployed a personal portfolio using Next.js and Tailwind CSS, showcasing my projects and skills. Implemented server-side rendering for improved performance and SEO.",
+        }
+    ]
   }
 };
 
@@ -92,14 +108,19 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
             title: currentResume.title,
             templateId: currentResume.templateId,
             sections: {
-                summary: { content: currentResume.sections.summary.content },
-                experience: currentResume.sections.experience.map(exp => ({
+                summary: { content: currentResume.sections.summary?.content || "" },
+                experience: (currentResume.sections.experience || []).map(exp => ({
                     ...exp,
                     startDate: exp.startDate?.split('T')[0], // Format for input[type=date]
                     endDate: exp.endDate?.split('T')[0] || 'Present',
                 })),
-                education: currentResume.sections.education,
-                skills: currentResume.sections.skills,
+                education: (currentResume.sections.education || []).map(edu => ({
+                    ...edu,
+                })),
+                skills: currentResume.sections.skills || [],
+                projects: (currentResume.sections.projects || []).map(proj => ({
+                    ...proj,
+                })),
             }
         };
         form.reset(formData);
@@ -109,6 +130,8 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   }, [currentResume, form]);
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "sections.experience" });
+  const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "sections.education" });
+  const { fields: projFields, append: appendProj, remove: removeProj } = useFieldArray({ control: form.control, name: "sections.projects" });
   
   const handleFillSampleData = () => {
     form.reset(sampleValues);
@@ -146,10 +169,12 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
         </Card>
 
         <Tabs defaultValue="customization" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 h-auto md:h-10 md:grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 h-auto md:h-10 md:grid-cols-6">
                 <TabsTrigger value="customization"><Settings className="mr-2 hidden md:inline-flex"/> General</TabsTrigger>
                 <TabsTrigger value="personal_info"><User className="mr-2 hidden md:inline-flex"/> Summary</TabsTrigger>
                 <TabsTrigger value="experience"><Briefcase className="mr-2 hidden md:inline-flex"/> Experience</TabsTrigger>
+                <TabsTrigger value="education"><GraduationCap className="mr-2 hidden md:inline-flex"/> Education</TabsTrigger>
+                <TabsTrigger value="projects"><Lightbulb className="mr-2 hidden md:inline-flex"/> Projects</TabsTrigger>
                 <TabsTrigger value="skills"><Star className="mr-2 hidden md:inline-flex"/> Skills</TabsTrigger>
             </TabsList>
             
@@ -190,6 +215,32 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                                 <FormMessage />
                                 </FormItem> 
                             )} />
+                        </Card>
+                    ))}
+                </TabsContent>
+
+                <TabsContent value="education" className="m-0 space-y-4">
+                    <SectionHeader title="Your Education" onAdd={() => appendEdu({ id: uuidv4(), degree: "", institution: "" })} />
+                    {eduFields.map((field, index) => (
+                        <Card key={field.id} className="relative bg-muted/50 p-4">
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeEdu(index)}><Trash2 className="h-4 w-4" /></Button>
+                            <FormField name={`sections.education.${index}.degree`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Degree / Certificate</FormLabel><FormControl><Input placeholder="B.Sc. in Computer Science" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`sections.education.${index}.institution`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Institution</FormLabel><FormControl><Input placeholder="University of Technology" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                <FormField name={`sections.education.${index}.startYear`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Year</FormLabel><FormControl><Input placeholder="2018" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                                <FormField name={`sections.education.${index}.endYear`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Year</FormLabel><FormControl><Input placeholder="2022" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            </div>
+                        </Card>
+                    ))}
+                </TabsContent>
+
+                <TabsContent value="projects" className="m-0 space-y-4">
+                    <SectionHeader title="Projects / Leadership" onAdd={() => appendProj({ id: uuidv4(), title: "", description: "" })} />
+                    {projFields.map((field, index) => (
+                        <Card key={field.id} className="relative bg-muted/50 p-4">
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeProj(index)}><Trash2 className="h-4 w-4" /></Button>
+                            <FormField name={`sections.projects.${index}.title`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Project Title</FormLabel><FormControl><Input placeholder="Personal Portfolio Website" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`sections.projects.${index}.description`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="Describe the project, your role, and the outcome." {...field} rows={4} /></FormControl><FormMessage /></FormItem> )} />
                         </Card>
                     ))}
                 </TabsContent>

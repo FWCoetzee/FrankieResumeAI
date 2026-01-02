@@ -63,9 +63,10 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
         templateId: data.templateId,
         sections: {
             summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-            experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(), endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
-            education: [],
+            experience: (data.sections.experience || []).map((exp, index) => ({ ...exp, id: exp.id || uuidv4(), startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(), endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: index })),
+            education: (data.sections.education || []).map((edu, index) => ({...edu, id: edu.id || uuidv4(), order: index })),
             skills: data.sections.skills || [],
+            projects: (data.sections.projects || []).map((proj, index) => ({...proj, id: proj.id || uuidv4(), order: index })),
         }
     };
     set({ 

@@ -49,9 +49,18 @@ export async function generateResumeAction(
         responsibilities: exp.bullets?.join('\n') || '',
         achievements: '',
     })),
-    education: [],
+    education: formData.sections.education?.map(edu => ({
+        degree: edu.degree,
+        institution: edu.institution,
+        start_year: edu.startYear,
+        end_year: edu.endYear,
+    })) || [],
     skills: formData.sections.skills || [],
-    projects: [],
+    projects: formData.sections.projects?.map(proj => ({
+        title: proj.title,
+        description: proj.description,
+        technologies: [], // Assuming technologies are part of description for now
+    })) || [],
     certifications: [],
   };
 
@@ -95,7 +104,20 @@ export async function generateResumeAction(
                 bullets: exp.bullets || [],
                 order: index,
             })),
-            education: [],
+            education: (formData.sections.education || []).map((edu, index) => ({
+                id: edu.id || uuidv4(),
+                degree: edu.degree,
+                institution: edu.institution,
+                startYear: edu.startYear,
+                endYear: edu.endYear,
+                order: index,
+            })),
+            projects: (formData.sections.projects || []).map((proj, index) => ({
+                id: proj.id || uuidv4(),
+                title: proj.title,
+                description: proj.description || '',
+                order: index,
+            })),
             skills: formData.sections.skills || [],
         },
         settings: { fontSize: 10, spacing: 'normal' },

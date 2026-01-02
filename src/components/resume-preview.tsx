@@ -5,7 +5,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2 } from "lucide-react";
+import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2, BookOpen } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
@@ -92,7 +92,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
             <h2 className="text-2xl font-bold">{title}</h2>
         </div>
 
-        {sections.summary.content && (
+        {sections.summary?.content && (
             <div className="space-y-2">
                 <h3 className="text-md font-semibold text-center uppercase tracking-wider text-muted-foreground">Summary</h3>
                 <p className="text-center text-sm text-pretty">{sections.summary.content}</p>
@@ -110,7 +110,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
             </div>
         )}
 
-        {sections.experience.length > 0 && (
+        {sections.experience && sections.experience.length > 0 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-md">Work Experience</h3>
             {sections.experience.map((job, index) => (
@@ -124,6 +124,32 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
                       {job.bullets.map((bullet, i) => <li key={i} className="text-pretty">{bullet}</li>)}
                     </ul>
                   }
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.education && sections.education.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-md">Education</h3>
+            {sections.education.map((edu, index) => (
+              <div key={edu.id || index} className="space-y-1.5 pl-4">
+                <div className="flex justify-between items-baseline">
+                    <p className="font-semibold">{edu.degree} from {edu.institution}</p>
+                    <p className="text-xs text-muted-foreground">{edu.startYear} - {edu.endYear}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.projects && sections.projects.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-semibold text-md">Projects</h3>
+            {sections.projects.map((proj, index) => (
+              <div key={proj.id || index} className="space-y-1.5 pl-4">
+                 <p className="font-semibold">{proj.title}</p>
+                 <p className="text-pretty">{proj.description}</p>
               </div>
             ))}
           </div>
@@ -201,10 +227,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     try {
       const canvas = await html2canvas(elementToCapture, {
-        scale: 2, // Higher scale for better resolution
+        scale: 2,
         useCORS: true,
         logging: false,
-        // Allow the canvas to expand to the full height of the content
         height: elementToCapture.scrollHeight,
         width: elementToCapture.scrollWidth,
         windowHeight: elementToCapture.scrollHeight,
@@ -255,6 +280,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     }
   };
 
+
   const wrapperClasses = cn(
     "transition-all duration-300",
     "bg-background/60 backdrop-blur-xl border rounded-xl shadow-lg",
@@ -282,7 +308,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                 <Wand2 /> AI Editor
               </TabsTrigger>
               <TabsTrigger value="suggestions" className="gap-2 text-base" disabled={!result.suggestions}>
-                  <Wand2 /> AI Suggestions
+                  <BookOpen /> Suggestions
               </TabsTrigger>
               </TabsList>
               <div className="p-2 sm:p-4">
@@ -290,7 +316,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                     {result.resume && (
                         <>
                         <div className="bg-gray-200 p-4 rounded-lg">
-                          <div id="resume-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-[8.5in]">
+                          <div id="resume-container-for-pdf" className="overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-full aspect-[8.5/11]">
                               <div id="resume-content">
                                 <TemplateRenderer 
                                     resume={result.resume}
@@ -376,5 +402,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-    
