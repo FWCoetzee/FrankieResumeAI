@@ -61,7 +61,11 @@ export async function generateResumeAction(
         description: proj.description,
         technologies: [],
     })) || [],
-    certifications: [],
+    certifications: formData.sections.certifications || [],
+    references: formData.sections.references?.map(ref => ({
+        name: ref.name,
+        contact: ref.contact,
+    })) || [],
   };
 
   const jobDescForAI = `A generic role for a candidate with skills like ${formData.sections.skills?.join(', ')}.`;
@@ -119,6 +123,12 @@ export async function generateResumeAction(
                 order: index,
             })),
             skills: formData.sections.skills || [],
+            references: (formData.sections.references || []).map((ref, index) => ({
+                id: ref.id || uuidv4(),
+                name: ref.name,
+                contact: ref.contact,
+                order: index,
+            })),
         },
         settings: { fontSize: 10, spacing: 'normal' },
         isDeleted: false,

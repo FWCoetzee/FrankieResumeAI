@@ -55,6 +55,7 @@ const GenerateResumeFromDataInputSchema = z.object({
     })
   ),
   certifications: z.array(z.string()),
+  references: z.array(z.object({ name: z.string(), contact: z.string() })),
 });
 
 export type GenerateResumeFromDataInput = z.infer<typeof GenerateResumeFromDataInputSchema>;
@@ -77,6 +78,7 @@ You will rewrite and enhance the provided content. For example:
 - For each work experience, convert the responsibilities and achievements into a concise list of 3-5 bullet points. Start each bullet point with a strong action verb. Quantify achievements with metrics wherever possible.
 - Select the most relevant skills and categorize them.
 - Rewrite project descriptions to be concise and achievement-oriented.
+- Format references professionally.
 - You MUST also provide translations for the main section headings of the resume in the specified language.
 
 You MUST provide your output as a single, valid JSON object that strictly adheres to the provided Zod schema for the output. Do NOT add any commentary or text outside of the JSON structure.
@@ -110,6 +112,10 @@ Raw Resume Data:
 - Original Certifications:
 {{#each certifications}}
   - {{{this}}}
+{{/each}}
+- Original References:
+{{#each references}}
+  - {{{name}}}: {{{contact}}}
 {{/each}}
 
 Based on all this information, generate the final, polished JSON output in the requested language ({{{language}}}).`,

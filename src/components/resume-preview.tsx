@@ -230,6 +230,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         scale: 2,
         useCORS: true,
         logging: false,
+        // These properties are key to capturing the full content
         height: elementToCapture.scrollHeight,
         width: elementToCapture.scrollWidth,
         windowHeight: elementToCapture.scrollHeight,
@@ -245,22 +246,29 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgWidth = imgProps.width;
+      const imgHeight = imgProps.height;
       const ratio = imgHeight / imgWidth;
-      const finalImgHeight = pdfWidth * ratio;
-
+      
+      let finalImgHeight = pdfWidth * ratio;
       let position = 0;
       let heightLeft = finalImgHeight;
 
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
-      heightLeft -= pdfHeight;
+      if (finalImgHeight < pdfHeight) {
+          // If the image is smaller than one page, just add it
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
+      } else {
+          // If the image is larger than one page, split it
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
+          heightLeft -= pdfHeight;
 
-      while (heightLeft > 0) {
-        position = heightLeft - finalImgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
-        heightLeft -= pdfHeight;
+          while (heightLeft > 0) {
+              position = heightLeft - finalImgHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
+              heightLeft -= pdfHeight;
+          }
       }
       
       const fileName = activeTab === 'preview' 

@@ -8,7 +8,7 @@ interface TemplateProps {
 }
 
 export const ModernTemplate: React.FC<TemplateProps> = ({ resume }) => {
-  const { header, summary, skills, experience, education, projects, headings } = resume;
+  const { header, summary, skills, experience, education, projects, certifications, references, headings } = resume;
 
   return (
     <div className="bg-white text-black p-8 font-sans text-sm">
@@ -88,7 +88,7 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume }) => {
 
       {/* Projects */}
       {projects && projects.length > 0 && (
-        <section>
+        <section className="mb-6">
           <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.projects}</h2>
           {projects.map((proj, index) => (
             <div key={index} className="mb-3 last:mb-0">
@@ -99,6 +99,29 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume }) => {
         </section>
       )}
 
+      {/* Certifications */}
+      {certifications && certifications.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.certifications}</h2>
+          <ul className="list-disc list-inside space-y-1 text-gray-700">
+            {certifications.map((cert, index) => (
+                <li key={index}>{cert}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* References */}
+      {references && references.length > 0 && (
+        <section>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.references}</h2>
+           {references.map((ref, index) => (
+            <div key={index} className="mb-2 last:mb-0">
+               <p className="text-gray-700"><span className="font-bold">{ref.name}</span> - {ref.contact}</p>
+            </div>
+          ))}
+        </section>
+      )}
     </div>
   );
 };

@@ -16,7 +16,7 @@ const SidebarSection: React.FC<{ title: string; children: React.ReactNode; class
 
 
 export const CreativeTemplate: React.FC<TemplateProps> = ({ resume }) => {
-  const { header, summary, skills, experience, education, projects, headings } = resume;
+  const { header, summary, skills, experience, education, projects, certifications, references, headings } = resume;
 
   return (
     <div className="bg-white text-gray-800 font-sans flex min-h-full">
@@ -62,6 +62,16 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume }) => {
             </div>
           ))}
         </SidebarSection>
+
+        {certifications && certifications.length > 0 && (
+            <SidebarSection title={headings.certifications}>
+                 <ul className="space-y-1 text-sm text-gray-300">
+                    {certifications.map((cert, index) => (
+                        <li key={index}>{cert}</li>
+                    ))}
+                </ul>
+            </SidebarSection>
+        )}
       </aside>
 
       {/* Main Content */}
@@ -90,13 +100,26 @@ export const CreativeTemplate: React.FC<TemplateProps> = ({ resume }) => {
         </section>
 
         {projects && projects.length > 0 && (
-          <section>
+          <section className="mb-8">
             <h2 className="text-xl font-bold uppercase tracking-wider text-gray-500 mb-4">{headings.projects}</h2>
             <div className="space-y-4">
               {projects.map((proj, index) => (
                 <div key={index}>
                   <h3 className="font-bold text-base">{proj.title}</h3>
                   <p className="mt-1 text-sm text-gray-600">{proj.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {references && references.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold uppercase tracking-wider text-gray-500 mb-4">{headings.references}</h2>
+             <div className="space-y-3">
+              {references.map((ref, index) => (
+                <div key={index}>
+                  <p className="text-gray-700"><span className="font-bold">{ref.name}</span> - {ref.contact}</p>
                 </div>
               ))}
             </div>

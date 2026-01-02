@@ -16,7 +16,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 
 
 export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume }) => {
-  const { header, summary, skills, experience, education, projects, headings } = resume;
+  const { header, summary, skills, experience, education, projects, certifications, references, headings } = resume;
 
   return (
     <div className="bg-white text-gray-800 p-10 font-serif text-sm leading-relaxed">
@@ -105,6 +105,26 @@ export const MinimalistTemplate: React.FC<TemplateProps> = ({ resume }) => {
                             <p className="mt-1 text-sm">{proj.description}</p>
                         </div>
                     ))}
+                </Section>
+            )}
+        </div>
+        
+        <div className="grid grid-cols-2 gap-x-12">
+            {/* Certifications */}
+            {certifications && certifications.length > 0 && (
+                <Section title={headings.certifications}>
+                    <ul className="space-y-1 font-sans">
+                        {certifications.map((cert, index) => <li key={index}>{cert}</li>)}
+                    </ul>
+                </Section>
+            )}
+
+            {/* References */}
+            {references && references.length > 0 && (
+                 <Section title={headings.references}>
+                    <ul className="space-y-1 font-sans">
+                        {references.map((ref, index) => <li key={index}><span className="font-semibold">{ref.name}</span> - {ref.contact}</li>)}
+                    </ul>
                 </Section>
             )}
         </div>

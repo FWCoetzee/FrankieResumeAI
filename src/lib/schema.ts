@@ -67,6 +67,13 @@ export const resumeSectionProjectSchema = z.object({
     order: z.number(),
 });
 
+export const resumeSectionReferenceSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    contact: z.string(),
+    order: z.number(),
+});
+
 
 export const resumeSectionsSchema = z.object({
   summary: resumeSectionSummarySchema,
@@ -74,6 +81,7 @@ export const resumeSectionsSchema = z.object({
   education: z.array(resumeSectionEducationSchema),
   skills: z.array(z.string()),
   projects: z.array(resumeSectionProjectSchema).optional(),
+  references: z.array(resumeSectionReferenceSchema).optional(),
 });
 
 export const resumeSettingsSchema = z.object({
@@ -131,6 +139,13 @@ export const resumeFormSchema = z.object({
         description: z.string().optional(),
         order: z.number().optional(),
     })).optional(),
+    certifications: z.array(z.string()).optional(),
+    references: z.array(z.object({
+        id: z.string().optional(),
+        name: z.string().min(1, "Reference name is required"),
+        contact: z.string().min(1, "Contact info is required"),
+        order: z.number().optional(),
+    })).optional(),
   }),
 });
 export type ResumeFormData = z.infer<typeof resumeFormSchema>;
@@ -147,6 +162,8 @@ export const generatedResumeSchema = z.object({
     experience: z.string(),
     education: z.string(),
     projects: z.string(),
+    certifications: z.string(),
+    references: z.string(),
   }),
   header: z.object({
     name: z.string(),
@@ -171,6 +188,11 @@ export const generatedResumeSchema = z.object({
   projects: z.array(z.object({
     title: z.string(),
     description: z.string(),
+  })).optional(),
+  certifications: z.array(z.string()).optional(),
+  references: z.array(z.object({
+    name: z.string(),
+    contact: z.string(),
   })).optional(),
 });
 export type GeneratedResumeData = z.infer<typeof generatedResumeSchema>;

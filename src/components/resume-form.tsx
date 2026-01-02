@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb } from "lucide-react";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award } from "lucide-react";
 import { useEffect } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
@@ -37,6 +37,8 @@ const emptyValues: ResumeFormData = {
     education: [],
     skills: [],
     projects: [],
+    certifications: [],
+    references: [],
   },
 };
 
@@ -88,6 +90,17 @@ const sampleValues: ResumeFormData = {
             title: "Personal Portfolio Website",
             description: "Developed and deployed a personal portfolio using Next.js and Tailwind CSS, showcasing my projects and skills. Implemented server-side rendering for improved performance and SEO.",
         }
+    ],
+    certifications: [
+        "Certified React Developer",
+        "Google Cloud Certified - Associate Cloud Engineer"
+    ],
+    references: [
+        {
+            id: uuidv4(),
+            name: "Jane Smith",
+            contact: "Available upon request",
+        }
     ]
   }
 };
@@ -121,6 +134,10 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 projects: (currentResume.sections.projects || []).map(proj => ({
                     ...proj,
                 })),
+                certifications: [], // This will be handled separately
+                references: (currentResume.sections.references || []).map(ref => ({
+                    ...ref,
+                })),
             }
         };
         form.reset(formData);
@@ -132,6 +149,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "sections.experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "sections.education" });
   const { fields: projFields, append: appendProj, remove: removeProj } = useFieldArray({ control: form.control, name: "sections.projects" });
+  const { fields: refFields, append: appendRef, remove: removeRef } = useFieldArray({ control: form.control, name: "sections.references" });
   
   const handleFillSampleData = () => {
     form.reset(sampleValues);
@@ -169,13 +187,15 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
         </Card>
 
         <Tabs defaultValue="customization" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-auto md:h-10 md:grid-cols-6">
+            <TabsList className="grid w-full grid-cols-2 h-auto md:h-10 md:grid-cols-8">
                 <TabsTrigger value="customization"><Settings className="mr-2 hidden md:inline-flex"/> General</TabsTrigger>
                 <TabsTrigger value="personal_info"><User className="mr-2 hidden md:inline-flex"/> Summary</TabsTrigger>
                 <TabsTrigger value="experience"><Briefcase className="mr-2 hidden md:inline-flex"/> Experience</TabsTrigger>
                 <TabsTrigger value="education"><GraduationCap className="mr-2 hidden md:inline-flex"/> Education</TabsTrigger>
                 <TabsTrigger value="projects"><Lightbulb className="mr-2 hidden md:inline-flex"/> Projects</TabsTrigger>
                 <TabsTrigger value="skills"><Star className="mr-2 hidden md:inline-flex"/> Skills</TabsTrigger>
+                <TabsTrigger value="certifications"><Award className="mr-2 hidden md:inline-flex"/> Certs</TabsTrigger>
+                <TabsTrigger value="references"><BookUser className="mr-2 hidden md:inline-flex"/> Refs</TabsTrigger>
             </TabsList>
             
             <Card className="mt-4">
@@ -264,6 +284,39 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                         </FormItem>
                         )}
                     />
+                </TabsContent>
+
+                <TabsContent value="certifications" className="m-0 space-y-6">
+                    <FormField
+                        name="sections.certifications"
+                        control={form.control}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Certifications</FormLabel>
+                            <FormControl>
+                            <Textarea
+                                placeholder="Enter each certification on a new line"
+                                onChange={e => field.onChange(e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                                value={Array.isArray(field.value) ? field.value.join('\n') : ''}
+                                rows={5}
+                            />
+                            </FormControl>
+                            <FormDescription>Separate each certification with a new line.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </TabsContent>
+
+                <TabsContent value="references" className="m-0 space-y-4">
+                    <SectionHeader title="Your References" onAdd={() => appendRef({ name: "", contact: "" })} />
+                    {refFields.map((field, index) => (
+                        <Card key={field.id} className="relative bg-muted/50 p-4">
+                            <Button type="button" variant="destructive" size="icon" className="absolute top-4 right-4 h-7 w-7" onClick={() => removeRef(index)}><Trash2 className="h-4 w-4" /></Button>
+                            <FormField name={`sections.references.${index}.name`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Reference Name</FormLabel><FormControl><Input placeholder="Jane Smith" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                            <FormField name={`sections.references.${index}.contact`} control={form.control} render={({ field }) => ( <FormItem className="mt-4"><FormLabel>Contact Info / Relationship</FormLabel><FormControl><Input placeholder="Available upon request" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                        </Card>
+                    ))}
                 </TabsContent>
 
               </CardContent>
