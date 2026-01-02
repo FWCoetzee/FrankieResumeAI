@@ -41,14 +41,14 @@ export async function generateResumeAction(
       location: "",
       summary: formData.sections.summary?.content || "",
     },
-    work_experience: formData.sections.experience.map(exp => ({
+    work_experience: formData.sections.experience?.map(exp => ({
         job_title: exp.role,
         company: exp.company,
         start_date: exp.startDate,
         end_date: exp.endDate || undefined,
         responsibilities: exp.bullets?.join('\n') || '',
         achievements: '',
-    })),
+    })) || [],
     education: formData.sections.education?.map(edu => ({
         degree: edu.degree,
         institution: edu.institution,
