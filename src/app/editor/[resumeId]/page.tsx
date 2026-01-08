@@ -12,17 +12,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function EditorPage() {
     const { user, isUserLoading } = useUser();
     const params = useParams();
-    const { setCurrentResume, clearCurrentResume } = useResumeStore();
+    const { clearCurrentResume } = useResumeStore();
 
     const resumeId = params.resumeId as string;
 
     useEffect(() => {
-        // When the route is for a new resume, clear any existing resume data from the store.
-        // This ensures the form starts fresh.
+        // When the route is for a new resume, clear any existing resume data from the store
+        // to ensure the form starts fresh.
         if (resumeId === 'new') {
             clearCurrentResume();
         }
-        // In a real app, if resumeId is not 'new', you would fetch the specific resume data here.
+        // In a real app, if resumeId is not 'new', you would fetch the specific resume data here
+        // and set it in the store. For now, the dashboard handles loading existing resumes.
     }, [resumeId, clearCurrentResume]);
 
     if (isUserLoading) {
@@ -40,22 +41,23 @@ export default function EditorPage() {
             </div>
         );
     }
-
-    if (!user) {
-        // For logged-out users, show the onboarding flow which leads to the form.
-        // This is the intended path for new, unauthenticated visitors.
+    
+    // If a user is logged IN, always show the resume builder.
+    // This covers both creating a new resume and editing an existing one.
+    if (user) {
         return (
-            <div id="resume-builder" className="container mx-auto px-4 py-16 md:py-24">
-                <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Create Your Resume</h2>
-                <OnboardingFlow />
+            <div id="resume-builder" className="container mx-auto px-4 py-12 md:py-16">
+                <ResumeBuilder />
             </div>
-        )
+        );
     }
 
-    // For logged-in users (whether creating 'new' or editing), show the full resume builder directly.
+    // If a user is NOT logged in, show the onboarding flow.
+    // This guides new, unauthenticated visitors through the initial steps.
     return (
-        <div id="resume-builder" className="container mx-auto px-4 py-12 md:py-16">
-            <ResumeBuilder />
+        <div id="resume-builder" className="container mx-auto px-4 py-16 md:py-24">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Create Your Resume</h2>
+            <OnboardingFlow />
         </div>
     );
 }

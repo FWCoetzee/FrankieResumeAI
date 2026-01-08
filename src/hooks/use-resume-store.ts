@@ -50,28 +50,52 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   clearCurrentResume: () => {
-    set({ currentResume: null, result: null, isReviewing: false, isLoading: false });
+    // When clearing, we don't nullify the object entirely, but reset it to a state
+    // that represents a new, unsaved resume. This preserves the flow.
+    const newResume: ResumeData = {
+        resumeId: '', // An empty resumeId signifies a new, unsaved document
+        ownerId: '',
+        title: '',
+        templateId: 'modern',
+        status: 'draft',
+        sections: {
+            summary: { content: '', lastEdited: new Date().toISOString() },
+            experience: [],
+            education: [],
+            skills: [],
+            projects: [],
+            references: [],
+        },
+        settings: { fontSize: 10, spacing: 'normal' },
+        isDeleted: false,
+    };
+    set({ currentResume: newResume, result: null, isReviewing: false, isLoading: false });
   },
 
   setFormForReview: (data) => {
-     // Get existing resumeId if available
-     const existingResumeId = get().currentResume?.resumeId;
+     // Get the current resume from the store. It might be null or an existing resume.
+     const currentResume = get().currentResume;
+
+     // If there's an existing resume, preserve its ID. Otherwise, it's a new resume.
+     const resumeId = currentResume?.resumeId || '';
 
      const reviewData: Partial<ResumeData> = {
-        resumeId: existingResumeId, // Preserve existing ID
+        resumeId: resumeId,
         title: data.title,
         templateId: data.templateId,
         sections: {
             summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-            experience: (data.sections.experience || []).map((exp, index) => ({ ...exp, id: exp.id || uuidv4(), startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(), endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: index })),
+            experience: (data.sections.experience || []).map((exp, index) => ({ ...exp, id: exp.id || uuidv4(), startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '', endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: index })),
             education: (data.sections.education || []).map((edu, index) => ({...edu, id: edu.id || uuidv4(), order: index })),
             skills: data.sections.skills || [],
-            projects: (data.sections.projects || []).map((proj, index) => ({...proj, id: proj.id || uuidv4(), order: index })),
+            projects: (data.sections.projects || []).map((proj, index) => ({...proj, id: proj.id || uuidv4(), description: proj.description || '', order: index })),
+            references: (data.sections.references || []).map((ref, index) => ({...ref, id: ref.id || uuidv4(), order: index })),
         }
     };
+
     set({ 
       isReviewing: true, 
-      currentResume: { ...get().currentResume, ...reviewData } as ResumeData,
+      currentResume: { ...currentResume, ...reviewData } as ResumeData,
       result: null 
     });
   },
@@ -81,12 +105,20 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   generateAndSetResults: (response, formData) => {
-    set({ isLoading: true });
-    // When generation is successful, update the current resume in the store with the saved ID
-    if (response.savedResumeId && get().currentResume) {
-        set({ currentResume: { ...get().currentResume!, resumeId: response.savedResumeId } });
-    }
-    set({ result: response, isLoading: false, isReviewing: false });
+    set((state) => {
+      // When generation is successful, update the current resume in the store with the saved ID
+      const updatedResume = state.currentResume && response.savedResumeId
+        ? { ...state.currentResume, resumeId: response.savedResumeId }
+        : state.currentResume;
+
+      return {
+        ...state,
+        result: response,
+        currentResume: updatedResume,
+        isLoading: false,
+        isReviewing: false,
+      };
+    });
   },
 
   updateResult: (newResult) => {
