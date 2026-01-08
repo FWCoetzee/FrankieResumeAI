@@ -23,7 +23,7 @@ interface ResumeState {
 interface ResumeActions {
   setCurrentResume: (resume: ResumeData | null) => void;
   clearCurrentResume: () => void;
-  generateAndSetResults: (response: GenerationResult, formData: ResumeFormData) => void;
+  generateAndSetResults: (response: GenerationResult) => void;
   updateResult: (newResult: GenerationResult) => void;
   setFormForReview: (data: ResumeFormData) => void;
   setIsEditing: () => void;
@@ -35,6 +35,25 @@ const initialState: ResumeState = {
   result: null,
   isLoading: false,
   isReviewing: false,
+};
+
+const emptyResume: ResumeData = {
+    resumeId: '', 
+    ownerId: '',
+    title: '',
+    templateId: 'modern',
+    status: 'draft',
+    sections: {
+        summary: { content: '', lastEdited: new Date().toISOString() },
+        experience: [],
+        education: [],
+        skills: [],
+        projects: [],
+        certifications: [],
+        references: [],
+    },
+    settings: { fontSize: 10, spacing: 'normal' },
+    isDeleted: false,
 };
 
 export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => ({
@@ -50,31 +69,12 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   clearCurrentResume: () => {
-    const newResume: ResumeData = {
-        resumeId: '', 
-        ownerId: '',
-        title: '',
-        templateId: 'modern',
-        status: 'draft',
-        sections: {
-            summary: { content: '', lastEdited: new Date().toISOString() },
-            experience: [],
-            education: [],
-            skills: [],
-            projects: [],
-            certifications: [],
-            references: [],
-        },
-        settings: { fontSize: 10, spacing: 'normal' },
-        isDeleted: false,
-    };
-    set({ currentResume: newResume, result: null, isReviewing: false, isLoading: false });
+    set({ currentResume: emptyResume, result: null, isReviewing: false, isLoading: false });
   },
 
   setFormForReview: (data: ResumeFormData) => {
      const existingResume = get().currentResume;
      
-     // Construct a valid ResumeData object from form data for review.
      const reviewData: ResumeData = {
         resumeId: existingResume?.resumeId || '',
         ownerId: existingResume?.ownerId || '',
@@ -89,7 +89,8 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
                 id: exp.id || uuidv4(),
                 role: exp.role,
                 company: exp.company,
-                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(),
+                // Add guard against invalid date strings
+                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
                 endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
                 bullets: exp.bullets || [],
                 order: index,
@@ -130,7 +131,7 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
     set({ isReviewing: false, result: null });
   },
 
-  generateAndSetResults: (response, formData) => {
+  generateAndSetResults: (response) => {
     set((state) => {
       // When generation is successful, update the current resume in the store with the saved ID
       const updatedResume = state.currentResume && response.savedResumeId
@@ -138,7 +139,6 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
         : state.currentResume;
 
       return {
-        ...state,
         result: response,
         currentResume: updatedResume,
         isLoading: false,

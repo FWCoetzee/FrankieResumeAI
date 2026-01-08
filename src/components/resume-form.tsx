@@ -3,7 +3,7 @@
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { resumeFormSchema, type ResumeFormData, type ResumeData } from "@/lib/schema";
+import { resumeFormSchema, type ResumeFormData } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -138,7 +138,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
     } else {
         form.reset(emptyValues);
     }
-  }, [currentResume, form]);
+  }, [currentResume, form.reset]);
 
   const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control: form.control, name: "sections.experience" });
   const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control: form.control, name: "sections.education" });

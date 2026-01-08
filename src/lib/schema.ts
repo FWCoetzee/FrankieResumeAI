@@ -101,9 +101,10 @@ export const resumeSchema = z.object({
   status: resumeStatusSchema.default("draft"),
   sections: z.object({
     summary: resumeSectionSummarySchema,
+    // Note: startDate is a string (ISO) but can be empty if not provided.
     experience: z.array(resumeSectionExperienceSchema.extend({
-        startDate: z.string().datetime().optional(),
-        endDate: z.string().datetime().nullable().optional(),
+        startDate: z.string().optional(), 
+        endDate: z.string().nullable().optional(),
     })),
     education: z.array(resumeSectionEducationSchema),
     skills: z.array(z.string()),

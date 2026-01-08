@@ -83,9 +83,8 @@ export async function generateResumeAction(
       generateLinkedInProfile(aiPayload as unknown as GenerateLinkedInProfileInput)
     ]);
     
-    // Construct the full ResumeData object just before saving.
     const finalResumeId = resumeId || uuidv4();
-    const resumeToSave: ResumeData & { userName: string | null; userEmail: string | null } = {
+    const resumeToSave: ResumeData & { userName?: string | null; userEmail?: string | null } = {
         resumeId: finalResumeId,
         ownerId: userId,
         title: formData.title,
@@ -102,7 +101,7 @@ export async function generateResumeAction(
                 id: exp.id || uuidv4(),
                 role: exp.role,
                 company: exp.company,
-                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(),
+                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
                 endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
                 bullets: exp.bullets || [],
                 order: index,
