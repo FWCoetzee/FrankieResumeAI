@@ -35,18 +35,18 @@ const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
     // Convert all Timestamp objects back to ISO strings for form compatibility
     const resumeForStore: ResumeData = {
         ...resume,
-        createdAt: resume.createdAt ? new Date(resume.createdAt).toISOString() : new Date().toISOString(),
-        updatedAt: resume.updatedAt ? new Date(resume.updatedAt).toISOString() : new Date().toISOString(),
+        createdAt: resume.createdAt instanceof Date ? resume.createdAt.toISOString() : new Date().toISOString(),
+        updatedAt: resume.updatedAt instanceof Date ? resume.updatedAt.toISOString() : new Date().toISOString(),
         sections: {
             ...resume.sections,
             summary: {
                 ...resume.sections.summary,
-                lastEdited: resume.sections.summary.lastEdited ? new Date(resume.sections.summary.lastEdited).toISOString() : new Date().toISOString(),
+                lastEdited: resume.sections.summary.lastEdited instanceof Date ? resume.sections.summary.lastEdited.toISOString() : new Date().toISOString(),
             },
-            experience: resume.sections.experience.map(exp => ({
+            experience: (resume.sections.experience || []).map(exp => ({
                 ...exp,
-                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
-                endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null,
+                startDate: exp.startDate instanceof Date ? exp.startDate.toISOString() : '',
+                endDate: exp.endDate instanceof Date ? exp.endDate.toISOString() : null,
             }))
         }
     };
@@ -69,7 +69,7 @@ const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
     setDeleteCandidate(null);
   }
 
-  const updatedAt = resume.updatedAt ? new Date(resume.updatedAt) : null;
+  const updatedAt = resume.updatedAt instanceof Date ? resume.updatedAt : null;
 
   return (
     <>
@@ -132,7 +132,6 @@ export function ResumeHistory() {
     setIsLoading(true);
     setError(null);
 
-    // Correct path: /users/{userId}/resumes
     const resumesRef = collection(firestore, 'users', user.uid, 'resumes');
     const q = query(
       resumesRef, 

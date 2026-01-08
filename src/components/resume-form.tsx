@@ -116,7 +116,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   
   useEffect(() => {
     if (currentResume) {
-        // Map ResumeData to ResumeFormData for form compatibility
+        // Map ResumeData (from store) to ResumeFormData for form compatibility
         const formData: ResumeFormData = {
             title: currentResume.title,
             templateId: currentResume.templateId,
@@ -124,20 +124,14 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 summary: { content: currentResume.sections.summary?.content || "" },
                 experience: (currentResume.sections.experience || []).map(exp => ({
                     ...exp,
-                    startDate: exp.startDate?.split('T')[0], // Format for input[type=date]
-                    endDate: exp.endDate?.split('T')[0] || 'Present',
+                    startDate: exp.startDate?.split('T')[0] || '', // Format for input[type=date]
+                    endDate: exp.endDate?.split('T')[0] || '',
                 })),
-                education: (currentResume.sections.education || []).map(edu => ({
-                    ...edu,
-                })),
+                education: currentResume.sections.education || [],
                 skills: currentResume.sections.skills || [],
-                projects: (currentResume.sections.projects || []).map(proj => ({
-                    ...proj,
-                })),
-                certifications: [], // This will be handled separately
-                references: (currentResume.sections.references || []).map(ref => ({
-                    ...ref,
-                })),
+                projects: currentResume.sections.projects || [],
+                certifications: currentResume.sections.certifications || [],
+                references: currentResume.sections.references || [],
             }
         };
         form.reset(formData);
@@ -161,7 +155,6 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   }
   
   const onSubmit = (data: ResumeFormData) => {
-    // We now just pass the raw form data up. The action will handle conversion.
     onGenerate(data);
   }
 
@@ -226,7 +219,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                                 <FormControl>
                                     <Textarea
                                         placeholder="Enter each achievement on a new line."
-                                        onChange={e => field.onChange(e.target.value.split('\n').filter(s => s.trim()))}
+                                        onChange={e => field.onChange(e.target.value.split('\n'))}
                                         value={Array.isArray(field.value) ? field.value.join('\n') : ''}
                                         rows={4}
                                     />

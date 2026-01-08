@@ -50,10 +50,8 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   clearCurrentResume: () => {
-    // When clearing, we don't nullify the object entirely, but reset it to a state
-    // that represents a new, unsaved resume. This preserves the flow.
     const newResume: ResumeData = {
-        resumeId: '', // An empty resumeId signifies a new, unsaved document
+        resumeId: '', 
         ownerId: '',
         title: '',
         templateId: 'modern',
@@ -64,6 +62,7 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
             education: [],
             skills: [],
             projects: [],
+            certifications: [],
             references: [],
         },
         settings: { fontSize: 10, spacing: 'normal' },
@@ -72,30 +71,57 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
     set({ currentResume: newResume, result: null, isReviewing: false, isLoading: false });
   },
 
-  setFormForReview: (data) => {
-     // Get the current resume from the store. It might be null or an existing resume.
-     const currentResume = get().currentResume;
-
-     // If there's an existing resume, preserve its ID. Otherwise, it's a new resume.
-     const resumeId = currentResume?.resumeId || '';
-
-     const reviewData: Partial<ResumeData> = {
-        resumeId: resumeId,
+  setFormForReview: (data: ResumeFormData) => {
+     const existingResume = get().currentResume;
+     
+     // Construct a valid ResumeData object from form data for review.
+     const reviewData: ResumeData = {
+        resumeId: existingResume?.resumeId || '',
+        ownerId: existingResume?.ownerId || '',
         title: data.title,
         templateId: data.templateId,
+        status: 'draft',
+        settings: existingResume?.settings || { fontSize: 10, spacing: 'normal' },
+        isDeleted: false,
         sections: {
             summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-            experience: (data.sections.experience || []).map((exp, index) => ({ ...exp, id: exp.id || uuidv4(), startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '', endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: index })),
-            education: (data.sections.education || []).map((edu, index) => ({...edu, id: edu.id || uuidv4(), order: index })),
+            experience: (data.sections.experience || []).map((exp, index) => ({
+                id: exp.id || uuidv4(),
+                role: exp.role,
+                company: exp.company,
+                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : new Date().toISOString(),
+                endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
+                bullets: exp.bullets || [],
+                order: index,
+            })),
+            education: (data.sections.education || []).map((edu, index) => ({
+                id: edu.id || uuidv4(),
+                degree: edu.degree,
+                institution: edu.institution,
+                startYear: edu.startYear,
+                endYear: edu.endYear,
+                order: index,
+            })),
             skills: data.sections.skills || [],
-            projects: (data.sections.projects || []).map((proj, index) => ({...proj, id: proj.id || uuidv4(), description: proj.description || '', order: index })),
-            references: (data.sections.references || []).map((ref, index) => ({...ref, id: ref.id || uuidv4(), order: index })),
-        }
+            projects: (data.sections.projects || []).map((proj, index) => ({
+                id: proj.id || uuidv4(),
+                title: proj.title,
+                description: proj.description || '',
+                order: index,
+            })),
+            certifications: data.sections.certifications || [],
+            references: (data.sections.references || []).map((ref, index) => ({
+                id: ref.id || uuidv4(),
+                name: ref.name,
+                contact: ref.contact,
+                order: index,
+            })),
+        },
     };
 
     set({ 
       isReviewing: true, 
-      currentResume: { ...currentResume, ...reviewData } as ResumeData,
+      currentResume: reviewData,
       result: null 
     });
   },

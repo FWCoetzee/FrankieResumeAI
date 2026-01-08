@@ -36,119 +36,90 @@ export type UserProfile = z.infer<typeof userProfileSchema>;
 // # Resume-related Schemas
 // ####################################
 
+// Base schemas for individual sections, used in both Firestore data and form data
 export const resumeSectionSummarySchema = z.object({
-  content: z.string(),
-  lastEdited: z.string().datetime(),
+  content: z.string().optional(),
+  lastEdited: z.any().optional(), // Allow string or server timestamp
 });
 
 export const resumeSectionExperienceSchema = z.object({
-  id: z.string(),
-  company: z.string(),
-  role: z.string(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime().nullable(),
-  bullets: z.array(z.string()),
-  order: z.number(),
+  id: z.string().optional(),
+  company: z.string().min(1, "Company is required"),
+  role: z.string().min(1, "Role is required"),
+  startDate: z.string().optional(), // Stored as string 'YYYY-MM-DD' in form
+  endDate: z.string().optional(), // Stored as string 'YYYY-MM-DD' or 'Present' in form
+  bullets: z.array(z.string()).optional(),
+  order: z.number().optional(),
 });
 
 export const resumeSectionEducationSchema = z.object({
-    id: z.string(),
-    degree: z.string(),
-    institution: z.string(),
+    id: z.string().optional(),
+    degree: z.string().min(1, "Degree is required"),
+    institution: z.string().min(1, "Institution is required"),
     startYear: z.string().optional(),
     endYear: z.string().optional(),
-    order: z.number(),
+    order: z.number().optional(),
 });
 
 export const resumeSectionProjectSchema = z.object({
-    id: z.string(),
-    title: z.string(),
+    id: z.string().optional(),
+    title: z.string().min(1, "Project title is required"),
     description: z.string().optional(),
-    order: z.number(),
+    order: z.number().optional(),
 });
 
 export const resumeSectionReferenceSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    contact: z.string(),
-    order: z.number(),
+    id: z.string().optional(),
+    name: z.string().min(1, "Reference name is required"),
+    contact: z.string().min(1, "Contact info is required"),
+    order: z.number().optional(),
 });
 
-
-export const resumeSectionsSchema = z.object({
-  summary: resumeSectionSummarySchema,
-  experience: z.array(resumeSectionExperienceSchema),
-  education: z.array(resumeSectionEducationSchema),
-  skills: z.array(z.string()),
-  projects: z.array(resumeSectionProjectSchema).optional(),
-  references: z.array(resumeSectionReferenceSchema).optional(),
+// This represents the structure of the data collected from the form.
+export const resumeFormSchema = z.object({
+  title: z.string().min(1, "Resume title is required"),
+  templateId: z.string().default("modern"),
+  sections: z.object({
+    summary: resumeSectionSummarySchema.pick({ content: true }).optional(),
+    experience: z.array(resumeSectionExperienceSchema).optional(),
+    education: z.array(resumeSectionEducationSchema).optional(),
+    skills: z.array(z.string()).optional(),
+    projects: z.array(resumeSectionProjectSchema).optional(),
+    certifications: z.array(z.string()).optional(),
+    references: z.array(resumeSectionReferenceSchema).optional(),
+  }),
 });
+export type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
-export const resumeSettingsSchema = z.object({
-  fontSize: z.number().default(10),
-  spacing: z.enum(["normal", "compact"]).default("normal"),
-});
-
-// This schema represents the full data structure stored in Firestore for a single resume.
+// This schema represents the full data structure stored in Firestore.
+// It uses ISO date strings for dates.
 export const resumeSchema = z.object({
   resumeId: z.string(),
   ownerId: z.string(),
   title: z.string(),
   templateId: z.string(),
   status: resumeStatusSchema.default("draft"),
-  sections: resumeSectionsSchema,
-  settings: resumeSettingsSchema,
+  sections: z.object({
+    summary: resumeSectionSummarySchema,
+    experience: z.array(resumeSectionExperienceSchema.extend({
+        startDate: z.string().datetime().optional(),
+        endDate: z.string().datetime().nullable().optional(),
+    })),
+    education: z.array(resumeSectionEducationSchema),
+    skills: z.array(z.string()),
+    projects: z.array(resumeSectionProjectSchema).optional(),
+    certifications: z.array(z.string()).optional(),
+    references: z.array(resumeSectionReferenceSchema).optional(),
+  }),
+  settings: z.object({
+    fontSize: z.number().default(10),
+    spacing: z.enum(["normal", "compact"]).default("normal"),
+  }),
   createdAt: z.any().optional(),
   updatedAt: z.any().optional(),
   isDeleted: z.boolean().default(false),
 });
 export type ResumeData = z.infer<typeof resumeSchema>;
-
-
-// This schema represents the data collected from the form.
-// It's a subset of the full ResumeData, adapted for form handling.
-export const resumeFormSchema = z.object({
-  title: z.string().min(1, "Resume title is required"),
-  templateId: z.string().default("modern"), // Default template
-  sections: z.object({
-    summary: z.object({
-      content: z.string().optional(),
-    }),
-    experience: z.array(z.object({
-        id: z.string().optional(),
-        company: z.string().min(1, "Company is required"),
-        role: z.string().min(1, "Role is required"),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        bullets: z.array(z.string()).optional(),
-        order: z.number().optional(),
-      })
-    ).optional(),
-    education: z.array(z.object({
-        id: z.string().optional(),
-        degree: z.string().min(1, "Degree is required"),
-        institution: z.string().min(1, "Institution is required"),
-        startYear: z.string().optional(),
-        endYear: z.string().optional(),
-        order: z.number().optional(),
-    })).optional(),
-    skills: z.array(z.string()).optional(),
-    projects: z.array(z.object({
-        id: z.string().optional(),
-        title: z.string().min(1, "Project title is required"),
-        description: z.string().optional(),
-        order: z.number().optional(),
-    })).optional(),
-    certifications: z.array(z.string()).optional(),
-    references: z.array(z.object({
-        id: z.string().optional(),
-        name: z.string().min(1, "Reference name is required"),
-        contact: z.string().min(1, "Contact info is required"),
-        order: z.number().optional(),
-    })).optional(),
-  }),
-});
-export type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
 
 // ####################################

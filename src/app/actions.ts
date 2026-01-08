@@ -25,8 +25,7 @@ export async function generateResumeAction(
   savedResumeId?: string;
 }> {
 
-  // This payload is a simplified version that directly uses form data.
-  // The AI flows are designed to handle this structure.
+  // This payload is for the AI, constructed from the form data.
   const aiPayload = {
     target_job_title: formData.title,
     // Provide sensible defaults for fields not in the simplified form.
@@ -35,7 +34,7 @@ export async function generateResumeAction(
     resume_style: "Modern",
     language: "English",
     personal_info: {
-      full_name: userName || "User", // This data would ideally come from the user's profile
+      full_name: userName || "User",
       email: userEmail || "",
       phone: "",
       location: "",
@@ -123,6 +122,7 @@ export async function generateResumeAction(
                 order: index,
             })),
             skills: formData.sections.skills || [],
+            certifications: formData.sections.certifications || [],
             references: (formData.sections.references || []).map((ref, index) => ({
                 id: ref.id || uuidv4(),
                 name: ref.name,
