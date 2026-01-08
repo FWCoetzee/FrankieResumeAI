@@ -9,6 +9,7 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const editModeSchema = z.enum([
@@ -73,7 +74,48 @@ const editResumeTextFlow = ai.defineFlow(
     outputSchema: EditResumeTextOutputSchema,
   },
   async (input) => {
-    const response = await prompt(input);
-    return response.text;
+    async function generateWithFallback(payload: EditResumeTextInput): Promise<EditResumeTextOutput> {
+      const primaryModel = googleAI.model('gemini-2.5-flash');
+      const fallbackModel = googleAI.model('gemini-1.5-pro-preview-0514');
+      const maxRetries = 2;
+      let attempt = 0;
+      let backoff = 1000;
+
+      while (attempt <= maxRetries) {
+        attempt++;
+        try {
+          console.log(`[LLM Router - Edit] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          const response = await ai.run(
+              {name: 'primaryModelGeneration', labels: {flow: 'editResumeText', model: primaryModel.name}},
+              () => prompt(payload, { model: primaryModel })
+          );
+          return response.text;
+        } catch (error: any) {
+          const isOverloaded = error.message && (error.message.includes('429') || error.message.includes('503'));
+          if (isOverloaded && attempt <= maxRetries) {
+            console.warn(`[LLM Router - Edit] Primary model failed (overloaded/rate-limited). Retrying in ${backoff}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            backoff *= 2;
+            continue;
+          }
+          console.error(`[LLM Router - Edit] Primary model failed permanently after ${attempt} attempt(s). Error: ${error.message}. Failing over to fallback model.`);
+          break;
+        }
+      }
+
+      try {
+        console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModel.name}).`);
+        const response = await ai.run(
+            {name: 'fallbackModelGeneration', labels: {flow: 'editResumeText', model: fallbackModel.name}},
+            () => prompt(payload, { model: fallbackModel })
+        );
+        return response.text;
+      } catch (fallbackError: any) {
+        console.error(`[LLM Router - Edit] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);
+        throw new Error("The AI service is currently unavailable. Please try again later.");
+      }
+    }
+
+    return await generateWithFallback(input);
   }
 );

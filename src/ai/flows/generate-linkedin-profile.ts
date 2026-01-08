@@ -10,6 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, languageSchema } from '@/lib/schema';
 
@@ -88,10 +89,50 @@ const generateLinkedInProfileFlow = ai.defineFlow(
     outputSchema: GenerateLinkedInProfileOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
-      throw new Error("The AI failed to generate a LinkedIn profile. The output was empty.");
+    async function generateWithFallback(payload: GenerateLinkedInProfileInput): Promise<GenerateLinkedInProfileOutput> {
+      const primaryModel = googleAI.model('gemini-2.5-flash');
+      const fallbackModel = googleAI.model('gemini-1.5-pro-preview-0514');
+      const maxRetries = 2;
+      let attempt = 0;
+      let backoff = 1000;
+
+      while (attempt <= maxRetries) {
+        attempt++;
+        try {
+          console.log(`[LLM Router - LinkedIn] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          const {output} = await ai.run(
+              {name: 'primaryModelGeneration', labels: {flow: 'generateLinkedIn', model: primaryModel.name}},
+              () => prompt(payload, { model: primaryModel })
+          );
+          if (!output) throw new Error("Primary model returned empty output.");
+          return output;
+        } catch (error: any) {
+          const isOverloaded = error.message && (error.message.includes('429') || error.message.includes('503'));
+          if (isOverloaded && attempt <= maxRetries) {
+            console.warn(`[LLM Router - LinkedIn] Primary model failed (overloaded/rate-limited). Retrying in ${backoff}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            backoff *= 2;
+            continue;
+          }
+          console.error(`[LLM Router - LinkedIn] Primary model failed permanently after ${attempt} attempt(s). Error: ${error.message}. Failing over to fallback model.`);
+          break;
+        }
+      }
+
+      try {
+        console.log(`[LLM Router - LinkedIn] Failover: Trying fallback model (${fallbackModel.name}).`);
+        const {output} = await ai.run(
+            {name: 'fallbackModelGeneration', labels: {flow: 'generateLinkedIn', model: fallbackModel.name}},
+            () => prompt(payload, { model: fallbackModel })
+        );
+        if (!output) throw new Error("Fallback model returned empty output.");
+        return output;
+      } catch (fallbackError: any) {
+        console.error(`[LLM Router - LinkedIn] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);
+        throw new Error("The AI service is currently unavailable. Please try again later.");
+      }
     }
-    return output;
+    
+    return await generateWithFallback(input);
   }
 );
