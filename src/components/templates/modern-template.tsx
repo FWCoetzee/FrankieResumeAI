@@ -76,7 +76,7 @@ export const ModernTemplate: React.FC<TemplateProps> = ({ resume }) => {
       <section className="mb-6">
         <h2 className="text-sm font-bold uppercase tracking-widest text-blue-800 mb-2 border-b-2 border-gray-200 pb-1">{headings.education}</h2>
         {education.map((edu, index) => (
-          <div key={index} className="flex justify-between items-baseline">
+          <div key={index} className="flex justify-between items-baseline mb-2 last:mb-0">
             <div>
               <h3 className="font-bold text-base">{edu.degree}</h3>
               <p className="text-sm italic text-gray-800">{edu.institution}</p>

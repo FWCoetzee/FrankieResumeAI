@@ -227,7 +227,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     try {
       const canvas = await html2canvas(elementToCapture, {
-        scale: 2,
+        scale: 2, // Higher scale for better quality
         useCORS: true,
         logging: false,
         // These properties are key to capturing the full content
@@ -238,33 +238,36 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       });
 
       const imgData = canvas.toDataURL('image/png');
+      
+      // A4 paper dimensions in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
       const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
         format: 'a4',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgProps = pdf.getImageProperties(imgData);
       const imgWidth = imgProps.width;
       const imgHeight = imgProps.height;
       const ratio = imgHeight / imgWidth;
       
       let finalImgHeight = pdfWidth * ratio;
-      let position = 0;
-      let heightLeft = finalImgHeight;
-
+      
       if (finalImgHeight < pdfHeight) {
-          // If the image is smaller than one page, just add it
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
       } else {
-          // If the image is larger than one page, split it
+          // Handle multi-page content
+          let position = 0;
+          let heightLeft = finalImgHeight;
+
           pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
           heightLeft -= pdfHeight;
 
           while (heightLeft > 0) {
-              position = heightLeft - finalImgHeight;
+              position = heightLeft - finalImgHeight; // Becomes negative
               pdf.addPage();
               pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
               heightLeft -= pdfHeight;
@@ -323,16 +326,26 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="preview">
                     {result.resume && (
                         <>
+                        {/* Visible Preview Area */}
                         <div className="bg-gray-200 p-4 rounded-lg">
-                          <div id="resume-container-for-pdf" className="overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-full aspect-[8.5/11]">
-                              <div id="resume-content">
+                          <div id="resume-container-for-display" className="overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-full aspect-[8.5/11]">
+                              <TemplateRenderer 
+                                  resume={result.resume}
+                                  style={resumeData.templateId}
+                              />
+                          </div>
+                        </div>
+
+                        {/* Hidden, full-size render for PDF generation */}
+                        <div className="hidden">
+                            <div id="resume-content">
                                 <TemplateRenderer 
                                     resume={result.resume}
                                     style={resumeData.templateId}
                                 />
-                              </div>
-                          </div>
+                            </div>
                         </div>
+                        
                         <div className="mt-4 flex justify-end gap-2">
                           <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                           <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
@@ -347,13 +360,20 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
+                        {/* Visible Preview Area */}
                         <div className="bg-gray-200 p-4 rounded-lg">
-                          <div id="cover-letter-container-for-pdf" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-[8.5in]">
-                              <div id="cover-letter-content">
+                          <div id="cover-letter-display-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full">
                                 <CoverLetterContent content={result.coverLetter} />
-                              </div>
                           </div>
                         </div>
+
+                        {/* Hidden, full-size render for PDF generation */}
+                        <div className="hidden">
+                          <div id="cover-letter-content">
+                               <CoverLetterContent content={result.coverLetter} />
+                          </div>
+                        </div>
+
                         <div className="mt-4 flex justify-end gap-2">
                             <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
                             <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
