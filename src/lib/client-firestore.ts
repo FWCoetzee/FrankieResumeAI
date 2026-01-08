@@ -16,11 +16,11 @@ import { initializeFirebase } from '@/firebase';
  * Creates or updates a resume document in the /users/{userId}/resumes subcollection.
  * This is a non-blocking operation.
  * @param userId The ID of the current user.
- * @param data The full resume data object to save.
+ * @param data The full resume data object to save. It should include userName and userEmail for creation.
  */
 export function saveOrUpdateResumeDataClient(
   userId: string,
-  data: ResumeData
+  data: ResumeData & { userName: string | null, userEmail: string | null }
 ): void {
   const { firestore } = initializeFirebase();
   const resumeId = data.resumeId || uuidv4();
@@ -29,45 +29,45 @@ export function saveOrUpdateResumeDataClient(
 
   const isNew = !data.resumeId;
 
-  if (isNew) {
-    const dataToSave = {
-      ...data,
-      resumeId: resumeId,
-      ownerId: userId,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+  const dataToSave = {
+    ...data,
+    resumeId: resumeId, // Ensure ID is part of the document
+    ownerId: userId, // Enforce ownership
+    updatedAt: serverTimestamp(),
+  };
+  
+  // These were for user creation and should not be in the resume document
+  delete (dataToSave as any).userName;
+  delete (dataToSave as any).userEmail;
 
-    // Use a write batch to ensure atomic creation of user and resume docs
+
+  if (isNew) {
+    // For a new resume, we ensure the user document exists and create the resume atomically.
     const batch = writeBatch(firestore);
-    
-    // 1. Ensure the parent user document exists.
     const userDocRef = doc(firestore, 'users', userId);
-    batch.set(userDocRef, { 
-        userId: userId, 
-        email: data.userEmail, // Assuming userEmail is passed in data for creation
-        displayName: data.userName, // Assuming userName is passed
-        updatedAt: serverTimestamp() 
+
+    // 1. Set/merge user profile info.
+    batch.set(userDocRef, {
+      userId: userId,
+      email: data.userEmail,
+      displayName: data.userName,
+      updatedAt: serverTimestamp(),
     }, { merge: true });
 
-    // 2. Create the new resume document in the subcollection.
-    batch.set(resumeDocRef, dataToSave);
+    // 2. Create the new resume document with a creation timestamp.
+    batch.set(resumeDocRef, { ...dataToSave, createdAt: serverTimestamp() });
 
-    // Commit the batch
     batch.commit().catch(error => {
-        console.error("Firestore batch write failed for new resume:", error);
+      console.error("Firestore batch write failed for new resume:", error);
     });
 
   } else {
-    const dataToUpdate = {
-        ...data,
-        updatedAt: serverTimestamp(),
-    };
-    // Ensure critical fields are not changed on update
-    delete (dataToUpdate as any).ownerId;
-    delete (dataToUpdate as any).createdAt;
+    // For an existing resume, we just update it.
+    // Ensure critical fields are not overwritten on update.
+    delete (dataToSave as any).ownerId;
+    delete (dataToSave as any).createdAt;
 
-    updateDoc(resumeDocRef, dataToUpdate).catch(error => {
+    updateDoc(resumeDocRef, dataToSave).catch(error => {
         console.error("Firestore updateDoc failed:", error);
     });
   }
