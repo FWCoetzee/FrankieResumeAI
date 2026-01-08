@@ -206,15 +206,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const { toast } = useToast();
 
   const handleDownloadPdf = async () => {
-    const elementToCapture = document.getElementById(
-      activeTab === 'preview' ? 'resume-content' : 'cover-letter-content'
-    );
+    // Determine which element to capture based on the active tab
+    const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
+    const elementToCapture = document.getElementById(elementId);
 
     if (!elementToCapture) {
       toast({
         variant: "destructive",
         title: "Download Failed",
-        description: "Could not find the content to download.",
+        description: `Could not find the content element with ID: ${elementId}`,
       });
       return;
     }
@@ -230,7 +230,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
         scale: 2, // Higher scale for better quality
         useCORS: true,
         logging: false,
-        // These properties are key to capturing the full content
+        // These properties are key to capturing the full content, not just the visible part
         height: elementToCapture.scrollHeight,
         width: elementToCapture.scrollWidth,
         windowHeight: elementToCapture.scrollHeight,
@@ -254,24 +254,20 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       const imgHeight = imgProps.height;
       const ratio = imgHeight / imgWidth;
       
-      let finalImgHeight = pdfWidth * ratio;
-      
-      if (finalImgHeight < pdfHeight) {
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
-      } else {
-          // Handle multi-page content
-          let position = 0;
-          let heightLeft = finalImgHeight;
+      const finalImgWidth = pdfWidth;
+      const finalImgHeight = pdfWidth * ratio;
 
-          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalImgHeight);
-          heightLeft -= pdfHeight;
+      let position = 0;
+      let heightLeft = finalImgHeight;
 
-          while (heightLeft > 0) {
-              position = heightLeft - finalImgHeight; // Becomes negative
-              pdf.addPage();
-              pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, finalImgHeight);
-              heightLeft -= pdfHeight;
-          }
+      pdf.addImage(imgData, 'PNG', 0, position, finalImgWidth, finalImgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - finalImgHeight; // Becomes negative
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, finalImgWidth, finalImgHeight);
+        heightLeft -= pdfHeight;
       }
       
       const fileName = activeTab === 'preview' 
@@ -326,24 +322,14 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="preview">
                     {result.resume && (
                         <>
-                        {/* Visible Preview Area */}
+                        {/* The element to be captured for PDF is now the content itself, not a container */}
                         <div className="bg-gray-200 p-4 rounded-lg">
-                          <div id="resume-container-for-display" className="overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full w-full aspect-[8.5/11]">
+                          <div id="resume-content" className="overflow-y-auto bg-white rounded-lg shadow-inner mx-auto max-w-full aspect-[8.5/11]">
                               <TemplateRenderer 
                                   resume={result.resume}
                                   style={resumeData.templateId}
                               />
                           </div>
-                        </div>
-
-                        {/* Hidden, full-size render for PDF generation */}
-                        <div className="hidden">
-                            <div id="resume-content">
-                                <TemplateRenderer 
-                                    resume={result.resume}
-                                    style={resumeData.templateId}
-                                />
-                            </div>
                         </div>
                         
                         <div className="mt-4 flex justify-end gap-2">
@@ -360,17 +346,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
-                        {/* Visible Preview Area */}
                         <div className="bg-gray-200 p-4 rounded-lg">
-                          <div id="cover-letter-display-container" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full">
+                          <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full">
                                 <CoverLetterContent content={result.coverLetter} />
-                          </div>
-                        </div>
-
-                        {/* Hidden, full-size render for PDF generation */}
-                        <div className="hidden">
-                          <div id="cover-letter-content">
-                               <CoverLetterContent content={result.coverLetter} />
                           </div>
                         </div>
 
@@ -430,3 +408,5 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
+
+    
