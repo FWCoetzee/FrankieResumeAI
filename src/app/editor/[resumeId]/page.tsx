@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authFetch } from "@/lib/auth-fetch";
 
 export default function EditorPage() {
     const { user, isUserLoading } = useUser();
@@ -24,7 +25,7 @@ export default function EditorPage() {
                 clearCurrentResume();
             } else if (user) {
                 try {
-                    const response = await fetch(`/api/resumes/${resumeId}`);
+                    const response = await authFetch(`/api/resumes/${resumeId}`);
                     if (response.ok) {
                         const data = await response.json();
                         setCurrentResume(data);

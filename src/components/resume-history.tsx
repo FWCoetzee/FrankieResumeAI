@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { useToast } from "@/hooks/use-toast";
+import { authFetch } from "@/lib/auth-fetch";
 
 type ResumeListItem = {
     resumeId: number;
@@ -93,7 +94,7 @@ export function ResumeHistory() {
       setIsLoading(true);
       setError(null);
       try {
-          const response = await fetch('/api/resumes');
+          const response = await authFetch('/api/resumes');
           if (!response.ok) {
               throw new Error("Could not fetch resume history.");
           }
@@ -123,7 +124,7 @@ export function ResumeHistory() {
 
   const handleSelectResume = async (resumeId: number) => {
     try {
-        const response = await fetch(`/api/resumes/${resumeId}`);
+        const response = await authFetch(`/api/resumes/${resumeId}`);
         if (!response.ok) {
             throw new Error("Failed to fetch resume details.");
         }
@@ -146,7 +147,7 @@ export function ResumeHistory() {
   const handleDeleteResume = async (resumeId: number) => {
     if (!user) return;
     try {
-        const response = await fetch(`/api/resumes/${resumeId}`, {
+        const response = await authFetch(`/api/resumes/${resumeId}`, {
             method: 'DELETE'
         });
         if (!response.ok) {

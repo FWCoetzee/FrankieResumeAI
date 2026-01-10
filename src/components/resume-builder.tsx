@@ -13,6 +13,8 @@ import { set, cloneDeep } from "lodash";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { AuthDialog } from "./auth-dialog";
 import { v4 as uuidv4 } from "uuid";
+import { authFetch } from "@/lib/auth-fetch";
+
 
 export function ResumeBuilder() {
   const { user } = useUser();
@@ -55,12 +57,15 @@ export function ResumeBuilder() {
     // If the resume has no ID, it's a new one. Create it first.
     if (!currentResume.resumeId) {
         try {
-            const createResponse = await fetch('/api/resumes', {
+            const createResponse = await authFetch('/api/resumes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: currentResume.title }),
             });
-            if (!createResponse.ok) throw new Error('Failed to create new resume project.');
+            if (!createResponse.ok) {
+              const errorData = await createResponse.json();
+              throw new Error(errorData.error || 'Failed to create new resume project.');
+            }
             
             const { resumeId } = await createResponse.json();
             
@@ -87,7 +92,7 @@ export function ResumeBuilder() {
     });
 
     try {
-        const response = await fetch(`/api/resumes/${resumeId}/generate`, {
+        const response = await authFetch(`/api/resumes/${resumeId}/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ resumeData: currentResume }),
