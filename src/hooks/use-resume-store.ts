@@ -10,7 +10,7 @@ export type GenerationResult = {
   coverLetter?: string;
   linkedin?: GenerateLinkedInProfileOutput;
   error?: string;
-  savedResumeId?: string;
+  savedResumeId?: number;
 };
 
 interface ResumeState {
@@ -23,7 +23,7 @@ interface ResumeState {
 interface ResumeActions {
   setCurrentResume: (resume: ResumeData | null) => void;
   clearCurrentResume: () => void;
-  generateAndSetResults: (response: GenerationResult) => void;
+  setGenerationResult: (response: GenerationResult) => void;
   updateResult: (newResult: GenerationResult) => void;
   setFormForReview: (data: ResumeFormData) => void;
   setIsEditing: () => void;
@@ -37,12 +37,10 @@ const initialState: ResumeState = {
   isReviewing: false,
 };
 
-const emptyResume: ResumeData = {
-    resumeId: '', 
-    ownerId: '',
+const emptyResume: Partial<ResumeData> = {
     title: '',
     templateId: 'modern',
-    status: 'draft',
+    status: 'DRAFT',
     sections: {
         summary: { content: '', lastEdited: new Date().toISOString() },
         experience: [],
@@ -62,26 +60,25 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   setCurrentResume: (resume) => {
     set({
       currentResume: resume,
-      result: null, // Clear previous results when a new resume is loaded
+      result: null,
       isReviewing: false,
       isLoading: false,
     });
   },
 
   clearCurrentResume: () => {
-    const newEmptyResume = { ...emptyResume, resumeId: uuidv4() };
-    set({ currentResume: newEmptyResume, result: null, isReviewing: false, isLoading: false });
+    set({ currentResume: null, result: null, isReviewing: false, isLoading: false });
   },
 
   setFormForReview: (data: ResumeFormData) => {
      const existingResume = get().currentResume;
      
      const reviewData: ResumeData = {
-        resumeId: existingResume?.resumeId || uuidv4(),
-        ownerId: existingResume?.ownerId || '',
+        resumeId: existingResume?.resumeId || 0, // Use 0 or another indicator for a new resume
+        ownerId: existingResume?.ownerId || 0,
         title: data.title,
         templateId: data.templateId,
-        status: 'draft',
+        status: 'DRAFT',
         settings: existingResume?.settings || { fontSize: 10, spacing: 'normal' },
         isDeleted: false,
         sections: {
@@ -90,8 +87,8 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
                 id: exp.id || uuidv4(),
                 role: exp.role,
                 company: exp.company,
-                startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
-                endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
+                startDate: exp.startDate,
+                endDate: exp.endDate,
                 bullets: exp.bullets || [],
                 order: index,
             })),
@@ -131,9 +128,9 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
     set({ isReviewing: false, result: null });
   },
 
-  generateAndSetResults: (response) => {
+  setGenerationResult: (response) => {
     set((state) => {
-      // When generation is successful, update the current resume in the store with the saved ID
+      // When generation is successful, update the current resume in the store with the saved ID if it was new
       const updatedResume = state.currentResume && response.savedResumeId
         ? { ...state.currentResume, resumeId: response.savedResumeId }
         : state.currentResume;

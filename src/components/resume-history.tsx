@@ -22,54 +22,20 @@ import {
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { useToast } from "@/hooks/use-toast";
 
-const HistoryItem = ({ resume }: { resume: ResumeData }) => {
-  const { setCurrentResume } = useResumeStore();
-  const { toast } = useToast();
-  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
-  const { user } = useUser();
+type ResumeListItem = {
+    resumeId: number;
+    title: string;
+    templateId: string;
+    state: string;
+    updatedAt: string;
+}
 
-  const handleSelect = async () => {
-    try {
-        const response = await fetch(`/api/resumes/${resume.resumeId}`);
-        if (!response.ok) {
-            throw new Error("Failed to fetch resume details.");
-        }
-        const fullResumeData = await response.json();
-        setCurrentResume(fullResumeData);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        toast({
-            title: "Resume Loaded",
-            description: "The selected resume data has been loaded into the form.",
-        });
-    } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not load the selected resume.",
-        });
-    }
-  }
-  
-  const handleConfirmDelete = async () => {
-    if (deleteCandidate && user) {
-        try {
-            const response = await fetch(`/api/resumes/${deleteCandidate}`, {
-                method: 'DELETE'
-            });
-            if (!response.ok) {
-                throw new Error("Failed to delete resume.");
-            }
-            toast({
-                title: "Resume Deleted",
-                description: "The resume has been successfully removed.",
-            });
-        } catch(error) {
-             toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Could not delete the selected resume.",
-            });
-        }
+const HistoryItem = ({ resume, onSelect, onDelete }: { resume: ResumeListItem, onSelect: (id: number) => void, onDelete: (id: number) => void }) => {
+  const [deleteCandidate, setDeleteCandidate] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteCandidate) {
+        onDelete(deleteCandidate);
     }
     setDeleteCandidate(null);
   }
@@ -106,7 +72,7 @@ const HistoryItem = ({ resume }: { resume: ResumeData }) => {
               <Trash2 className="h-4 w-4 text-destructive" />
               <span className="sr-only">Delete</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={handleSelect}>
+          <Button variant="outline" size="sm" onClick={() => onSelect(resume.resumeId)}>
               Load <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -117,9 +83,28 @@ const HistoryItem = ({ resume }: { resume: ResumeData }) => {
 
 export function ResumeHistory() {
   const { user, isUserLoading } = useUser();
-  const [resumes, setResumes] = useState<ResumeData[] | null>(null);
+  const [resumes, setResumes] = useState<ResumeListItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { setCurrentResume } = useResumeStore();
+  const { toast } = useToast();
+
+  const fetchResumes = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+          const response = await fetch('/api/resumes');
+          if (!response.ok) {
+              throw new Error("Could not fetch resume history.");
+          }
+          const data = await response.json();
+          setResumes(data);
+      } catch (err: any) {
+          setError(err);
+      } finally {
+          setIsLoading(false);
+      }
+  };
 
   useEffect(() => {
     if (isUserLoading) {
@@ -132,27 +117,55 @@ export function ResumeHistory() {
       setIsLoading(false);
       return;
     }
-
-    const fetchResumes = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const response = await fetch('/api/resumes');
-            if (!response.ok) {
-                throw new Error("Could not fetch resume history.");
-            }
-            const data = await response.json();
-            setResumes(data);
-        } catch (err: any) {
-            setError(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
     
     fetchResumes();
-
   }, [user, isUserLoading]);
+
+  const handleSelectResume = async (resumeId: number) => {
+    try {
+        const response = await fetch(`/api/resumes/${resumeId}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch resume details.");
+        }
+        const fullResumeData = await response.json();
+        setCurrentResume(fullResumeData);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        toast({
+            title: "Resume Loaded",
+            description: "The selected resume data has been loaded into the form.",
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load the selected resume.",
+        });
+    }
+  }
+
+  const handleDeleteResume = async (resumeId: number) => {
+    if (!user) return;
+    try {
+        const response = await fetch(`/api/resumes/${resumeId}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            throw new Error("Failed to delete resume.");
+        }
+        toast({
+            title: "Resume Deleted",
+            description: "The resume has been successfully removed.",
+        });
+        // Refresh the list after deletion
+        fetchResumes(); 
+    } catch(error) {
+         toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not delete the selected resume.",
+        });
+    }
+  }
 
   const renderContent = () => {
     if (isLoading) {
@@ -187,7 +200,7 @@ export function ResumeHistory() {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.resumeId} resume={resume} />
+                <HistoryItem key={resume.resumeId} resume={resume} onSelect={handleSelectResume} onDelete={handleDeleteResume} />
             ))}
         </div>
     );

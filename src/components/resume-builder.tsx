@@ -27,7 +27,7 @@ export function ResumeBuilder() {
     isLoading,
     isReviewing,
     setFormForReview,
-    generateAndSetResults,
+    setGenerationResult,
     setIsEditing,
     updateResult,
   } = useResumeStore();
@@ -36,18 +36,7 @@ export function ResumeBuilder() {
     if (!user) {
       setAuthDialogOpen(true);
       // Persist form data to the store even if not logged in
-      const reviewData: Partial<ResumeData> = {
-          resumeId: currentResume?.resumeId || undefined,
-          title: data.title,
-          templateId: data.templateId,
-          sections: {
-              summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-              experience: (data.sections.experience || []).map(exp => ({ ...exp, id: exp.id || uuidv4(), startDate: new Date(exp.startDate || '').toISOString(), endDate: exp.endDate ? new Date(exp.endDate).toISOString() : null, bullets: exp.bullets || [], order: 0 })),
-              education: [],
-              skills: data.sections.skills || [],
-          }
-      };
-      setCurrentResume({ ...currentResume, ...reviewData } as ResumeData);
+      setFormForReview(data);
       return;
     }
     setFormForReview(data);
@@ -62,6 +51,35 @@ export function ResumeBuilder() {
         });
         return;
     }
+    
+    // If the resume has no ID, it's a new one. Create it first.
+    if (!currentResume.resumeId) {
+        try {
+            const createResponse = await fetch('/api/resumes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: currentResume.title }),
+            });
+            if (!createResponse.ok) throw new Error('Failed to create new resume project.');
+            
+            const { resumeId } = await createResponse.json();
+            
+            // Now, generate content for this new resume
+            generateContentForResume(resumeId);
+
+        } catch (error) {
+            console.error("New Resume Creation Error:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+            toast({ variant: "destructive", title: "Creation Failed", description: errorMessage });
+        }
+    } else {
+        // It's an existing resume, just generate new content for it.
+        generateContentForResume(currentResume.resumeId);
+    }
+  }
+
+  const generateContentForResume = async (resumeId: number) => {
+    if (!currentResume) return;
 
     toast({
       title: "Generating your documents...",
@@ -69,11 +87,9 @@ export function ResumeBuilder() {
     });
 
     try {
-        const response = await fetch(`/api/resumes/${currentResume.resumeId}/generate`, {
+        const response = await fetch(`/api/resumes/${resumeId}/generate`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ resumeData: currentResume }),
         });
 
@@ -89,7 +105,7 @@ export function ResumeBuilder() {
             description: "Your new AI-powered resume has been generated and saved.",
         });
 
-        generateAndSetResults(generationResult);
+        setGenerationResult({ ...generationResult, savedResumeId: resumeId });
 
     } catch (error) {
         console.error("AI Generation or API Error:", error);
@@ -99,7 +115,7 @@ export function ResumeBuilder() {
             title: "Generation Failed",
             description: errorMessage,
         });
-        generateAndSetResults({ error: errorMessage });
+        setGenerationResult({ error: errorMessage });
     }
   }
 
