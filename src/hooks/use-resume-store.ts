@@ -69,14 +69,15 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
   },
 
   clearCurrentResume: () => {
-    set({ currentResume: emptyResume, result: null, isReviewing: false, isLoading: false });
+    const newEmptyResume = { ...emptyResume, resumeId: uuidv4() };
+    set({ currentResume: newEmptyResume, result: null, isReviewing: false, isLoading: false });
   },
 
   setFormForReview: (data: ResumeFormData) => {
      const existingResume = get().currentResume;
      
      const reviewData: ResumeData = {
-        resumeId: existingResume?.resumeId || '',
+        resumeId: existingResume?.resumeId || uuidv4(),
         ownerId: existingResume?.ownerId || '',
         title: data.title,
         templateId: data.templateId,
@@ -89,7 +90,6 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
                 id: exp.id || uuidv4(),
                 role: exp.role,
                 company: exp.company,
-                // Add guard against invalid date strings
                 startDate: exp.startDate ? new Date(exp.startDate).toISOString() : '',
                 endDate: exp.endDate && exp.endDate !== 'Present' ? new Date(exp.endDate).toISOString() : null,
                 bullets: exp.bullets || [],

@@ -20,56 +20,61 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useResumeStore } from "@/hooks/use-resume-store";
-import { deleteResumeDataClient } from "@/lib/client-firestore";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore } from "@/firebase";
-import { collection, query, where, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 
-const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
+const HistoryItem = ({ resume }: { resume: ResumeData }) => {
   const { setCurrentResume } = useResumeStore();
   const { toast } = useToast();
   const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
   const { user } = useUser();
 
-  const handleSelect = () => {
-    // Convert all Timestamp objects back to ISO strings for form compatibility
-    const resumeForStore: ResumeData = {
-        ...resume,
-        createdAt: resume.createdAt instanceof Date ? resume.createdAt.toISOString() : new Date().toISOString(),
-        updatedAt: resume.updatedAt instanceof Date ? resume.updatedAt.toISOString() : new Date().toISOString(),
-        sections: {
-            ...resume.sections,
-            summary: {
-                ...resume.sections.summary,
-                lastEdited: resume.sections.summary.lastEdited instanceof Date ? resume.sections.summary.lastEdited.toISOString() : new Date().toISOString(),
-            },
-            experience: (resume.sections.experience || []).map(exp => ({
-                ...exp,
-                startDate: exp.startDate instanceof Date ? exp.startDate.toISOString() : '',
-                endDate: exp.endDate instanceof Date ? exp.endDate.toISOString() : null,
-            }))
+  const handleSelect = async () => {
+    try {
+        const response = await fetch(`/api/resumes/${resume.resumeId}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch resume details.");
         }
-    };
-    setCurrentResume(resumeForStore);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    toast({
-        title: "Resume Loaded",
-        description: "The selected resume data has been loaded into the form.",
-    });
+        const fullResumeData = await response.json();
+        setCurrentResume(fullResumeData);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        toast({
+            title: "Resume Loaded",
+            description: "The selected resume data has been loaded into the form.",
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not load the selected resume.",
+        });
+    }
   }
   
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (deleteCandidate && user) {
-        deleteResumeDataClient(user.uid, deleteCandidate);
-        toast({
-            title: "Resume Deleted",
-            description: "The resume has been successfully removed.",
-        });
+        try {
+            const response = await fetch(`/api/resumes/${deleteCandidate}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error("Failed to delete resume.");
+            }
+            toast({
+                title: "Resume Deleted",
+                description: "The resume has been successfully removed.",
+            });
+        } catch(error) {
+             toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Could not delete the selected resume.",
+            });
+        }
     }
     setDeleteCandidate(null);
   }
 
-  const updatedAt = resume.updatedAt instanceof Date ? resume.updatedAt : null;
+  const updatedAt = resume.updatedAt ? new Date(resume.updatedAt as any) : new Date();
 
   return (
     <>
@@ -97,7 +102,7 @@ const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDeleteCandidate(resume.id)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setDeleteCandidate(resume.resumeId)}>
               <Trash2 className="h-4 w-4 text-destructive" />
               <span className="sr-only">Delete</span>
           </Button>
@@ -112,8 +117,7 @@ const HistoryItem = ({ resume }: { resume: ResumeData & { id: string } }) => {
 
 export function ResumeHistory() {
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
-  const [resumes, setResumes] = useState<(ResumeData & { id: string })[] | null>(null);
+  const [resumes, setResumes] = useState<ResumeData[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -129,51 +133,26 @@ export function ResumeHistory() {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    const fetchResumes = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/api/resumes');
+            if (!response.ok) {
+                throw new Error("Could not fetch resume history.");
+            }
+            const data = await response.json();
+            setResumes(data);
+        } catch (err: any) {
+            setError(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    fetchResumes();
 
-    const resumesRef = collection(firestore, 'users', user.uid, 'resumes');
-    const q = query(
-      resumesRef, 
-      where("isDeleted", "==", false),
-      orderBy("updatedAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(q, 
-      (querySnapshot) => {
-        const resumesData = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            // Deep conversion of Timestamps to JS Dates
-            const convertTimestamps = (obj: any): any => {
-              if (obj instanceof Timestamp) {
-                  return obj.toDate();
-              }
-              if (Array.isArray(obj)) {
-                  return obj.map(convertTimestamps);
-              }
-              if (obj !== null && typeof obj === 'object') {
-                  return Object.keys(obj).reduce((acc, key) => {
-                      acc[key] = convertTimestamps(obj[key]);
-                      return acc;
-                  }, {} as { [key: string]: any });
-              }
-              return obj;
-            };
-
-            return { id: doc.id, ...convertTimestamps(data) } as ResumeData & { id: string };
-        });
-        setResumes(resumesData);
-        setIsLoading(false);
-      },
-      (err) => {
-        console.error("Firestore onSnapshot error:", err);
-        setError(err);
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user, isUserLoading, firestore]);
+  }, [user, isUserLoading]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -208,7 +187,7 @@ export function ResumeHistory() {
     return (
         <div className="space-y-2">
             {resumes.map(resume => (
-                <HistoryItem key={resume.id} resume={resume} />
+                <HistoryItem key={resume.resumeId} resume={resume} />
             ))}
         </div>
     );
