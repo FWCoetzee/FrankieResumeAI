@@ -20,35 +20,41 @@ export default function EditorPage() {
 
     useEffect(() => {
         const loadResume = async () => {
+            if (isUserLoading) return; // Wait for user status to be resolved
+            
             setIsLoading(true);
+
             if (resumeId === 'new') {
                 clearCurrentResume();
-            } else if (user) {
-                try {
-                    const response = await authFetch(`/api/resumes/${resumeId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setCurrentResume(data);
-                    } else {
-                        console.error('Failed to fetch resume, navigating to new.');
-                        router.replace('/editor/new');
+            } else {
+                if (user) { // Only fetch if user is logged in
+                    try {
+                        const response = await authFetch(`/api/resumes/${resumeId}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setCurrentResume(data);
+                        } else {
+                            console.error(`Failed to fetch resume ${resumeId}, status: ${response.status}`);
+                            router.replace('/app/dashboard'); // Or a dedicated 404 page
+                        }
+                    } catch (error) {
+                        console.error('Error fetching resume:', error);
+                        router.replace('/app/dashboard');
                     }
-                } catch (error) {
-                    console.error('Error fetching resume:', error);
-                    router.replace('/editor/new');
+                } else {
+                    // If not logged in and trying to access a specific resume, redirect
+                    router.replace('/auth/login');
                 }
             }
             setIsLoading(false);
         };
 
-        if (!isUserLoading) {
-            loadResume();
-        }
+        loadResume();
 
-    }, [resumeId, user, isUserLoading, setCurrentResume, clearCurrentResume, router]);
+    }, [resumeId, user, isUserLoading]);
     
 
-    if (isLoading || isUserLoading) {
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 py-12 md:py-16">
                 <div className="grid lg:grid-cols-2 gap-12 items-start">

@@ -91,23 +91,18 @@ export const resumeFormSchema = z.object({
 });
 export type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
-// This schema represents the full data structure stored in Firestore.
-// It uses ISO date strings for dates.
+// This schema represents the full data structure stored in SQL.
 export const resumeSchema = z.object({
-  resumeId: z.string(),
-  ownerId: z.string(),
+  resumeId: z.number().int(),
+  ownerId: z.number().int(),
   title: z.string(),
   templateId: z.string(),
-  status: resumeStatusSchema.default("draft"),
+  status: z.string(),
   sections: z.object({
-    summary: resumeSectionSummarySchema,
-    // Note: startDate is a string (ISO) but can be empty if not provided.
-    experience: z.array(resumeSectionExperienceSchema.extend({
-        startDate: z.string().optional(), 
-        endDate: z.string().nullable().optional(),
-    })),
-    education: z.array(resumeSectionEducationSchema),
-    skills: z.array(z.string()),
+    summary: resumeSectionSummarySchema.optional(),
+    experience: z.array(resumeSectionExperienceSchema).optional(),
+    education: z.array(resumeSectionEducationSchema).optional(),
+    skills: z.array(z.string()).optional(),
     projects: z.array(resumeSectionProjectSchema).optional(),
     certifications: z.array(z.string()).optional(),
     references: z.array(resumeSectionReferenceSchema).optional(),
@@ -115,10 +110,10 @@ export const resumeSchema = z.object({
   settings: z.object({
     fontSize: z.number().default(10),
     spacing: z.enum(["normal", "compact"]).default("normal"),
-  }),
-  createdAt: z.any().optional(),
-  updatedAt: z.any().optional(),
-  isDeleted: z.boolean().default(false),
+  }).optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
+  isDeleted: z.boolean().default(false).optional(),
 });
 export type ResumeData = z.infer<typeof resumeSchema>;
 
