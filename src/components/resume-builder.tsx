@@ -54,8 +54,10 @@ export function ResumeBuilder() {
         return;
     }
     
+    let resumeIdToGenerate = currentResume.resumeId;
+
     // If the resume has no ID, it's a new one. Create it first.
-    if (!currentResume.resumeId) {
+    if (!resumeIdToGenerate) {
         try {
             const createResponse = await authFetch('/api/resumes', {
                 method: 'POST',
@@ -68,19 +70,21 @@ export function ResumeBuilder() {
             }
             
             const { resumeId } = await createResponse.json();
+            resumeIdToGenerate = resumeId;
             
-            // Now, generate content for this new resume
-            generateContentForResume(resumeId);
+            // Update the store with the new ID
+            setCurrentResume({ ...currentResume, resumeId });
 
         } catch (error) {
             console.error("New Resume Creation Error:", error);
             const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
             toast({ variant: "destructive", title: "Creation Failed", description: errorMessage });
+            return; // Stop if we can't create the resume project
         }
-    } else {
-        // It's an existing resume, just generate new content for it.
-        generateContentForResume(currentResume.resumeId);
     }
+    
+    // Proceed with generation using the now-guaranteed resume ID.
+    generateContentForResume(resumeIdToGenerate);
   }
 
   const generateContentForResume = async (resumeId: number) => {

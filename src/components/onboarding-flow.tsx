@@ -189,7 +189,7 @@ export function OnboardingFlow() {
       case 0:
         return <StepWelcome onNext={handleNext} />;
       case 1:
-        return <StepUpload onNext={() => setStep(3)} />; // Skip Goal and Experience for now
+        return <StepUpload onNext={() => setStep(2)} />;
       case 2:
         return <StepJobTarget onNext={handleFinish} onTargetChange={handleSelect('title')} />;
       default:
