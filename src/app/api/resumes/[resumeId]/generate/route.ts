@@ -23,7 +23,7 @@ async function verifyOwnership(resumeId: number, userId: number) {
 export async function POST(request: Request, { params }: { params: { resumeId: string } }) {
     const user = await getAuthenticatedUser();
     if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }
 
     const resumeId = parseInt(params.resumeId, 10);
@@ -44,12 +44,12 @@ export async function POST(request: Request, { params }: { params: { resumeId: s
     try {
         const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
         if (userRes.rows.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
         }
         const userId = userRes.rows[0].id;
         
         if (!(await verifyOwnership(resumeId, userId))) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
         }
         
         const resumeRes = await db.query('SELECT current_version_id FROM resumes WHERE id = $1', [resumeId]);
@@ -74,7 +74,6 @@ export async function POST(request: Request, { params }: { params: { resumeId: s
                 company: exp.company,
                 start_date: exp.startDate,
                 end_date: exp.endDate || undefined,
-                // The AI expects responsibilities/achievements as a single string
                 responsibilities: exp.bullets?.join('\n') || '',
                 achievements: exp.bullets?.join('\n') || '',
             })) || [],

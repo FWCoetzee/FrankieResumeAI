@@ -11,14 +11,14 @@ const createResumeSchema = z.object({
 export async function POST(request: Request) {
     const user = await getAuthenticatedUser();
     if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }
 
     const body = await request.json();
     const parsed = createResumeSchema.safeParse(body);
 
     if (!parsed.success) {
-        return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+        return NextResponse.json({ error: 'Invalid input', details: parsed.error.format() }, { status: 400 });
     }
 
     const { title } = parsed.data;
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     const user = await getAuthenticatedUser();
     if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }
 
     const db = getDb();
