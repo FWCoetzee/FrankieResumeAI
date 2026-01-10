@@ -10,7 +10,7 @@ async function verifyOwnership(resumeId: number, userId: number) {
 }
 
 export async function GET(request: Request, { params }: { params: { resumeId: string } }) {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -41,7 +41,7 @@ export async function GET(request: Request, { params }: { params: { resumeId: st
                 r.state as "status",
                 r.created_at as "createdAt",
                 r.updated_at as "updatedAt",
-                rv.content -> 'sections' as sections,
+                rv.content as sections,
                 rv.content -> 'settings' as settings
              FROM resumes r
              JOIN resume_versions rv ON r.current_version_id = rv.id
@@ -52,8 +52,24 @@ export async function GET(request: Request, { params }: { params: { resumeId: st
         if (resumeRes.rows.length === 0) {
             return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
         }
+        
+        // The 'sections' and 'settings' are returned as JSON from the DB.
+        // We need to combine them into the expected nested structure.
+        const resume = resumeRes.rows[0];
+        const responseData = {
+            resumeId: resume.resumeId,
+            ownerId: resume.ownerId,
+            title: resume.title,
+            templateId: resume.templateId,
+            status: resume.status,
+            createdAt: resume.createdAt,
+            updatedAt: resume.updatedAt,
+            sections: resume.sections,
+            settings: resume.settings,
+        };
 
-        return NextResponse.json(resumeRes.rows[0]);
+
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error(`Failed to fetch resume ${resumeId}:`, error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -62,7 +78,7 @@ export async function GET(request: Request, { params }: { params: { resumeId: st
 
 
 export async function DELETE(request: Request, { params }: { params: { resumeId: string } }) {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

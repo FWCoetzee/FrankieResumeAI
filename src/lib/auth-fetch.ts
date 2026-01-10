@@ -1,45 +1,24 @@
 
 'use client';
 
-import { getAuth, onIdTokenChanged, type User } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 async function getFirebaseToken(): Promise<string> {
     const auth = getAuth();
-    
-    // If we have a current user, try to get the token immediately.
-    if (auth.currentUser) {
-        try {
-            return await auth.currentUser.getIdToken();
-        } catch (error) {
-            console.error("authFetch: Error getting ID token for current user.", error);
-            return Promise.reject(new Error("Could not verify user identity."));
-        }
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+        // If there's no user, we can't get a token.
+        return Promise.reject(new Error("No user is currently signed in."));
     }
 
-    // If there's no current user, we wait for the auth state to be resolved.
-    // This is crucial for handling the initial page load race condition.
-    return new Promise((resolve, reject) => {
-        const unsubscribe = onIdTokenChanged(auth, async (user) => {
-            unsubscribe(); // Stop listening after we get the first update.
-            if (user) {
-                try {
-                    const token = await user.getIdToken();
-                    resolve(token);
-                } catch (error) {
-                    console.error("authFetch: Error getting ID token after state change.", error);
-                    reject(new Error("Could not verify user identity."));
-                }
-            } else {
-                // If the user is not logged in after the check, we reject.
-                reject(new Error("User is not authenticated."));
-            }
-        }, (error) => {
-            // This handles errors during the auth state observation.
-            unsubscribe();
-            console.error("authFetch: Error observing auth state.", error);
-            reject(new Error("Authentication check failed."));
-        });
-    });
+    try {
+        // This method automatically handles token refreshing.
+        return await currentUser.getIdToken(true);
+    } catch (error) {
+        console.error("authFetch: Error getting ID token.", error);
+        return Promise.reject(new Error("Could not verify user identity. Please sign in again."));
+    }
 }
 
 export async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
@@ -57,7 +36,7 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
         return fetch(url, updatedOptions);
 
     } catch (error) {
-        // This will catch errors from getFirebaseToken (e.g., user not authenticated).
+        // This catches errors from getFirebaseToken (e.g., user not authenticated).
         console.error(`authFetch: Authentication error before fetching ${url}.`, error);
         // We simulate a 401 response so the calling code can handle it consistently.
         const errorResponse = {

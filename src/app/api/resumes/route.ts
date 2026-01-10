@@ -9,7 +9,7 @@ const createResumeSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }

@@ -9,9 +9,15 @@ import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } fr
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
 import { resumeSchema, type ResumeData } from '@/lib/schema';
 
+// This is a partial schema, as the full resume data will be sent.
+// We just validate that the 'sections' part exists.
 const generateSchema = z.object({
-    resumeData: resumeSchema,
+    resumeData: z.object({
+      title: z.string(),
+      sections: z.object({}).passthrough(),
+    }).passthrough(),
 });
+
 
 async function verifyOwnership(resumeId: number, userId: number) {
     const db = getDb();
@@ -21,7 +27,7 @@ async function verifyOwnership(resumeId: number, userId: number) {
 
 
 export async function POST(request: Request, { params }: { params: { resumeId: string } }) {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
     }
@@ -37,7 +43,7 @@ export async function POST(request: Request, { params }: { params: { resumeId: s
         return NextResponse.json({ error: 'Invalid input', details: parsed.error.errors }, { status: 400 });
     }
 
-    const { resumeData } = parsed.data;
+    const { resumeData } = parsed.data as { resumeData: ResumeData };
 
     const db = getDb();
     
