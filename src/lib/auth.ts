@@ -1,10 +1,12 @@
 
 import { headers } from 'next/headers';
-import { initializeApp, getApp, getApps, App } from 'firebase-admin/app';
+import { initializeApp, getApp, getApps, App, applicationDefault } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 
 const app = !getApps().length
-  ? initializeApp()
+  ? initializeApp({
+      credential: applicationDefault(),
+  })
   : getApp();
 
 const auth = getAuth(app);
