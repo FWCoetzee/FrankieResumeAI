@@ -35,7 +35,7 @@ export function AuthDialog({ open, onOpenChange, initialMode = 'login' }: AuthDi
             <Button asChild size="lg">
                 <Link href="/auth/signup">Create an Account</Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
+            <Button asChild size="lg">
                 <Link href="/auth/login">Log In to Existing Account</Link>
             </Button>
         </DialogFooter>

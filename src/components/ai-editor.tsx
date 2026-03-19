@@ -148,7 +148,6 @@ export function AiEditor({ result, resumeData, onAcceptEdit }: AiEditorProps) {
         return (
             <div className="flex flex-col space-y-2">
                 <Button
-                    variant="outline"
                     size="sm"
                     className="w-full justify-start gap-2"
                     onClick={handleClick}
@@ -178,7 +177,6 @@ export function AiEditor({ result, resumeData, onAcceptEdit }: AiEditorProps) {
     
     return (
          <Button
-            variant="outline"
             size="sm"
             className="w-full justify-start gap-2"
             onClick={handleClick}

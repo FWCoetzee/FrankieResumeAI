@@ -112,7 +112,7 @@ export function PricingPage() {
                                 <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-muted-foreground mt-1 shrink-0" /><div>No advanced AI enhancements</div></div>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=free" className="w-full"><Button variant="outline" className="w-full">Choose Plan</Button></Link>
+                                <Link href="/subscribe?plan=free" className="w-full"><Button className="w-full">Choose Plan</Button></Link>
                             </CardFooter>
                         </Card>
 
@@ -154,7 +154,7 @@ export function PricingPage() {
                                 <div className="flex items-start gap-3"><CheckCircle className="h-5 w-5 text-green-500 mt-1 shrink-0" /><div>Priority Support</div></div>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button variant="outline" className="w-full">Choose Plan</Button></Link>
+                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button className="w-full">Choose Plan</Button></Link>
                             </CardFooter>
                         </Card>
                     </div>
@@ -259,8 +259,8 @@ export function PricingPage() {
                     <p className="max-w-xl mx-auto mt-4 text-lg text-primary-foreground/80">Stop letting opportunities pass you by. Build a resume that opens doors.</p>
 
                     <div className="mt-8 flex justify-center gap-4 flex-wrap">
-                        <Link href="/subscribe?plan=lifetime"><Button size="lg" variant="secondary">Choose Lifetime Deal</Button></Link>
-                        <Link href="/subscribe?plan=free"><Button size="lg" variant="outline">Try Free Plan</Button></Link>
+                        <Link href="/subscribe?plan=lifetime"><Button size="lg">Choose Lifetime Deal</Button></Link>
+                        <Link href="/subscribe?plan=free"><Button size="lg">Try Free Plan</Button></Link>
                     </div>
                      <p className="mt-4 text-sm text-primary-foreground/80">Your dream job is just a click away.</p>
                 </div>

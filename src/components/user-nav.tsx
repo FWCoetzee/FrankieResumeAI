@@ -90,7 +90,7 @@ export function UserNav() {
   if (!user) {
      return (
         <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
+            <Button asChild>
               <Link href="/auth/login">Log In</Link>
             </Button>
             <Button asChild>

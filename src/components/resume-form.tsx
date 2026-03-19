@@ -174,7 +174,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
             <CardContent className="pt-6">
                 <div className="flex flex-wrap gap-2">
                     <Button type="button" size="sm" onClick={handleFillSampleData}><FilePlus2 className="mr-2 h-4 w-4" /> Fill with Sample Data</Button>
-                    <Button type="button" size="sm" variant="outline" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
+                    <Button type="button" size="sm" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
                 </div>
             </CardContent>
         </Card>

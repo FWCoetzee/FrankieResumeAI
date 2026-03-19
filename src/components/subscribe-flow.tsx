@@ -52,7 +52,7 @@ const PlanConfirmationStep = ({ plan, onContinue, onChooseDifferent }: { plan: a
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row gap-2">
             <Button onClick={onContinue} className="w-full sm:w-auto">Continue</Button>
-            <Button variant="ghost" onClick={onChooseDifferent} className="w-full sm:w-auto">Choose a Different Plan</Button>
+            <Button onClick={onChooseDifferent} className="w-full sm:w-auto">Choose a Different Plan</Button>
         </CardFooter>
     </Card>
 );
@@ -134,7 +134,7 @@ const UserDetailsStep = ({ onBack, onSubmit }: { onBack: () => void, onSubmit: (
                 </div>
             </CardContent>
             <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-2">
-                <Button variant="ghost" onClick={onBack}>Back</Button>
+                <Button onClick={onBack}>Back</Button>
                 <Button type="submit" form="user-details-form">Proceed to Checkout</Button>
             </CardFooter>
         </Card>
@@ -220,7 +220,7 @@ const CheckoutStep = ({ plan, userDetails, onBack, onCheckout }: { plan: any, us
                 </div>
             </CardContent>
             <CardFooter className="flex flex-col-reverse sm:flex-row justify-between gap-2">
-                <Button variant="ghost" onClick={onBack}>Go Back</Button>
+                <Button onClick={onBack}>Go Back</Button>
                 <Button onClick={onCheckout} size="lg"><Lock className="mr-2 h-4 w-4" /> Complete Payment</Button>
             </CardFooter>
         </Card>

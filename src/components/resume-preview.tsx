@@ -157,7 +157,7 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
 
       </CardContent>
        <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-6">
-          <Button variant="outline" onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
+          <Button onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
           <Button onClick={onGenerate} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
             Generate with AI
@@ -333,7 +333,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         </div>
                         
                         <div className="mt-4 flex justify-end gap-2">
-                          <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
+                          <Button onClick={onEdit} size="sm"><Pencil /> Edit Form</Button>
                           <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
                             {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
                             {isDownloading ? "Downloading..." : "Download PDF"}
@@ -353,7 +353,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         </div>
 
                         <div className="mt-4 flex justify-end gap-2">
-                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
+                            <Button onClick={onEdit} size="sm"><Pencil /> Edit Form</Button>
                             <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
                                 {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
                                 {isDownloading ? "Downloading..." : "Download PDF"}
@@ -366,7 +366,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                    <TabsContent value="linkedin">
                         {result.linkedin && <LinkedInPreview content={result.linkedin} />}
                          <div className="mt-4 flex justify-end gap-2">
-                            <Button onClick={onEdit} size="sm" variant="outline"><Pencil /> Edit Form</Button>
+                            <Button onClick={onEdit} size="sm"><Pencil /> Edit Form</Button>
                         </div>
                   </TabsContent>
 

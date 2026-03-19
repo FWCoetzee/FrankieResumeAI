@@ -73,7 +73,7 @@ const HistoryItem = ({ resume, onSelect, onDelete }: { resume: ResumeListItem, o
               <Trash2 className="h-4 w-4 text-destructive" />
               <span className="sr-only">Delete</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => onSelect(resume.resumeId)}>
+          <Button size="sm" onClick={() => onSelect(resume.resumeId)}>
               Load <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

@@ -153,7 +153,7 @@ export function AccountPage() {
             </div>
         </CardContent>
         <CardFooter className="flex justify-end">
-            <Button asChild variant="outline">
+            <Button asChild>
                 <Link href="/pricing">Manage Subscription</Link>
             </Button>
         </CardFooter>
