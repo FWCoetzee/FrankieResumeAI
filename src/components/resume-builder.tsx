@@ -12,7 +12,6 @@ import { ResumeHistory } from "./resume-history";
 import { set, cloneDeep } from "lodash";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { AuthDialog } from "./auth-dialog";
-import { v4 as uuidv4 } from "uuid";
 import { authFetch } from "@/lib/auth-fetch";
 
 
@@ -21,6 +20,8 @@ export function ResumeBuilder() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const ANONYMOUS_RESUME_STORAGE_KEY = 'anonymousResumeData';
+
 
   const {
     currentResume,
@@ -36,8 +37,14 @@ export function ResumeBuilder() {
 
   const handleGenerate = async (data: ResumeFormData) => {
     if (!user) {
+      // Save data to localStorage for anonymous users
+      try {
+        localStorage.setItem(ANONYMOUS_RESUME_STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("Could not save resume to local storage", e);
+      }
       setAuthDialogOpen(true);
-      // Persist form data to the store even if not logged in
+      // Also keep in memory for immediate review if they close the dialog
       setFormForReview(data);
       return;
     }
@@ -128,19 +135,57 @@ export function ResumeBuilder() {
     }
   }
 
-  const handleAcceptEdit = (fieldPath: string, newValue: string | string[]) => {
-    if (!result || !currentResume) return;
+  const handleAcceptEdit = async (fieldPath: string, newValue: string | string[]) => {
+    if (!result || !result.resume || !currentResume || !currentResume.resumeId) {
+      toast({
+        variant: "destructive",
+        title: "Save Error",
+        description: "Cannot save edit, no active resume found.",
+      });
+      return;
+    }
   
+    // Create a deep copy to avoid direct mutation of the store's state
     const newResult = cloneDeep(result);
   
+    // Apply the change to the copied object. The field path from AI editor is like 'resume.summary'
+    // so we remove the 'resume.' prefix to set it on the resume object directly.
     set(newResult, fieldPath, newValue);
       
+    // Optimistically update the UI to feel instantaneous
     updateResult(newResult);
   
-    toast({
-        title: "Content Updated",
-        description: "Your document has been updated with the AI's suggestion.",
-    });
+    // Persist the entire edited resume content to the backend
+    try {
+      const response = await authFetch(`/api/resumes/${currentResume.resumeId}/save-edit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Send the entire edited resume object
+        body: JSON.stringify({ editedContent: newResult.resume }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save edit.');
+      }
+  
+      await response.json();
+  
+      toast({
+        title: "Content Saved",
+        description: "Your edit has been saved as a new version.",
+      });
+    } catch (error) {
+      console.error("Save Edit Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: errorMessage,
+      });
+      // Revert the optimistic update on failure
+      updateResult(result);
+    }
   };
 
   if (isMobile) {

@@ -8,6 +8,7 @@ import { useResumeStore } from "@/hooks/use-resume-store";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authFetch } from "@/lib/auth-fetch";
+import { type ResumeFormData, type ResumeData } from "@/lib/schema";
 
 export default function EditorPage() {
     const { user, isUserLoading } = useUser();
@@ -17,6 +18,7 @@ export default function EditorPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     const resumeId = params.resumeId as string;
+    const ANONYMOUS_RESUME_STORAGE_KEY = 'anonymousResumeData';
 
     useEffect(() => {
         const loadResume = async () => {
@@ -24,7 +26,48 @@ export default function EditorPage() {
             
             setIsLoading(true);
 
+            // After login, check for pending data from an anonymous session
+            if (user) {
+                const pendingData = localStorage.getItem(ANONYMOUS_RESUME_STORAGE_KEY);
+                if (pendingData) {
+                    try {
+                        const parsedData: ResumeFormData = JSON.parse(pendingData);
+                        
+                        // We have data from a previous session. Load it into the store
+                        // as a new, unsaved resume.
+                        const newResume: Partial<ResumeData> = {
+                            resumeId: 0, // Mark as new
+                            title: parsedData.title,
+                            templateId: parsedData.templateId || 'modern',
+                            status: 'DRAFT',
+                            sections: {
+                                summary: { content: parsedData.sections.summary?.content || '', lastEdited: new Date().toISOString() },
+                                experience: parsedData.sections.experience || [],
+                                education: parsedData.sections.education || [],
+                                skills: parsedData.sections.skills || [],
+                                projects: parsedData.sections.projects || [],
+                                certifications: parsedData.sections.certifications || [],
+                                references: parsedData.sections.references || [],
+                            }
+                        };
+                        setCurrentResume(newResume as ResumeData);
+                        localStorage.removeItem(ANONYMOUS_RESUME_STORAGE_KEY);
+                        
+                        // The user is now on /editor/[someId], but we've loaded a new resume.
+                        // Redirect to the clean /editor/new URL to prevent confusion.
+                        router.replace('/editor/new');
+                        setIsLoading(false);
+                        return; // Stop further execution
+                    } catch (e) {
+                        console.error("Failed to parse pending resume data", e);
+                        // Clear corrupted data
+                        localStorage.removeItem(ANONYMOUS_RESUME_STORAGE_KEY);
+                    }
+                }
+            }
+            
             if (resumeId === 'new') {
+                // If it's a new resume and there's no pending data, just clear the store
                 clearCurrentResume();
             } else {
                 if (user) { // Only fetch if user is logged in
@@ -35,7 +78,8 @@ export default function EditorPage() {
                             setCurrentResume(data);
                         } else {
                             console.error(`Failed to fetch resume ${resumeId}, status: ${response.status}`);
-                            router.replace('/app/dashboard'); // Or a dedicated 404 page
+                            // If resume doesn't exist or isn't owned, go to dashboard
+                            router.replace('/app/dashboard');
                         }
                     } catch (error) {
                         console.error('Error fetching resume:', error);
@@ -51,7 +95,7 @@ export default function EditorPage() {
 
         loadResume();
 
-    }, [resumeId, user, isUserLoading]);
+    }, [resumeId, user, isUserLoading, router, setCurrentResume, clearCurrentResume]);
     
 
     if (isLoading) {
