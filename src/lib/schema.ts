@@ -79,6 +79,9 @@ export const resumeSectionReferenceSchema = z.object({
 export const resumeFormSchema = z.object({
   title: z.string().min(1, "Resume title is required"),
   templateId: z.string().default("modern"),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  jobDescription: z.string().optional(),
   sections: z.object({
     summary: resumeSectionSummarySchema.pick({ content: true }).optional(),
     experience: z.array(resumeSectionExperienceSchema).optional(),
@@ -98,6 +101,9 @@ export const resumeSchema = z.object({
   title: z.string(),
   templateId: z.string(),
   status: z.string(),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  jobDescription: z.string().optional(),
   sections: z.object({
     summary: resumeSectionSummarySchema.optional(),
     experience: z.array(resumeSectionExperienceSchema).optional(),

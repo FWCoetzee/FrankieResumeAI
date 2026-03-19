@@ -31,6 +31,9 @@ interface ResumeFormProps {
 const emptyValues: ResumeFormData = {
   title: "",
   templateId: "modern",
+  phone: "",
+  location: "",
+  jobDescription: "",
   sections: {
     summary: { content: "" },
     experience: [],
@@ -45,6 +48,9 @@ const emptyValues: ResumeFormData = {
 const sampleValues: ResumeFormData = {
   title: "Senior Frontend Engineer",
   templateId: "modern",
+  phone: "082 123 4567",
+  location: "Johannesburg, South Africa",
+  jobDescription: `We are looking for a Senior Frontend Engineer to join our team. The ideal candidate will have strong experience with React, TypeScript, and Next.js. Responsibilities include developing new user-facing features, building reusable components, and optimizing applications for maximum speed and scalability. Experience with state management libraries like Zustand or Redux is a plus.`,
   sections: {
     summary: {
       content: "A passionate and experienced Senior Frontend Engineer with a proven track record of building and launching successful web applications. Expert in React, TypeScript, and Next.js, with a keen eye for detail and a dedication to creating exceptional user experiences. Seeking to leverage my skills to contribute to a mission-driven team."
@@ -120,6 +126,9 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
         const formData: ResumeFormData = {
             title: currentResume.title,
             templateId: currentResume.templateId,
+            phone: currentResume.phone || "",
+            location: currentResume.location || "",
+            jobDescription: currentResume.jobDescription || "",
             sections: {
                 summary: { content: currentResume.sections.summary?.content || "" },
                 experience: (currentResume.sections.experience || []).map(exp => ({
@@ -174,7 +183,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
             <CardContent className="pt-6">
                 <div className="flex flex-wrap gap-2">
                     <Button type="button" size="sm" onClick={handleFillSampleData}><FilePlus2 className="mr-2 h-4 w-4" /> Fill with Sample Data</Button>
-                    <Button type="button" size="sm" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
+                    <Button type="button" size="sm" onClick={handleClearForm} variant="outline"><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
                 </div>
             </CardContent>
         </Card>
@@ -194,8 +203,12 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
             <Card className="mt-4">
               <CardContent className="pt-6">
                 <TabsContent value="customization" className="m-0 space-y-4">
-                  <FormField name="title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Resume Title</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer Application" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField name="templateId" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Template</FormLabel><FormControl><Input placeholder="e.g., modern" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField name="title" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Resume Title / Target Job</FormLabel><FormControl><Input placeholder="e.g., Senior Software Engineer Application" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField name="phone" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="e.g., 082 123 4567" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField name="location" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input placeholder="e.g., Cape Town, South Africa" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  </div>
+                   <FormField name="jobDescription" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Target Job Description</FormLabel><FormControl><Textarea placeholder="Paste the job description here so the AI can tailor your resume..." {...field} rows={6} /></FormControl><FormDescription>Providing a job description greatly improves the quality of AI suggestions.</FormDescription><FormMessage /></FormItem> )} />
                 </TabsContent>
                 
                 <TabsContent value="personal_info" className="m-0 space-y-4">

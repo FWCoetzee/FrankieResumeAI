@@ -64,15 +64,15 @@ export async function POST(request: Request, { params }: { params: { resumeId: s
         // This payload MUST match the GenerateResumeFromDataInput schema
         const aiPayload: GenerateResumeFromDataInput = {
             target_job_title: resumeData.title,
-            resume_intent: "Tech (ATS-Optimized)", // Example value, could be dynamic in future
-            experience_level: "Mid-level", // Example value
-            resume_style: "Modern", // Example value
-            language: "English", // Example value
+            resume_intent: "Tech (ATS-Optimized)", // TODO: Capture this from the user
+            experience_level: "Mid-level", // TODO: Capture this from the user
+            resume_style: "Modern", // TODO: Capture this from the user
+            language: "English", // TODO: Capture this from the user
             personal_info: {
                 full_name: user.name || "User",
                 email: user.email || "",
-                phone: "", // This field can be added to user profile later
-                location: "", // This field can be added to user profile later
+                phone: resumeData.phone || "",
+                location: resumeData.location || "",
                 summary: resumeData.sections.summary?.content || "",
             },
             work_experience: resumeData.sections.experience?.map(exp => ({
@@ -92,14 +92,14 @@ export async function POST(request: Request, { params }: { params: { resumeId: s
             skills: resumeData.sections.skills || [],
             projects: resumeData.sections.projects?.map(proj => ({
                 title: proj.title,
-                description: proj.description,
+                description: proj.description || '',
                 technologies: [], // Can be extracted from description if needed in future
             })) || [],
             certifications: resumeData.sections.certifications || [],
             references: resumeData.sections.references?.map(ref => ({ name: ref.name, contact: ref.contact })) || [],
         };
 
-        const jobDescForAI = `A generic role for a candidate with skills like ${resumeData.sections.skills?.join(', ')}.`;
+        const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills?.join(', ')}.`;
 
         const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
             generateResumeFromData(aiPayload),
