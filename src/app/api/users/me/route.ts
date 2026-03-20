@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
@@ -10,13 +11,17 @@ export async function GET(request: Request) {
 
     const db = getDb();
     try {
-        const userRes = await db.query('SELECT id, firebase_uid, email, display_name, plan FROM users WHERE firebase_uid = $1', [user.uid]);
+        let userRes = await db.query('SELECT id, firebase_uid, email, display_name, plan FROM users WHERE firebase_uid = $1', [user.uid]);
         
         if (userRes.rows.length === 0) {
             // This case might happen if user exists in Firebase Auth but not in our DB.
             // We can choose to create them here or handle it as an error.
-            // For now, we'll treat it as a "not found" case.
-            return NextResponse.json({ error: 'User profile not found in database.' }, { status: 404 });
+            // For now, we'll lazily create them to make the system resilient.
+            console.log(`User ${user.uid} not found in DB, creating profile.`);
+            userRes = await db.query(
+                 'INSERT INTO users (firebase_uid, email, display_name, plan) VALUES ($1, $2, $3, $4) RETURNING id, firebase_uid, email, display_name, plan',
+                [user.uid, user.email, user.name, 'free']
+            );
         }
 
         const userProfile = userRes.rows[0];

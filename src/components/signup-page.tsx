@@ -23,6 +23,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { authFetch } from "@/lib/auth-fetch";
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -58,6 +59,18 @@ export function SignUpPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       await updateProfile(userCredential.user, { displayName: values.name });
+      
+      // Force token refresh to include new display name before API call
+      await userCredential.user.getIdToken(true);
+
+      // Now create the user profile in our backend DB
+      const profileResponse = await authFetch('/api/users', { method: 'POST' });
+      if (!profileResponse.ok) {
+          // This failure is not critical for the user, as lazy-creation will handle it.
+          // Log it for monitoring.
+          console.error("Failed to create user profile in DB immediately after signup.");
+      }
+
       toast({ title: "Account Created", description: "Welcome! You've been successfully signed up." });
       router.push('/app/dashboard');
     } catch (err: any) {

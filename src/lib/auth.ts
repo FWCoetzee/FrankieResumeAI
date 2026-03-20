@@ -1,24 +1,31 @@
 
 import { headers } from 'next/headers';
 import { DecodedIdToken, getAuth as getAdminAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, App as AdminApp, ServiceAccount, cert } from 'firebase-admin/app';
-import { firebaseConfig } from '@/firebase/config'; // Import the client-side config
+import {
+  initializeApp,
+  getApps,
+  App as AdminApp,
+  applicationDefault,
+} from 'firebase-admin/app';
+import { firebaseConfig } from '@/firebase/config';
 
 // This function initializes the Firebase Admin SDK.
 // It's designed to be safely called multiple times.
 function initializeAdminApp(): AdminApp {
-    const apps = getApps();
-    if (apps.length > 0) {
-        return apps[0]!;
-    }
-    
-    // Explicitly providing the projectId helps the SDK find the correct
-    // Application Default Credentials in a Google Cloud environment.
-    return initializeApp({
-        projectId: firebaseConfig.projectId,
-    });
-}
+  // Return the initialized app if it already exists
+  if (getApps().length) {
+    return getApps()[0]!;
+  }
 
+  // Otherwise, initialize the app.
+  // Using applicationDefault() is the recommended way for Google Cloud environments
+  // like Cloud Run, Cloud Functions, and App Hosting. It automatically finds
+  // the service account credentials from the environment.
+  return initializeApp({
+    credential: applicationDefault(),
+    projectId: firebaseConfig.projectId, // Explicitly setting projectId is a good practice.
+  });
+}
 
 /**
  * Retrieves the decoded user token from the request headers.

@@ -27,18 +27,15 @@ export async function POST(request: Request) {
     try {
         await db.query('BEGIN');
 
-        // Find or create user in our database
-        let res = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        let userId;
+        // Find user in our database. They MUST exist at this point due to login/signup flow.
+        const res = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
         if (res.rows.length === 0) {
-            res = await db.query(
-                'INSERT INTO users (firebase_uid, email, display_name, plan) VALUES ($1, $2, $3, $4) RETURNING id',
-                [user.uid, user.email, user.name, 'free']
-            );
-            userId = res.rows[0].id;
-        } else {
-            userId = res.rows[0].id;
+             // This should ideally not happen because of the improved signup/login flow
+            await db.query('ROLLBACK');
+            return NextResponse.json({ error: 'User profile not found. Please try logging out and in again.' }, { status: 404 });
         }
+        const userId = res.rows[0].id;
+
 
         // Create the resume metadata
         const resumeRes = await db.query(
