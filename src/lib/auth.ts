@@ -10,15 +10,11 @@ function initializeAdminApp(): AdminApp {
     if (apps.length > 0) {
         return apps[0]!;
     }
-
-    // When deployed to App Hosting, GOOGLE_APPLICATION_CREDENTIALS is automatically set.
-    // For local development, you must set this environment variable to point to your service account key file.
-    // See: https://firebase.google.com/docs/admin/setup#initialize-sdk
-    const credential = process.env.GOOGLE_APPLICATION_CREDENTIALS
-        ? cert(JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS))
-        : undefined;
     
-    return initializeApp({ credential });
+    // This will use Application Default Credentials (ADC).
+    // In a Google Cloud environment (like App Hosting or Cloud Workstations),
+    // this automatically finds the service account credentials.
+    return initializeApp();
 }
 
 
@@ -58,8 +54,8 @@ export async function getAuthenticatedUser(request: Request): Promise<DecodedIdT
                 const adminAuth = getAdminAuth(adminApp);
                 const decodedToken = await adminAuth.verifyIdToken(token);
                 return decodedToken;
-            } catch (error) {
-                console.error('Error verifying Firebase ID token in local dev:', error);
+            } catch (error: any) {
+                console.error(`Error verifying Firebase ID token in local dev. Code: ${error.code}, Message: ${error.message}`);
                 return null;
             }
         }
