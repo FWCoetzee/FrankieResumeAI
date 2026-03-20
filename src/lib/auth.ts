@@ -2,6 +2,7 @@
 import { headers } from 'next/headers';
 import { DecodedIdToken, getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, App as AdminApp, ServiceAccount, cert } from 'firebase-admin/app';
+import { firebaseConfig } from '@/firebase/config'; // Import the client-side config
 
 // This function initializes the Firebase Admin SDK.
 // It's designed to be safely called multiple times.
@@ -11,10 +12,11 @@ function initializeAdminApp(): AdminApp {
         return apps[0]!;
     }
     
-    // This will use Application Default Credentials (ADC).
-    // In a Google Cloud environment (like App Hosting or Cloud Workstations),
-    // this automatically finds the service account credentials.
-    return initializeApp();
+    // Explicitly providing the projectId helps the SDK find the correct
+    // Application Default Credentials in a Google Cloud environment.
+    return initializeApp({
+        projectId: firebaseConfig.projectId,
+    });
 }
 
 
