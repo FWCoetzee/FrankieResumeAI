@@ -20,6 +20,8 @@ import { AiEditor } from "./ai-editor";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { AdBanner } from "./ad-banner";
 
 
 interface ResumePreviewProps {
@@ -204,9 +206,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const [activeTab, setActiveTab] = React.useState("preview");
   const [isDownloading, setIsDownloading] = React.useState(false);
   const { toast } = useToast();
+  const { profile } = useUserProfile();
 
   const handleDownloadPdf = async () => {
-    // Determine which element to capture based on the active tab
     const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
     const elementToCapture = document.getElementById(elementId);
 
@@ -227,36 +229,39 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
 
     try {
       const canvas = await html2canvas(elementToCapture, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         useCORS: true,
         logging: false,
-        // These properties are key to capturing the full content, not just the visible part
         height: elementToCapture.scrollHeight,
         width: elementToCapture.scrollWidth,
         windowHeight: elementToCapture.scrollHeight,
         windowWidth: elementToCapture.scrollWidth,
       });
 
+      // Add watermark if user is on the free plan
+      if (profile && profile.plan === 'free') {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+              ctx.save();
+              ctx.globalAlpha = 0.08;
+              ctx.fillStyle = 'black';
+              ctx.font = 'bold 72px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              ctx.rotate(-0.5); // ~30 degrees
+              ctx.fillText('Created with DeepResumeAI', 0, 0);
+              ctx.restore();
+          }
+      }
+
       const imgData = canvas.toDataURL('image/png');
-      
-      // A4 paper dimensions in mm
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
-      });
-
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
       const imgProps = pdf.getImageProperties(imgData);
-      const imgWidth = imgProps.width;
-      const imgHeight = imgProps.height;
-      const ratio = imgHeight / imgWidth;
-      
+      const ratio = imgProps.height / imgProps.width;
       const finalImgWidth = pdfWidth;
       const finalImgHeight = pdfWidth * ratio;
-
       let position = 0;
       let heightLeft = finalImgHeight;
 
@@ -264,7 +269,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       heightLeft -= pdfHeight;
 
       while (heightLeft > 0) {
-        position = heightLeft - finalImgHeight; // Becomes negative
+        position = heightLeft - finalImgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, finalImgWidth, finalImgHeight);
         heightLeft -= pdfHeight;
@@ -322,7 +327,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="preview">
                     {result.resume && (
                         <>
-                        {/* The element to be captured for PDF is now the content itself, not a container */}
+                        {profile && profile.plan === 'free' && <AdBanner className="mb-4" />}
                         <div className="bg-gray-200 p-4 rounded-lg">
                           <div id="resume-content" className="overflow-y-auto bg-white rounded-lg shadow-inner mx-auto max-w-full aspect-[8.5/11]">
                               <TemplateRenderer 
@@ -346,6 +351,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   <TabsContent value="cover-letter">
                     {result.coverLetter && (
                         <>
+                        {profile && profile.plan === 'free' && <AdBanner className="mb-4" />}
                         <div className="bg-gray-200 p-4 rounded-lg">
                           <div id="cover-letter-content" className="bg-white aspect-[8.5/11] overflow-y-auto rounded-lg shadow-inner mx-auto max-w-full">
                                 <CoverLetterContent content={result.coverLetter} />

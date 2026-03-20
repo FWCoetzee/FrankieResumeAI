@@ -9,12 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { FilePlus } from "lucide-react";
 import Link from "next/link";
 import { useResumeStore } from "@/hooks/use-resume-store";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { AdBanner } from "./ad-banner";
 
 export function DashboardPage() {
     const { user } = useUser();
     const router = useRouter();
     const { toast } = useToast();
     const { clearCurrentResume } = useResumeStore();
+    const { profile, isLoading: isProfileLoading } = useUserProfile();
 
     const handleCreateNew = () => {
         clearCurrentResume();
@@ -34,6 +37,10 @@ export function DashboardPage() {
                 </Button>
             </div>
             
+            {profile && profile.plan === 'free' && (
+                <AdBanner className="mb-8" />
+            )}
+
             {/* The ResumeHistory component is the main content of the dashboard */}
             <ResumeHistory />
         </div>
