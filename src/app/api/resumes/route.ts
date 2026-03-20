@@ -32,8 +32,8 @@ export async function POST(request: Request) {
         let userId;
         if (res.rows.length === 0) {
             res = await db.query(
-                'INSERT INTO users (firebase_uid, email, display_name) VALUES ($1, $2, $3) RETURNING id',
-                [user.uid, user.email, user.name]
+                'INSERT INTO users (firebase_uid, email, display_name, plan) VALUES ($1, $2, $3, $4) RETURNING id',
+                [user.uid, user.email, user.name, 'free']
             );
             userId = res.rows[0].id;
         } else {
