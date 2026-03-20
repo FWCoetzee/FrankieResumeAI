@@ -21,10 +21,18 @@ function initializeAdminApp(): AdminApp {
   // Using applicationDefault() is the recommended way for Google Cloud environments
   // like Cloud Run, Cloud Functions, and App Hosting. It automatically finds
   // the service account credentials from the environment.
-  return initializeApp({
-    credential: applicationDefault(),
-    projectId: firebaseConfig.projectId, // Explicitly setting projectId is a good practice.
-  });
+  console.log("Initializing Firebase Admin SDK...");
+  try {
+    const app = initializeApp({
+      credential: applicationDefault(),
+      projectId: firebaseConfig.projectId, // Explicitly setting projectId is a good practice.
+    });
+    console.log("Firebase Admin SDK initialized successfully.");
+    return app;
+  } catch (error: any) {
+      console.error("FATAL: Failed to initialize Firebase Admin SDK.", error);
+      throw new Error(`Could not initialize Firebase Admin SDK: ${error.message}`);
+  }
 }
 
 /**
@@ -64,7 +72,8 @@ export async function getAuthenticatedUser(request: Request): Promise<DecodedIdT
                 const decodedToken = await adminAuth.verifyIdToken(token);
                 return decodedToken;
             } catch (error: any) {
-                console.error(`Error verifying Firebase ID token in local dev. Code: ${error.code}, Message: ${error.message}`);
+                // This is the critical logging to diagnose the issue.
+                console.error(`[AUTH_ERROR] Failed to verify ID token during local development. Code: ${error.code}. Message: ${error.message}`);
                 return null;
             }
         }
