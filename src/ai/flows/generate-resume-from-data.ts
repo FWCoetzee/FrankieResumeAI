@@ -150,7 +150,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
           const startTime = Date.now();
           
           const {output} = await ai.run(
-              {name: 'primaryModelGeneration', labels: {model: primaryModel.name}},
+              'primaryModelGeneration',
               () => prompt(payload, { model: primaryModel })
           );
           
@@ -193,7 +193,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
         const startTime = Date.now();
         
         const {output} = await ai.run(
-            {name: 'fallbackModelGeneration', labels: {model: fallbackModel.name}},
+            'fallbackModelGeneration',
             () => prompt(payload, { model: fallbackModel })
         );
         

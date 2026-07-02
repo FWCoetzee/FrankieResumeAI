@@ -235,8 +235,8 @@ export function AiEditor({ result, resumeData, onAcceptEdit }: AiEditorProps) {
         <div>
             <Label className="text-xs font-semibold text-muted-foreground">AI Actions</Label>
             <div className="grid grid-cols-2 gap-2 mt-1">
-                {editModes.map(mode => (
-                <ModeButton key={mode.id} {...mode} />
+                {editModes.map(m => (
+                  <ModeButton key={m.id} mode={m.id} label={m.label} icon={m.icon} />
                 ))}
             </div>
         </div>

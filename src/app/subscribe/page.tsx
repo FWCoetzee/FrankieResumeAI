@@ -8,10 +8,11 @@ export const metadata: Metadata = {
 };
 
 // The 'searchParams' prop is used to access URL query parameters in a Server Component.
-export default function SubscribePage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function SubscribePage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const resolvedSearchParams = await searchParams;
   // We extract the 'plan' from the searchParams and pass it to the client component.
   // This is a robust way to handle dynamic routing information.
-  const plan = typeof searchParams.plan === 'string' ? searchParams.plan : 'pro';
+  const plan = typeof resolvedSearchParams.plan === 'string' ? resolvedSearchParams.plan : 'pro';
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl">

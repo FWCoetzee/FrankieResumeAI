@@ -130,7 +130,7 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
         try {
           console.log(`[LLM Router - Suggestions] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
           const {output} = await ai.run(
-              {name: 'primaryModelGeneration', labels: {flow: 'provideSuggestions', model: primaryModel.name}},
+              'primaryModelGeneration',
               () => prompt(payload, { model: primaryModel })
           );
           if (!output) throw new Error("Primary model returned empty output.");
@@ -151,7 +151,7 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
       try {
         console.log(`[LLM Router - Suggestions] Failover: Trying fallback model (${fallbackModel.name}).`);
         const {output} = await ai.run(
-            {name: 'fallbackModelGeneration', labels: {flow: 'provideSuggestions', model: fallbackModel.name}},
+            'fallbackModelGeneration',
             () => prompt(payload, { model: fallbackModel })
         );
         if (!output) throw new Error("Fallback model returned empty output.");

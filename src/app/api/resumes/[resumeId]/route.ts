@@ -9,13 +9,14 @@ async function verifyOwnership(resumeId: number, userId: number) {
     return res.rows.length > 0;
 }
 
-export async function GET(request: Request, { params }: { params: { resumeId: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
     const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const resumeId = parseInt(params.resumeId, 10);
+    const { resumeId: resumeIdParam } = await params;
+    const resumeId = parseInt(resumeIdParam, 10);
     if (isNaN(resumeId)) {
         return NextResponse.json({ error: 'Invalid resume ID' }, { status: 400 });
     }
@@ -77,13 +78,14 @@ export async function GET(request: Request, { params }: { params: { resumeId: st
 }
 
 
-export async function DELETE(request: Request, { params }: { params: { resumeId: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
     const user = await getAuthenticatedUser(request);
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const resumeId = parseInt(params.resumeId, 10);
+    const { resumeId: resumeIdParam } = await params;
+    const resumeId = parseInt(resumeIdParam, 10);
      if (isNaN(resumeId)) {
         return NextResponse.json({ error: 'Invalid resume ID' }, { status: 400 });
     }

@@ -86,7 +86,7 @@ const editResumeTextFlow = ai.defineFlow(
         try {
           console.log(`[LLM Router - Edit] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
           const response = await ai.run(
-              {name: 'primaryModelGeneration', labels: {flow: 'editResumeText', model: primaryModel.name}},
+              'primaryModelGeneration',
               () => prompt(payload, { model: primaryModel })
           );
           return response.text;
@@ -106,7 +106,7 @@ const editResumeTextFlow = ai.defineFlow(
       try {
         console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModel.name}).`);
         const response = await ai.run(
-            {name: 'fallbackModelGeneration', labels: {flow: 'editResumeText', model: fallbackModel.name}},
+            'fallbackModelGeneration',
             () => prompt(payload, { model: fallbackModel })
         );
         return response.text;

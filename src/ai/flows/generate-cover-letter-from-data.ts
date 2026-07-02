@@ -106,7 +106,7 @@ const generateCoverLetterFromDataFlow = ai.defineFlow(
         try {
           console.log(`[LLM Router - CoverLetter] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
           const response = await ai.run(
-              {name: 'primaryModelGeneration', labels: {flow: 'generateCoverLetter', model: primaryModel.name}},
+              'primaryModelGeneration',
               () => prompt(payload, { model: primaryModel })
           );
           return response.text;
@@ -126,7 +126,7 @@ const generateCoverLetterFromDataFlow = ai.defineFlow(
       try {
         console.log(`[LLM Router - CoverLetter] Failover: Trying fallback model (${fallbackModel.name}).`);
         const response = await ai.run(
-            {name: 'fallbackModelGeneration', labels: {flow: 'generateCoverLetter', model: fallbackModel.name}},
+            'fallbackModelGeneration',
             () => prompt(payload, { model: fallbackModel })
         );
         return response.text;
