@@ -67,35 +67,19 @@ export default function EditorPage() {
             }
             
             if (resumeId === 'new') {
-                // If it's a new resume and there's no pending data, just clear the store
+                // If it's a new resume, just clear the store
                 clearCurrentResume();
             } else {
-                if (user) { // Only fetch if user is logged in
-                    try {
-                        const response = await authFetch(`/api/resumes/${resumeId}`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            setCurrentResume(data);
-                        } else {
-                            console.error(`Failed to fetch resume ${resumeId}, status: ${response.status}`);
-                            // If resume doesn't exist or isn't owned, go to dashboard
-                            router.replace('/app/dashboard');
-                        }
-                    } catch (error) {
-                        console.error('Error fetching resume:', error);
-                        router.replace('/app/dashboard');
-                    }
-                } else {
-                    // If not logged in and trying to access a specific resume, redirect
-                    router.replace('/auth/login');
-                }
+                // For MVP, we will eventually fetch from Firestore using anonymous session ID
+                // For now, if we don't have a user (which we don't for public), we might just clear or load from local storage
+                clearCurrentResume();
             }
             setIsLoading(false);
         };
 
         loadResume();
 
-    }, [resumeId, user, isUserLoading, router, setCurrentResume, clearCurrentResume]);
+    }, [resumeId, router, setCurrentResume, clearCurrentResume]);
     
 
     if (isLoading) {

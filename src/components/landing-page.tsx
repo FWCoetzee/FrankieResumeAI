@@ -46,7 +46,7 @@ const features = [
     {
         icon: <Maximize className="h-8 w-8 text-primary" />,
         title: "Future Expansion Tools",
-        description: "Your lifetime access includes all future tools, such as interview prep simulators and salary negotiation guides."
+        description: "Build your resume with AI, preview the result, and pay only when you are ready to download the final PDF."
     }
   ];
 
@@ -64,12 +64,12 @@ const features = [
       answer: "Applicant Tracking Systems (ATS) are used by most companies to filter resumes. An ATS-optimized resume is formatted correctly and contains the right keywords to ensure it gets seen by a human recruiter."
     },
     {
-      question: "Can I try it for free?",
-      answer: "Yes! Our Free Tier allows you to generate a resume and explore the basic features. The Pro and Lifetime tiers unlock advanced capabilities like unlimited variants, cover letters, and multi-language support."
+    question: "Can I build a resume without signing up?",
+    answer: "Yes. You can build and preview a resume with Gemini without creating an account. Payment is required only when you download the final PDF."
     },
     {
-      question: "What's included in the Lifetime Deal?",
-      answer: "The Lifetime Deal is a one-time purchase that gives you permanent access to all current and future Pro features. This includes unlimited resume generations, cover letters, all themes, and multi-language exports."
+    question: "How much does PDF export cost?",
+    answer: "The recommended launch price is USD $4.99 internationally or ZAR R99 in South Africa, charged once per PDF export."
     },
     {
       question: "Can I customize the generated resume?",
@@ -89,7 +89,7 @@ const features = [
       role: "Junior Graphic Designer"
     },
      {
-      quote: "The ability to create tailored resumes for each application is incredible. It used to take me hours, but now it takes seconds. This is the best R199 I've ever spent on my career.",
+    quote: "The ability to create tailored resumes for each application is incredible. It used to take me hours, but now it takes seconds.",
       name: "Chris van der Merwe",
       role: "Project Manager"
     }
@@ -104,7 +104,7 @@ export function LandingPage() {
                 <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
                 <div className="mt-8 flex justify-center gap-4 flex-wrap">
                     <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
-                    <Link href="/subscribe?plan=lifetime"><Button size="lg" className="w-full sm:w-auto">Get Lifetime Access for R199</Button></Link>
+                    <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Build My Resume</Button></Link>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
             </section>
@@ -143,7 +143,7 @@ export function LandingPage() {
                     <ul className="space-y-4">
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Instant Resume Generation</h4><p className="text-sm text-muted-foreground">Go from draft to distinction in under a minute.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">ATS Optimization</h4><p className="text-sm text-muted-foreground">Our AI knows what recruiters' robots want to see.</p></div></li>
-                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Job-Tailored Rewrites</h4><p className="text-sm text-muted-foreground">Create unlimited, perfectly targeted resumes for every application.</p></div></li>
+                        <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Job-Tailored Rewrites</h4><p className="text-sm text-muted-foreground">Create focused, job-tailored resume content for each application.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Modern Design Themes</h4><p className="text-sm text-muted-foreground">Choose from a gallery of templates that are professional, not predictable.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Multilingual Export</h4><p className="text-sm text-muted-foreground">Export your resume in all 11 official languages.</p></div></li>
                         <li className="flex items-start gap-3"><CheckCircle className="h-6 w-6 text-green-500 mt-1 shrink-0" /><div><h4 className="font-semibold">Your Data is Private</h4><p className="text-sm text-muted-foreground">We respect your privacy. Your data is secure and never shared.</p></div></li>
@@ -151,21 +151,20 @@ export function LandingPage() {
                 </div>
             </section>
 
-             {/* Early Access Offer */}
+             {/* PDF Export Offer */}
             <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
                 <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold">Limited Offer: Get Lifetime Access</h2>
-                    <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">Become an early supporter and get lifetime access to all Pro features for a single, once-off payment.</p>
-                    <div className="mt-8 text-5xl font-extrabold">R199 <span className="text-2xl font-normal opacity-80">once-off</span></div>
-                    <p className="mt-2 text-primary-foreground/80">(Normally R99 per month)</p>
+                    <h2 className="text-3xl md:text-4xl font-bold">Preview Before You Download</h2>
+                    <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">Build and preview your resume with Gemini. Pay once only when you are ready to download the final PDF.</p>
+                    <div className="mt-8 text-5xl font-extrabold">$4.99 <span className="text-2xl font-normal opacity-80">or R99</span></div>
+                    <p className="mt-2 text-primary-foreground/80">One-time PDF export</p>
                     <div className="mt-8 max-w-md mx-auto text-left space-y-2">
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Unlimited AI Resume Generations</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Unlimited Cover Letters</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> All Resume Themes</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Multi-Language Export</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> All Future Tools & Updates</p>
+                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> AI-assisted resume generation</p>
+                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Live resume/CV preview</p>
+                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Modern resume templates</p>
+                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Verified PDF download</p>
                     </div>
-                    <Link href="/subscribe?plan=lifetime"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Claim Your Lifetime Deal</Button></Link>
+                    <Link href="/editor/new"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Start Building</Button></Link>
                 </div>
             </section>
             
@@ -195,58 +194,56 @@ export function LandingPage() {
                  <div className="container mx-auto px-4">
                     <div className="text-center">
                         <h2 className="text-3xl md:text-4xl font-bold">Choose Your Plan</h2>
-                        <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Start for free, or unlock powerful features to accelerate your job search.</p>
+                        <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Build and preview without an account. Pay only when you download the final PDF.</p>
                     </div>
                     <div className="mt-12 grid lg:grid-cols-3 gap-8 items-start">
                         <Card className="flex flex-col h-full">
                             <CardHeader>
-                                <CardTitle>Free</CardTitle>
-                                <p className="text-4xl font-bold">R0</p>
-                                <p className="text-muted-foreground">Perfect for a quick start.</p>
+                                <CardTitle>Build & Preview</CardTitle>
+                                <p className="text-4xl font-bold">Free</p>
+                                <p className="text-muted-foreground">No account required.</p>
                             </CardHeader>
                             <CardContent className="flex-grow space-y-2">
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> 1 AI Resume Generation</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Basic Resume Theme</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> ATS Optimization</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> AI resume generation</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Resume/CV preview</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Modern templates</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=free" className="w-full"><Button className="w-full">Get Started</Button></Link>
+                                <Link href="/editor/new" className="w-full"><Button className="w-full">Start Building</Button></Link>
                             </CardFooter>
                         </Card>
                         <Card className="border-2 border-primary flex flex-col h-full shadow-lg">
                              <CardHeader>
                                 <div className="flex justify-between items-center">
-                                    <CardTitle>Pro</CardTitle>
+                                    <CardTitle>PDF Export</CardTitle>
                                     <div className="text-sm font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full">Most Popular</div>
                                 </div>
-                                <div><span className="text-4xl font-bold">R99</span><span className="text-muted-foreground">/mo</span></div>
-                                <p className="text-muted-foreground">For the serious job seeker.</p>
+                                <div><span className="text-4xl font-bold">$4.99</span><span className="text-muted-foreground"> or R99</span></div>
+                                <p className="text-muted-foreground">One-time payment when you download.</p>
                             </CardHeader>
                             <CardContent className="flex-grow space-y-2">
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Unlimited AI Resumes</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Unlimited Cover Letters</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> All Modern Themes</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Multi-Language Export</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> LinkedIn Rewrite Tool</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Verified PDF generation</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Payment receipt</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Error-reporting support</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=pro" className="w-full"><Button className="w-full">Go Pro</Button></Link>
+                                <Link href="/editor/new" className="w-full"><Button className="w-full">Build My Resume</Button></Link>
                             </CardFooter>
                         </Card>
                          <Card className="flex flex-col h-full">
                             <CardHeader>
-                                <CardTitle>Lifetime Access</CardTitle>
-                                <div><span className="text-4xl font-bold">R199</span><span className="text-muted-foreground"> once-off</span></div>
-                                <p className="text-muted-foreground">Pay once, own it forever.</p>
+                                <CardTitle>South Africa</CardTitle>
+                                <div><span className="text-4xl font-bold">R99</span><span className="text-muted-foreground"> per PDF</span></div>
+                                <p className="text-muted-foreground">Local pricing for PDF export.</p>
                             </CardHeader>
                             <CardContent className="flex-grow space-y-2">
-                                <p className="font-semibold">Everything in Pro, plus:</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> All Future Tools & Updates</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Priority Support</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> One-Time Payment</p>
+                                <p className="font-semibold">Local checkout includes:</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> PayFast or Yoco</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> One-time PDF payment</p>
+                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Verified download</p>
                             </CardContent>
                             <CardFooter>
-                                <Link href="/subscribe?plan=lifetime" className="w-full"><Button className="w-full">Get Lifetime Access</Button></Link>
+                                <Link href="/editor/new" className="w-full"><Button className="w-full">Start Building</Button></Link>
                             </CardFooter>
                         </Card>
                     </div>

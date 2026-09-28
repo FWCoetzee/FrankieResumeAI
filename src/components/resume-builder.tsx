@@ -11,7 +11,6 @@ import { useUser } from "@/firebase";
 import { ResumeHistory } from "./resume-history";
 import { set, cloneDeep } from "lodash";
 import { useResumeStore } from "@/hooks/use-resume-store";
-import { AuthDialog } from "./auth-dialog";
 import { authFetch } from "@/lib/auth-fetch";
 
 
@@ -19,7 +18,6 @@ export function ResumeBuilder() {
   const { user } = useUser();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const ANONYMOUS_RESUME_STORAGE_KEY = 'anonymousResumeData';
 
 
@@ -36,65 +34,23 @@ export function ResumeBuilder() {
   } = useResumeStore();
 
   const handleGenerate = async (data: ResumeFormData) => {
-    if (!user) {
-      // Save data to localStorage for anonymous users
-      try {
-        localStorage.setItem(ANONYMOUS_RESUME_STORAGE_KEY, JSON.stringify(data));
-      } catch (e) {
-        console.error("Could not save resume to local storage", e);
-      }
-      setAuthDialogOpen(true);
-      // Also keep in memory for immediate review if they close the dialog
-      setFormForReview(data);
-      return;
-    }
+    // For MVP, we use anonymous sessions. 
+    // We'll preserve the data in memory and later handle session-based generation.
     setFormForReview(data);
   };
   
   const handleConfirmGenerate = async () => {
-    if (!user || !currentResume) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "You must be logged in and have resume data to generate.",
-        });
-        return;
-    }
-    
-    let resumeIdToGenerate = currentResume.resumeId;
-
-    // If the resume has no ID, it's a new one. Create it first.
-    if (!resumeIdToGenerate) {
-        try {
-            const createResponse = await authFetch('/api/resumes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: currentResume.title }),
-            });
-            if (!createResponse.ok) {
-              const errorData = await createResponse.json();
-              throw new Error(errorData.error || 'Failed to create new resume project.');
-            }
-            
-            const { resumeId } = await createResponse.json();
-            resumeIdToGenerate = resumeId;
-            
-            // Update the store with the new ID
-            setCurrentResume({ ...currentResume, resumeId });
-
-        } catch (error) {
-            console.error("New Resume Creation Error:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-            toast({ variant: "destructive", title: "Creation Failed", description: errorMessage });
-            return; // Stop if we can't create the resume project
-        }
-    }
-    
-    // Proceed with generation using the now-guaranteed resume ID.
-    generateContentForResume(resumeIdToGenerate);
+    // This will be replaced with anonymous generation logic in /api/resumes/generate
+    toast({
+        variant: "destructive",
+        title: "Coming Soon",
+        description: "AI generation is currently being updated for anonymous sessions.",
+    });
   }
 
   const generateContentForResume = async (resumeId: number) => {
+    // ... existing code ...
+
     if (!currentResume) return;
 
     toast({
@@ -204,7 +160,6 @@ export function ResumeBuilder() {
      }
      return (
         <div className="space-y-8 print-hidden">
-            <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
             <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
             {user && <ResumeHistory />}
         </div>
@@ -213,7 +168,6 @@ export function ResumeBuilder() {
 
   return (
     <div className="grid lg:grid-cols-2 gap-12 items-start">
-      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
       <div className="space-y-8 print-hidden">
         <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
         {user && <ResumeHistory />}

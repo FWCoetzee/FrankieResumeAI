@@ -87,34 +87,21 @@ export function UserNav() {
     return <Skeleton className="h-10 w-10 rounded-full" />;
   }
 
-  if (!user) {
-     return (
-        <div className="flex items-center gap-2">
-            <Button asChild>
-              <Link href="/auth/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/auth/signup">Sign Up</Link>
-            </Button>
-        </div>
-     )
-  }
+  return (
+    <div className="flex items-center gap-2">
+      <Button asChild>
+        <Link href="/editor/new">Build Resume</Link>
+      </Button>
+    </div>
+  )
   
-  const userDisplayName = user?.isAnonymous ? "Anonymous User" : user?.displayName || "User";
-  const userEmail = user?.isAnonymous ? "Anonymous session" : user?.email || user?.uid;
-  const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=${user?.uid}`;
-  const avatarUrl = optimisticAvatarUrl || user.photoURL || defaultAvatar;
+  const userDisplayName = "Visitor";
+  const userEmail = "Anonymous session";
+  const defaultAvatar = `https://api.dicebear.com/8.x/lorelei/svg?seed=anonymous`;
+  const avatarUrl = defaultAvatar;
 
   return (
     <>
-       <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        accept="image/png, image/jpeg, image/gif"
-        disabled={isUploading}
-      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -137,29 +124,11 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={handleAvatarChangeClick} disabled={isUploading}>
+            <DropdownMenuItem disabled>
               <UserIcon className="mr-2 h-4 w-4" />
-              <span>Change Avatar</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/app/account">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/app/account#billing">
-                <Wallet className="mr-2 h-4 w-4" />
-                <span>Billing</span>
-              </Link>
+              <span>Session Active</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </DropdownMenuItem>
-          {isUploading && <Progress value={uploadProgress} className="h-1 mt-2 mx-1" />}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
