@@ -49,6 +49,8 @@ This document outlines the system architecture and design decisions for GoogleRe
 - PDF download only after verified payment
 - Error-reporting link for failed payment or download flows
 - Visible AI rate-limit notice on the resume preview page
+- Use `Background/Google resume ai background_preview.jpeg` as the background for the resume preview page
+- Use `Background/Google resume ai background_downloadpdf.jpeg` as the background for the landing page
 
 ### 2. API Layer (Next.js Routes)
 
