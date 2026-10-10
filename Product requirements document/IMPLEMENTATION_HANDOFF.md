@@ -1,4 +1,4 @@
-# Google Resume AI: Implementation Handoff
+# Frankie Resume AI: Implementation Handoff
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Across all documents, specify acceptance criteria that can be tested; use consis
 
 ## Confirmed Product Decisions
 
-- Public product name: Google Resume AI.
+- Public product name: Frankie Resume AI.
 - Repository remains private permanently.
 - Visitors do not create accounts or sign in.
 - Visitors build and preview one resume through a temporary anonymous session.

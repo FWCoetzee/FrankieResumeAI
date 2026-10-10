@@ -1,9 +1,9 @@
-# Google Resume AI: Product Requirements Document (PRD)
+# Frankie Resume AI: Product Requirements Document (PRD)
 
 ## EXECUTIVE SUMMARY
 
 ### Project Context
-- **Product name:** Google Resume AI
+- **Product name:** Frankie Resume AI
 - **Developer:** Franklin Coetzee with AI assistance
 - **Source Attribution:** Every newly written source-code file begins with a creator comment containing Franklin Coetzee's name, ID number, email, and AI assistance credit.
 - **Timeline:** 6-month MVP (once per week, ~4 hours/week = ~100 hours total)
@@ -13,11 +13,11 @@
 - **Hosting:** Netlify only
 
 ### Strategic Position
-Google Resume AI is an **AI-powered resume builder** targeting businesses and organizations globally, with B2C access for job seekers where available and localization for South Africa. Visitors can build a resume with Gemini and preview the completed resume/CV without creating a user account or signing in. PDF download is offered after payment verification.
+Frankie Resume AI is an **AI-powered resume builder** targeting businesses and organizations globally, with B2C access for job seekers where available and localization for South Africa. Visitors can build a resume with Gemini and preview the completed resume/CV without creating a user account or signing in. PDF download is offered after payment verification.
 
-**Public information pages:** The site must include an About page explaining Google Resume AI's purpose, workflow, AI-assisted resume creation, payment-gated PDF export, and creator Franklin Coetzee's role. It must also include a Contact page with Franklin's public contact details and a way to report product, payment, PDF, or AI-generation issues.
+**Public information pages:** The site must include an About page explaining Frankie Resume AI's purpose, workflow, AI-assisted resume creation, payment-gated PDF export, and creator Franklin Coetzee's role. It must also include a Contact page with Franklin's public contact details and a way to report product, payment, PDF, or AI-generation issues.
 
-**Trust and compliance pages:** The site must publish Privacy and Terms pages before launch. These pages must explain anonymous resume-session handling, Gemini processing, payment-provider processing, retention and deletion periods, support reporting, and the independent status of Google Resume AI.
+**Trust and compliance pages:** The site must publish Privacy and Terms pages before launch. These pages must explain anonymous resume-session handling, Gemini processing, payment-provider processing, retention and deletion periods, support reporting, and the independent status of Frankie Resume AI.
 
 **Business Focus:** Target businesses and organizations first while keeping AI-assisted resume creation and preview accessible without user accounts or subscription sign-up. The MVP supports the same single-resume workflow for B2B and B2C visitors; organization accounts, team workspaces, bulk generation, and enterprise billing are future features. Monetize PDF export through one-time payments via PayPal, Lemon Squeezy, PayFast, or Yoco.
 

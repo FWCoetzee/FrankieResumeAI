@@ -83,7 +83,7 @@ const HistoryItem = ({ resume, onSelect, onDelete }: { resume: ResumeListItem, o
 }
 
 export function ResumeHistory() {
-  const { user, isUserLoading } = useUser();
+  const { isUserLoading } = useUser();
   const [resumes, setResumes] = useState<ResumeListItem[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -112,15 +112,9 @@ export function ResumeHistory() {
       setIsLoading(true);
       return;
     }
-    
-    if (!user) {
-      setResumes(null);
-      setIsLoading(false);
-      return;
-    }
-    
+
     fetchResumes();
-  }, [user, isUserLoading]);
+  }, [isUserLoading]);
 
   const handleSelectResume = async (resumeId: number) => {
     try {
@@ -145,7 +139,6 @@ export function ResumeHistory() {
   }
 
   const handleDeleteResume = async (resumeId: number) => {
-    if (!user) return;
     try {
         const response = await authFetch(`/api/resumes/${resumeId}`, {
             method: 'DELETE'

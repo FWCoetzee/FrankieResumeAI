@@ -1,13 +1,9 @@
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
-import {huggingface} from 'genkit-huggingface';
+import { genkit } from 'genkit';
+import { googleAI } from '@genkit-ai/google-genai';
+
+const googleApiKey = process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY;
 
 export const ai = genkit({
-  plugins: [
-    googleAI(),
-    huggingface({
-      apiKey: process.env.HUGGINGFACE_TOKEN,
-    }),
-  ],
+  plugins: googleApiKey ? [googleAI({ apiKey: googleApiKey })] : [],
   model: 'googleai/gemini-2.5-flash',
 });

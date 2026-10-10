@@ -1,25 +1,25 @@
 
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
 import { generatedResumeSchema } from '@/lib/schema';
+import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 
 // This is the input we expect from the client
 const saveEditSchema = z.object({
     editedContent: generatedResumeSchema,
 });
 
-async function verifyOwnership(resumeId: number, userId: number) {
+async function verifyOwnership(resumeId: number, ownerHash: string) {
     const db = getDb();
-    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND user_id = $2', [resumeId, userId]);
+    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
+        return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
     const { resumeId: resumeIdParam } = await params;
@@ -40,14 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     try {
         await db.query('BEGIN');
 
-        const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (userRes.rows.length === 0) {
-            await db.query('ROLLBACK');
-            return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
-        }
-        const userId = userRes.rows[0].id;
-        
-        if (!(await verifyOwnership(resumeId, userId))) {
+        if (!(await verifyOwnership(resumeId, ownerHash))) {
             await db.query('ROLLBACK');
             return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
         }

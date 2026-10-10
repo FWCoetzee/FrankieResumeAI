@@ -161,7 +161,7 @@ export function ResumeBuilder() {
      return (
         <div className="space-y-8 print-hidden">
             <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
-            {user && <ResumeHistory />}
+            <ResumeHistory />
         </div>
      );
   }
@@ -170,7 +170,7 @@ export function ResumeBuilder() {
     <div className="grid lg:grid-cols-2 gap-12 items-start">
       <div className="space-y-8 print-hidden">
         <ResumeForm onGenerate={handleGenerate} isLoading={isLoading} />
-        {user && <ResumeHistory />}
+        <ResumeHistory />
       </div>
       <div className="lg:sticky top-24">
         <ResumePreview 

@@ -1,8 +1,8 @@
-# Google Resume AI: System Design & Architecture
+# Frankie Resume AI: System Design & Architecture
 
 ## Overview
 
-This document outlines the system architecture and design decisions for GoogleResumeAI, focusing on scalability, performance, and maintainability within the constraints of a solo-developer project using Netlify hosting and free-tier services.
+This document outlines the system architecture and design decisions for FrankieResumeAI, focusing on scalability, performance, and maintainability within the constraints of a solo-developer project using Netlify hosting and free-tier services.
 
 ## High-Level Architecture
 
@@ -49,8 +49,8 @@ This document outlines the system architecture and design decisions for GoogleRe
 - PDF download only after verified payment
 - Error-reporting link for failed payment or download flows
 - Visible AI rate-limit notice on the resume preview page
-- Use `Background/Google resume ai background_preview.jpeg` as the background for the resume preview page
-- Use `Background/Google resume ai background_downloadpdf.jpeg` as the background for the landing page
+- Use `Background/Frankie resume ai background_preview.jpeg` as the background for the resume preview page
+- Use `Background/Frankie resume ai background_downloadpdf.jpeg` as the background for the landing page
 
 ### 2. API Layer (Next.js Routes)
 
@@ -151,7 +151,7 @@ resumes/
 ### 4.2 Public Information Pages
 
 **About page (`/about`):**
-- Introduce Google Resume AI and explain its purpose as an AI-assisted resume/CV builder.
+- Introduce Frankie Resume AI and explain its purpose as an AI-assisted resume/CV builder.
 - Explain the visitor workflow: build with Gemini, preview without an account, and pay before downloading a PDF.
 - Identify Franklin Coetzee as the creator, with clear credit for AI assistance.
 - Explain the site's B2B-first positioning and secondary B2C availability.
@@ -166,7 +166,7 @@ resumes/
 
 **Privacy page (`/privacy`) and Terms page (`/terms`):**
 - Publish both pages before production launch and link them from the global footer and payment flow.
-- State that Google Resume AI is an independent product and is not affiliated with or endorsed by Google unless that status changes through formal authorization.
+- State that Frankie Resume AI is an independent product and is not affiliated with or endorsed by Google unless that status changes through formal authorization.
 - Explain that resume content is processed by Google Gemini to provide requested generation features, including the categories of data sent and the retention period.
 - Explain that payment details are handled by the selected payment provider and that the app does not store card or bank details.
 - State the anonymous session, payment record, error-report, and rate-limit retention periods in user-facing language.

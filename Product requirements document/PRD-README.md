@@ -1,6 +1,6 @@
-# Google Resume AI: Product Requirements Document
+# Frankie Resume AI: Product Requirements Document
 
-Welcome to the GoogleResumeAI PRD! This document is organized into focused sections for easy reference and management.
+Welcome to the FrankieResumeAI PRD! This document is organized into focused sections for easy reference and management.
 
 ## 📋 Document Structure
 
@@ -12,7 +12,7 @@ Welcome to the GoogleResumeAI PRD! This document is organized into focused secti
 ## 🚀 Quick Facts
 
 - **Product:** AI-powered resume builder with payment-gated PDF export
-- **Public name:** Google Resume AI
+- **Public name:** Frankie Resume AI
 - **Timeline:** 6-month MVP
 - **Developer:** Solo (FWCoetzee) with AI assistance
 - **Creator:** Franklin Coetzee, with AI assistance

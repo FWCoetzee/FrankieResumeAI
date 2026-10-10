@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the SEO strategy and implementation specifications for Google Resume AI to ensure maximum discoverability and organic traffic growth.
+This document outlines the SEO strategy and implementation specifications for Frankie Resume AI to ensure maximum discoverability and organic traffic growth.
 
 ## Core SEO Objectives
 
@@ -40,10 +40,10 @@ This document outlines the SEO strategy and implementation specifications for Go
 
 ### About and Contact Pages
 
-- Publish an indexable About page at `/about` titled "About Google Resume AI".
-- Publish an indexable Contact page at `/contact` titled "Contact Google Resume AI".
+- Publish an indexable About page at `/about` titled "About Frankie Resume AI".
+- Publish an indexable Contact page at `/contact` titled "Contact Frankie Resume AI".
 - Publish Privacy and Terms pages at `/privacy` and `/terms`; link them in the global footer and payment flow.
-- Include Google Resume AI's public name, purpose, creator Franklin Coetzee, and relevant contact information in page metadata and visible headings.
+- Include Frankie Resume AI's public name, purpose, creator Franklin Coetzee, and relevant contact information in page metadata and visible headings.
 - Add About and Contact links to the global navigation and footer.
 - Add Organization and WebSite structured data where appropriate; do not expose private admin credentials or sensitive identifiers.
 

@@ -1,17 +1,17 @@
 
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 
-async function verifyOwnership(resumeId: number, userId: number) {
+async function verifyOwnership(resumeId: number, ownerHash: string) {
     const db = getDb();
-    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND user_id = $2', [resumeId, userId]);
+    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,20 +23,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
 
     const db = getDb();
     try {
-        const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (userRes.rows.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
-        const userId = userRes.rows[0].id;
-
-        if (!(await verifyOwnership(resumeId, userId))) {
+        if (!(await verifyOwnership(resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const resumeRes = await db.query(
             `SELECT
                 r.id AS "resumeId",
-                r.user_id AS "ownerId",
+                r.owner_hash AS "ownerHash",
                 r.title,
                 r.template_id as "templateId",
                 r.state as "status",
@@ -53,13 +47,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
         if (resumeRes.rows.length === 0) {
             return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
         }
-        
-        // The 'sections' and 'settings' are returned as JSON from the DB.
-        // We need to combine them into the expected nested structure.
+
         const resume = resumeRes.rows[0];
         const responseData = {
             resumeId: resume.resumeId,
-            ownerId: resume.ownerId,
+            ownerId: resume.ownerHash,
             title: resume.title,
             templateId: resume.templateId,
             status: resume.status,
@@ -69,7 +61,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
             settings: resume.settings,
         };
 
-
         return NextResponse.json(responseData);
     } catch (error) {
         console.error(`Failed to fetch resume ${resumeId}:`, error);
@@ -77,28 +68,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
     }
 }
 
-
 export async function DELETE(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const { resumeId: resumeIdParam } = await params;
     const resumeId = parseInt(resumeIdParam, 10);
-     if (isNaN(resumeId)) {
+    if (isNaN(resumeId)) {
         return NextResponse.json({ error: 'Invalid resume ID' }, { status: 400 });
     }
 
     const db = getDb();
     try {
-        const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (userRes.rows.length === 0) {
-             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-        }
-        const userId = userRes.rows[0].id;
-
-        if (!(await verifyOwnership(resumeId, userId))) {
+        if (!(await verifyOwnership(resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

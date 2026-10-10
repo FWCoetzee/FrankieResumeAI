@@ -12,17 +12,21 @@ import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 export function initializeFirebase() {
   const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-  // Initialize App Check if it hasn't been already.
+  // App Check is optional for the public anonymous flow and can block app startup when the
+  // site key is absent or the challenge endpoint is unavailable in local development.
   if (typeof window !== 'undefined') {
-    // Pass your reCAPTCHA v3 site key (public key) to activate.
-    // You can find this in your Firebase project settings -> App Check -> Apps -> Your Web App.
-    // Make sure you have selected "reCAPTCHA Enterprise" or "reCAPTCHA v3" in the console.
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6LeIxAcpAAAAAJu-5A_PM_T2W_x8S9vYgBfub2k6'),
+    const appCheckSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
 
-      // Optional: set to 'true' to allow app to function before token is retrieved.
-      isTokenAutoRefreshEnabled: true
-    });
+    if (appCheckSiteKey) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(appCheckSiteKey),
+          isTokenAutoRefreshEnabled: true,
+        });
+      } catch (error) {
+        console.warn('Firebase App Check initialization skipped:', error);
+      }
+    }
   }
 
   return getSdks(app);

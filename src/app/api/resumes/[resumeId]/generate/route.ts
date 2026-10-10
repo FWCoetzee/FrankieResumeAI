@@ -1,13 +1,13 @@
 
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
 import { generateResumeFromData, type GenerateResumeFromDataInput } from '@/ai/flows/generate-resume-from-data';
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from '@/ai/flows/provide-resume-suggestions';
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from '@/ai/flows/generate-cover-letter-from-data';
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
-import { resumeSchema, type ResumeData } from '@/lib/schema';
+import { type ResumeData } from '@/lib/schema';
+import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 
 // This is a partial schema, as the full resume data will be sent.
 // We just validate that the 'sections' part exists.
@@ -19,17 +19,17 @@ const generateSchema = z.object({
 });
 
 
-async function verifyOwnership(resumeId: number, userId: number) {
+async function verifyOwnership(resumeId: number, ownerHash: string) {
     const db = getDb();
-    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND user_id = $2', [resumeId, userId]);
+    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
 
 
 export async function POST(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
+        return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
     const { resumeId: resumeIdParam } = await params;
@@ -49,13 +49,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     const db = getDb();
     
     try {
-        const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (userRes.rows.length === 0) {
-            return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
-        }
-        const userId = userRes.rows[0].id;
-        
-        if (!(await verifyOwnership(resumeId, userId))) {
+        if (!(await verifyOwnership(resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
         }
         
@@ -70,8 +64,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             resume_style: "Modern", // TODO: Capture this from the user
             language: "English", // TODO: Capture this from the user
             personal_info: {
-                full_name: user.name || "User",
-                email: user.email || "",
+                full_name: "User",
+                email: "",
                 phone: resumeData.phone || "",
                 location: resumeData.location || "",
                 summary: resumeData.sections.summary?.content || "",

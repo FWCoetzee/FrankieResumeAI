@@ -1,17 +1,17 @@
 
 import { NextResponse } from 'next/server';
-import { getAuthenticatedUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
+import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 
 const createResumeSchema = z.object({
     title: z.string().min(1, 'Title is required'),
 });
 
 export async function POST(request: Request) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
+        return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -27,31 +27,18 @@ export async function POST(request: Request) {
     try {
         await db.query('BEGIN');
 
-        // Find user in our database. They MUST exist at this point due to login/signup flow.
-        const res = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (res.rows.length === 0) {
-             // This should ideally not happen because of the improved signup/login flow
-            await db.query('ROLLBACK');
-            return NextResponse.json({ error: 'User profile not found. Please try logging out and in again.' }, { status: 404 });
-        }
-        const userId = res.rows[0].id;
-
-
-        // Create the resume metadata
         const resumeRes = await db.query(
-            'INSERT INTO resumes (user_id, title, state) VALUES ($1, $2, $3) RETURNING id',
-            [userId, title, 'DRAFT']
+            'INSERT INTO resumes (owner_hash, title, state, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'' + '1 day' + '\') RETURNING id',
+            [ownerHash, title, 'DRAFT']
         );
         const resumeId = resumeRes.rows[0].id;
 
-        // Create the initial empty version
         const versionRes = await db.query(
             'INSERT INTO resume_versions (resume_id, content) VALUES ($1, $2) RETURNING id',
             [resumeId, JSON.stringify({ sections: {} })]
         );
         const versionId = versionRes.rows[0].id;
 
-        // Link the resume to its initial version
         await db.query('UPDATE resumes SET current_version_id = $1 WHERE id = $2', [versionId, resumeId]);
 
         await db.query('COMMIT');
@@ -65,23 +52,16 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized: No active user session.' }, { status: 401 });
+    const ownerHash = getAnonymousOwnerHashFromRequest(request);
+    if (!ownerHash) {
+        return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
     const db = getDb();
     try {
-        const userRes = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [user.uid]);
-        if (userRes.rows.length === 0) {
-            return NextResponse.json([], { status: 200 }); // No user, no resumes
-        }
-        const userId = userRes.rows[0].id;
-
-        // Query to get the list of resumes (metadata only)
         const resumesRes = await db.query(
-            'SELECT id as "resumeId", title, template_id as "templateId", state, updated_at as "updatedAt" FROM resumes WHERE user_id = $1 AND is_deleted = false ORDER BY updated_at DESC',
-            [userId]
+            'SELECT id as "resumeId", title, template_id as "templateId", state, updated_at as "updatedAt" FROM resumes WHERE owner_hash = $1 AND is_deleted = false AND expires_at > NOW() ORDER BY updated_at DESC',
+            [ownerHash]
         );
 
         return NextResponse.json(resumesRes.rows);
