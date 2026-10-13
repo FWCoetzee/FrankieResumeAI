@@ -39,13 +39,78 @@ export function ResumeBuilder() {
     setFormForReview(data);
   };
   
-  const handleConfirmGenerate = async () => {
-    // This will be replaced with anonymous generation logic in /api/resumes/generate
-    toast({
-        variant: "destructive",
-        title: "Coming Soon",
-        description: "AI generation is currently being updated for anonymous sessions.",
+  const ensureResumeExists = async (): Promise<number> => {
+    if (currentResume?.resumeId && currentResume.resumeId > 0) {
+      return currentResume.resumeId;
+    }
+
+    const response = await authFetch('/api/resumes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: currentResume?.title || 'Untitled Resume' }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create your resume draft.');
+    }
+
+    const data = await response.json();
+    const resumeId = Number(data.resumeId);
+
+    if (!resumeId) {
+      throw new Error('The server did not return a valid resume ID.');
+    }
+
+    setCurrentResume({ ...currentResume, resumeId, title: currentResume?.title || 'Untitled Resume' } as ResumeData);
+    return resumeId;
+  };
+
+  const handleConfirmGenerate = async () => {
+    if (!currentResume) {
+      toast({
+        variant: "destructive",
+        title: "Missing resume data",
+        description: "Please complete the form before generating.",
+      });
+      return;
+    }
+
+    try {
+      const resumeId = await ensureResumeExists();
+      toast({
+        title: "Generating your documents...",
+        description: "The AI is creating your tailored resume, suggestions, and cover letter.",
+      });
+
+      const response = await authFetch(`/api/resumes/${resumeId}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeData: currentResume }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'AI generation failed.');
+      }
+
+      const generationResult = await response.json();
+      setGenerationResult({ ...generationResult, savedResumeId: resumeId });
+
+      toast({
+        title: "Success!",
+        description: "Your resume content has been generated and saved.",
+      });
+    } catch (error) {
+      console.error('AI generation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred.';
+      toast({
+        variant: 'destructive',
+        title: 'Generation Failed',
+        description: errorMessage,
+      });
+      setGenerationResult({ error: errorMessage });
+    }
   }
 
   const generateContentForResume = async (resumeId: number) => {

@@ -8,6 +8,7 @@ import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } fr
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
+import { checkAnonymousGenerationLimit } from '@/lib/abuse-limit';
 
 // This is a partial schema, as the full resume data will be sent.
 // We just validate that the 'sections' part exists.
@@ -30,6 +31,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     const ownerHash = getAnonymousOwnerHashFromRequest(request);
     if (!ownerHash) {
         return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
+    }
+
+    const limit = checkAnonymousGenerationLimit(ownerHash);
+    if (!limit.allowed) {
+        return NextResponse.json(
+            {
+                error: 'Too many resume generation requests. Please try again later.',
+                retryAfterSeconds: limit.retryAfterSeconds,
+            },
+            {
+                status: 429,
+                headers: {
+                    'Retry-After': String(limit.retryAfterSeconds ?? 60),
+                },
+            }
+        );
     }
 
     const { resumeId: resumeIdParam } = await params;

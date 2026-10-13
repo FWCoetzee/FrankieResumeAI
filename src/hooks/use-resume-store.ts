@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import type { ResumeData, GeneratedResumeData, ResumeFormData } from '@/lib/schema';
 import type { GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
-import { v4 as uuidv4 } from "uuid";
+import { buildReviewResumeData } from '@/lib/resume-form-helpers';
 
 export type GenerationResult = {
   resume?: GeneratedResumeData;
@@ -72,52 +72,9 @@ export const useResumeStore = create<ResumeState & ResumeActions>((set, get) => 
 
   setFormForReview: (data: ResumeFormData) => {
      const existingResume = get().currentResume;
-     
-     const reviewData: ResumeData = {
-        resumeId: existingResume?.resumeId || 0, // Use 0 or another indicator for a new resume
-        ownerId: existingResume?.ownerId || 0,
-        title: data.title,
-        templateId: data.templateId,
-        status: 'DRAFT',
-        settings: existingResume?.settings || { fontSize: 10, spacing: 'normal' },
-        isDeleted: false,
-        sections: {
-            summary: { content: data.sections.summary?.content || '', lastEdited: new Date().toISOString() },
-            experience: (data.sections.experience || []).map((exp, index) => ({
-                id: exp.id || uuidv4(),
-                role: exp.role,
-                company: exp.company,
-                startDate: exp.startDate,
-                endDate: exp.endDate,
-                bullets: exp.bullets || [],
-                order: index,
-            })),
-            education: (data.sections.education || []).map((edu, index) => ({
-                id: edu.id || uuidv4(),
-                degree: edu.degree,
-                institution: edu.institution,
-                startYear: edu.startYear,
-                endYear: edu.endYear,
-                order: index,
-            })),
-            skills: data.sections.skills || [],
-            projects: (data.sections.projects || []).map((proj, index) => ({
-                id: proj.id || uuidv4(),
-                title: proj.title,
-                description: proj.description || '',
-                order: index,
-            })),
-            certifications: data.sections.certifications || [],
-            references: (data.sections.references || []).map((ref, index) => ({
-                id: ref.id || uuidv4(),
-                name: ref.name,
-                contact: ref.contact,
-                order: index,
-            })),
-        },
-    };
+     const reviewData = buildReviewResumeData(data, existingResume);
 
-    set({ 
+     set({ 
       isReviewing: true, 
       currentResume: reviewData,
       result: null 
