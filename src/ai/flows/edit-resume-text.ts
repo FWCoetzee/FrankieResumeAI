@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
+import { resolveWorkingModel } from '@/lib/model-resolver';
 
 const editModeSchema = z.enum([
   "Rewrite", "Strengthen", "Shorten", "Expand", 
@@ -75,8 +76,10 @@ const editResumeTextFlow = ai.defineFlow(
   },
   async (input) => {
     async function generateWithFallback(payload: EditResumeTextInput): Promise<EditResumeTextOutput> {
-      const primaryModel = googleAI.model('gemini-2.5-flash');
-      const fallbackModel = googleAI.model('gemini-1.5-pro-preview-0514');
+      const primaryModelId = await resolveWorkingModel('flash');
+      const fallbackModelId = await resolveWorkingModel('pro');
+      const primaryModel = googleAI.model(primaryModelId);
+      const fallbackModel = googleAI.model(fallbackModelId);
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -85,10 +88,7 @@ const editResumeTextFlow = ai.defineFlow(
         attempt++;
         try {
           console.log(`[LLM Router - Edit] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
-          const response = await ai.run(
-              'primaryModelGeneration',
-              () => prompt(payload, { model: primaryModel })
-          );
+          const response = await prompt(payload, { model: primaryModel });
           return response.text;
         } catch (error: any) {
           const isOverloaded = error.message && (error.message.includes('429') || error.message.includes('503'));
@@ -105,10 +105,7 @@ const editResumeTextFlow = ai.defineFlow(
 
       try {
         console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModel.name}).`);
-        const response = await ai.run(
-            'fallbackModelGeneration',
-            () => prompt(payload, { model: fallbackModel })
-        );
+        const response = await prompt(payload, { model: fallbackModel });
         return response.text;
       } catch (fallbackError: any) {
         console.error(`[LLM Router - Edit] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);

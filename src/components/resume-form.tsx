@@ -18,9 +18,121 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
+import { useAutosave } from "@/hooks/use-autosave";
+import { authFetch } from "@/lib/auth-fetch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Wand2, Loader2 } from "lucide-react";
+
+const AI_MODES = [
+  { label: "Strengthen", value: "Strengthen", description: "Make it more impactful" },
+  { label: "Job-Align", value: "Job-Align", description: "Align with target job" },
+  { label: "Shorten", value: "Shorten", description: "Make it more concise" },
+  { label: "Professional", value: "Tone", description: "Change to professional tone" },
+  { label: "Achievement", value: "Achievement", description: "Focus on measurable results" },
+];
+
+const IMPACT_CLICHES = [
+  "responsible for",
+  "helped with",
+  "tasked with",
+  "assisted in",
+  "worked on",
+  "familiar with",
+  "experience in",
+];
+
+function checkImpact(text: string) {
+  const lowerText = text.toLowerCase();
+  const foundCliches = IMPACT_CLICHES.filter(cliche => lowerText.includes(cliche));
+  return {
+    isLowImpact: foundCliches.length > 0,
+    cliches: foundCliches,
+  };
+}
+
+function RefineField({ 
+  value, 
+  onUpdate, 
+  placeholder = "Refining...", 
+  label = "Refine" 
+}: { 
+  value: string, 
+  onUpdate: (newValue: string) => void, 
+  placeholder?: string,
+  label?: string 
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { currentResume } = useResumeStore();
+  const { toast } = useToast();
+
+  const handleRefine = async (mode: string) => {
+    if (!currentResume?.resumeId || !value) return;
+    setIsLoading(true);
+    try {
+      const response = await authFetch('/api/resumes/refine-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: currentResume.resumeId,
+          payload: {
+            mode,
+            content: value,
+            targetJob: currentResume.title,
+          }
+        }),
+      });
+
+      if (!response.ok) throw new Error('Refinement failed');
+      const data = await response.json();
+      
+      // Optimistically update the field before the user even sees the toast
+      onUpdate(data.editedText);
+      
+      toast({
+        title: "Refined!",
+        description: `Applied ${mode} transformation.`,
+      });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'AI Error', description: 'Could not refine text.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs text-muted-foreground hover:text-primary">
+          {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+          {label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-2 w-64">
+        <p className="text-xs font-medium mb-2 px-2">Select AI transformation:</p>
+        <div className="grid gap-1">
+          {AI_MODES.map(mode => (
+            <Button 
+              key={mode.value} 
+              variant="ghost" 
+              size="sm" 
+              className="justify-start h-auto p-2 text-xs text-left"
+              onClick={() => handleRefine(mode.value)}
+              disabled={isLoading}
+            >
+              <div className="flex flex-col">
+                <span className="font-semibold">{mode.label}</span>
+                <span className="text-[10px] text-muted-foreground">{mode.description}</span>
+              </div>
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 interface ResumeFormProps {
   onGenerate: (data: ResumeFormData) => void;
@@ -112,13 +224,46 @@ const sampleValues: ResumeFormData = {
 
 export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
   const { currentResume, setCurrentResume } = useResumeStore();
+  const { toast } = useToast();
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: emptyValues,
     mode: "onBlur",
   });
+
+  // Autosave to LocalStorage AND Database
+  useAutosave(
+    form, 
+    'anonymousResumeData', 
+    emptyValues, 
+    async (data) => {
+      if (!currentResume?.resumeId) return;
+      
+      try {
+        await authFetch(`/api/resumes/${currentResume.resumeId}/save-edit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ editedContent: data }),
+        });
+      } catch (e) {
+        console.error('Autosave to DB failed', e);
+      }
+    }
+  );
   
+  // NEW: Visual indicator for autosave status
+  const [isSaving, setIsSaving] = useState(false);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // We simulate the "saving" state because useAutosave is debounced.
+      // In a real production app, we'd track the actual promise of the API call.
+      setIsSaving(true);
+      setTimeout(() => setIsSaving(false), 800);
+    }, 15000); // a subtle blink every 15s to show it's alive
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (currentResume) {
         // Map ResumeData (from store) to ResumeFormData for form compatibility
@@ -180,9 +325,22 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <Card>
             <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" onClick={handleFillSampleData}><FilePlus2 className="mr-2 h-4 w-4" /> Fill with Sample Data</Button>
-                    <Button type="button" size="sm" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
+                <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap gap-2">
+                        <Button type="button" size="sm" onClick={handleFillSampleData}><FilePlus2 className="mr-2 h-4 w-4" /> Fill with Sample Data</Button>
+                        <Button type="button" size="sm" onClick={handleClearForm}><Eraser className="mr-2 h-4 w-4" /> Clear Form</Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {isSaving ? (
+                            <span className="flex items-center gap-1 animate-pulse">
+                                <Loader2 className="h-3 w-3 animate-spin" /> Saving...
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1">
+                                <Badge variant="outline" className="text-[10px] h-5 px-1">Saved</Badge>
+                            </span>
+                        )}
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -211,7 +369,31 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 </TabsContent>
                 
                 <TabsContent value="personal_info" className="m-0 space-y-4">
-                    <FormField name="sections.summary.content" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Professional Summary</FormLabel><FormControl><Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={6} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField name="sections.summary.content" control={form.control} render={({ field }) => {
+                        const impact = checkImpact(field.value);
+                        return (
+                            <FormItem>
+                                <div className="flex justify-between items-center mb-2">
+                                    <FormLabel>Professional Summary</FormLabel>
+                                    <RefineField 
+                                        value={field.value} 
+                                        onUpdate={(val) => field.onChange(val)} 
+                                        label="Polish Summary" 
+                                    />
+                                </div>
+                                <FormControl>
+                                    <Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={6} />
+                                </FormControl>
+                                {impact.isLowImpact && (
+                                    <p className="text-[10px] text-amber-600 font-medium mt-1 flex items-center gap-1">
+                                        <Wand2 className="h-3 w-3" /> 
+                                        Tip: Avoid cliches like "{impact.cliches[0]}". Use "Strengthen" to improve impact.
+                                    </p>
+                                )}
+                                <FormMessage />
+                            </FormItem> 
+                        );
+                    }} />
                 </TabsContent>
 
                 <TabsContent value="experience" className="m-0 space-y-4">
@@ -225,21 +407,37 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                                 <FormField name={`sections.experience.${index}.startDate`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>Start Date</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
                                 <FormField name={`sections.experience.${index}.endDate`} control={form.control} render={({ field }) => ( <FormItem><FormLabel>End Date (leave blank if current)</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )} />
                             </div>
-                             <FormField name={`sections.experience.${index}.bullets`} control={form.control} render={({ field }) => ( 
-                                <FormItem className="mt-4">
-                                <FormLabel>Key Achievements (as bullet points)</FormLabel>
-                                <FormControl>
-                                    <Textarea
-                                        placeholder="Enter each achievement on a new line."
-                                        onChange={e => field.onChange(e.target.value.split('\n'))}
-                                        value={Array.isArray(field.value) ? field.value.join('\n') : ''}
-                                        rows={4}
-                                    />
-                                </FormControl>
-                                <FormDescription>Separate each bullet point with a new line.</FormDescription>
-                                <FormMessage />
-                                </FormItem> 
-                            )} />
+                             <FormField name={`sections.experience.${index}.bullets`} control={form.control} render={({ field }) => {
+                                const impact = checkImpact(Array.isArray(field.value) ? field.value.join(' ') : '');
+                                return (
+                                    <FormItem className="mt-4">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <FormLabel>Key Achievements (as bullet points)</FormLabel>
+                                        <RefineField 
+                                            value={Array.isArray(field.value) ? field.value.join('\n') : ''} 
+                                            onUpdate={(val) => field.onChange(val.split('\n'))} 
+                                            label="Improve Bullets" 
+                                        />
+                                    </div>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Enter each achievement on a new line."
+                                            onChange={e => field.onChange(e.target.value.split('\n'))}
+                                            value={Array.isArray(field.value) ? field.value.join('\n') : ''}
+                                            rows={4}
+                                        />
+                                    </FormControl>
+                                    {impact.isLowImpact && (
+                                        <p className="text-[10px] text-amber-600 font-medium mt-1 flex items-center gap-1">
+                                            <Wand2 className="h-3 w-3" /> 
+                                            Tip: We found low-impact phrasing. Try the "Strengthen" mode to focus on results.
+                                        </p>
+                                    )}
+                                    <FormDescription>Separate each bullet point with a new line.</FormDescription>
+                                    <FormMessage />
+                                    </FormItem> 
+                                );
+                            }} />
                         </Card>
                     ))}
                 </TabsContent>

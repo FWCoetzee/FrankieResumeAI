@@ -11,7 +11,7 @@ const saveEditSchema = z.object({
 });
 
 async function verifyOwnership(resumeId: number, ownerHash: string) {
-    const db = getDb();
+    const db = await getDb();
     const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
@@ -35,7 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     }
 
     const { editedContent } = parsed.data;
-    const db = getDb();
+    const db = await getDb();
     
     try {
         await db.query('BEGIN');

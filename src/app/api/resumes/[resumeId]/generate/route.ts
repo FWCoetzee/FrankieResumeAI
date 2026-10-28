@@ -6,6 +6,7 @@ import { generateResumeFromData, type GenerateResumeFromDataInput } from '@/ai/f
 import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from '@/ai/flows/provide-resume-suggestions';
 import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from '@/ai/flows/generate-cover-letter-from-data';
 import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
+import { analyzeTailoring } from '@/ai/flows/analyze-tailoring';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 import { checkAnonymousGenerationLimit } from '@/lib/abuse-limit';
@@ -21,7 +22,7 @@ const generateSchema = z.object({
 
 
 async function verifyOwnership(resumeId: number, ownerHash: string) {
-    const db = getDb();
+    const db = await getDb();
     const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
@@ -63,7 +64,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
 
     const { resumeData } = parsed.data as { resumeData: ResumeData };
 
-    const db = getDb();
+    const db = await getDb();
     
     try {
         if (!(await verifyOwnership(resumeId, ownerHash))) {
@@ -120,6 +121,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput)
         ]);
 
+        const tailoringAnalysis = await analyzeTailoring({
+            jobDescription: jobDescForAI,
+            resume: resumeResult,
+        });
+
         await db.query('BEGIN');
 
         const newVersionRes = await db.query(
@@ -140,6 +146,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             suggestions: suggestionsResult.suggestions,
             coverLetter: coverLetterResult,
             linkedin: linkedInResult,
+            tailoring: tailoringAnalysis,
             savedResumeId: resumeId,
         });
 

@@ -26,8 +26,14 @@ export function createAnonymousSessionId(): string {
 }
 
 export function computeOwnerHash(sessionId: string): string {
-  const secret = process.env.ANONYMOUS_SESSION_SECRET ?? 'frankie-resume-ai-dev-secret';
-  const combined = `${sessionId}:${secret}`;
+  const secret = process.env.ANONYMOUS_SESSION_SECRET;
+  
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('ANONYMOUS_SESSION_SECRET environment variable is required in production.');
+  }
+
+  const finalSecret = secret ?? 'frankie-resume-ai-dev-secret';
+  const combined = `${sessionId}:${finalSecret}`;
   let seed = createStableHash(combined);
   let output = '';
 
@@ -74,6 +80,18 @@ export function getAnonymousSessionFromRequest(request: Request): {
 
 export function getAnonymousOwnerHashFromRequest(request: Request): string | null {
   return getAnonymousSessionFromRequest(request).ownerHash ?? null;
+}
+
+/**
+ * Validates that the current request has a valid anonymous session.
+ * Throws an error if the session is missing or invalid.
+ */
+export async function validateAnonymousSession(request: Request) {
+  const session = getAnonymousSessionFromRequest(request);
+  if (!session.ownerHash) {
+    throw new Error('Invalid or missing anonymous session.');
+  }
+  return session;
 }
 
 export function attachAnonymousSessionCookie(response: Response, sessionId: string): Response {

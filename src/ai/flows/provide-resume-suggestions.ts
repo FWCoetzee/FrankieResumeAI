@@ -12,6 +12,7 @@
 import {ai} from '@/ai/genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
+import { resolveWorkingModel } from '@/lib/model-resolver';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, languageSchema } from '@/lib/schema';
 
 // Input schema now matches the new data model
@@ -119,8 +120,10 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
   },
   async input => {
     async function generateWithFallback(payload: ProvideResumeSuggestionsInput): Promise<ProvideResumeSuggestionsOutput> {
-      const primaryModel = googleAI.model('gemini-2.5-flash');
-      const fallbackModel = googleAI.model('gemini-1.5-pro-preview-0514');
+      const primaryModelId = await resolveWorkingModel('flash');
+      const primaryModel = googleAI.model(primaryModelId);
+      const fallbackModelId = await resolveWorkingModel('pro');
+      const fallbackModel = googleAI.model(fallbackModelId);
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;

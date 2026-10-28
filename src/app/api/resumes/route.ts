@@ -22,13 +22,13 @@ export async function POST(request: Request) {
     }
 
     const { title } = parsed.data;
-    const db = getDb();
+    const db = await getDb();
 
     try {
         await db.query('BEGIN');
 
         const resumeRes = await db.query(
-            'INSERT INTO resumes (owner_hash, title, state, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'' + '1 day' + '\') RETURNING id',
+            'INSERT INTO resumes (owner_hash, title, state, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'1 day\') RETURNING id',
             [ownerHash, title, 'DRAFT']
         );
         const resumeId = resumeRes.rows[0].id;
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     try {
         const resumesRes = await db.query(
             'SELECT id as "resumeId", title, template_id as "templateId", state, updated_at as "updatedAt" FROM resumes WHERE owner_hash = $1 AND is_deleted = false AND expires_at > NOW() ORDER BY updated_at DESC',

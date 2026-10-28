@@ -4,7 +4,7 @@ import { getDb } from '@/lib/db';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 
 async function verifyOwnership(resumeId: number, ownerHash: string) {
-    const db = getDb();
+    const db = await getDb();
     const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
     return res.rows.length > 0;
 }
@@ -21,7 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
         return NextResponse.json({ error: 'Invalid resume ID' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     try {
         if (!(await verifyOwnership(resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -80,7 +80,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ r
         return NextResponse.json({ error: 'Invalid resume ID' }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     try {
         if (!(await verifyOwnership(resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

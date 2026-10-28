@@ -7,20 +7,25 @@ import { debounce } from "lodash";
 export function useAutosave<T extends Record<string, any>>(
   form: UseFormReturn<T>,
   storageKey: string,
-  defaultValues: T
+  defaultValues: T,
+  onSave?: (data: T) => Promise<void> | void
 ) {
   const { watch, reset, formState: { isDirty } } = form;
 
   const debouncedSave = useCallback(
-    debounce((data: T) => {
+    debounce(async (data: T) => {
       try {
         const dataToSave = JSON.stringify(data);
         localStorage.setItem(storageKey, dataToSave);
+        
+        if (onSave) {
+          await onSave(data);
+        }
       } catch (error) {
         console.error("Error saving to localStorage", error);
       }
     }, 1000), // Debounce with a 1-second delay
-    [storageKey]
+    [storageKey, onSave]
   );
 
   // Load from localStorage on initial mount

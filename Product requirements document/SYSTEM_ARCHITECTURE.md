@@ -18,12 +18,11 @@ This document outlines the system architecture and design decisions for FrankieR
 │              (/api/resumes, /api/generate, etc.)                │
 └────────────────────┬──────────────────────────┬─────────────────┘
                      │                          │
-         ┌───────────▼────────────┐    ┌───────▼──────────────┐
-         │   Firebase Services    │    │  AI Services         │
-         │  - Auth               │    │  - Google Gemini     │
-         │  - Firestore (DB)     │    │  - Genkit (SDK)      │
-         │  - Storage (Files)    │    └─────────────────────┘
-         └──────────────────────┘
+         ┌───────────▼────────────┐  ┌───────────▼────────┐  ┌───────────▼────────┐
+         │   Firebase Services    │  │    PostgreSQL     │  │    AI Services     │
+         │  - Auth               │  │  - Resume records │  │  - Google Gemini   │
+         │  - Storage (Files)    │  │  - Version history│  │  - Genkit (SDK)    │
+         └───────────────────────┘  └────────────────────┘  └────────────────────┘
 ```
 
 ## Core Components
@@ -76,26 +75,16 @@ This document outlines the system architecture and design decisions for FrankieR
 - Server-side validation and rate limiting on every AI generation request
 - Never trust client-provided usage counters or payment status
 
-### 3. Database Layer (Firestore)
+### 3. Database Layer (Current Implementation: PostgreSQL)
 
-**Service:** Firebase Firestore (NoSQL)
+The active resume API uses PostgreSQL through the `pg` package and the server-only `POSTGRES_URL` connection string. The bootstrap schema is maintained in `database/schema.sql`; setup and local smoke-test instructions are in `docs/database-setup.md`.
 
-**Collections:**
-```
-resumes/
-├── {resumeId}
-│   ├── sessionId (temporary anonymous session reference)
-│   ├── title
-│   ├── content (JSON schema)
-│   ├── template
-│   ├── createdAt
-│   ├── updatedAt
-│   └── expiresAt
-```
+- `resumes` stores the anonymous owner hash, title, template, status, active version pointer, soft-delete flag, and expiry timestamp.
+- `resume_versions` stores each resume content snapshot as JSONB and links it to its source version when applicable.
+- API queries filter resume access by the owner hash derived from the `__gr_session` cookie.
+- Expired records are excluded from list and ownership queries. Automatic physical deletion is not currently implemented.
 
-**Indexing Strategy:**
-- Index on (sessionId, createdAt) for temporary resume queries
-- Index on expiresAt for cleanup of anonymous resume data
+The Firestore collections and TTL approach described in earlier project materials are not the persistence implementation used by the current resume API. Reconcile those future product requirements separately before switching or expanding the storage architecture.
 
 **Anonymous session model:**
 - On the first resume-builder request, issue a cryptographically random session ID in a Secure, HttpOnly, SameSite cookie.

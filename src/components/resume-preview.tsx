@@ -1,11 +1,11 @@
-
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2, BookOpen } from "lucide-react";
+import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2, BookOpen, Sparkles } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
 import { Button } from "./ui/button";
@@ -16,12 +16,13 @@ import { MinimalistTemplate } from "./templates/minimalist-template";
 import { CreativeTemplate } from "./templates/creative-template";
 import { LinkedInPreview } from "./linkedin-preview";
 import { cn } from "@/lib/utils";
-import { AiEditor } from "./ai-editor";
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { AdBanner } from "./ad-banner";
+
+const AiEditor = dynamic(() => import("./ai-editor").then((module) => module.AiEditor), {
+  ssr: false,
+});
 
 
 interface ResumePreviewProps {
@@ -77,6 +78,27 @@ const Placeholder = () => (
       <p className="text-sm">Fill out the form and click "Review & Generate" to see the result.</p>
     </div>
   </Card>
+);
+
+const AiEditorSkeleton = () => (
+  <div className="space-y-4 p-4 bg-white rounded-lg">
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-24" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="h-24 w-full" />
+    </div>
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-32" />
+      <div className="grid grid-cols-2 gap-2">
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    </div>
+  </div>
 );
 
 const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: () => void, isLoading: boolean }) => {
@@ -201,6 +223,35 @@ const CoverLetterContent = ({ content }: { content: string }) => {
   );
 };
 
+const TailoringView = ({ analysis }: { analysis: { requirement: string, implementation: string }[] }) => {
+  return (
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-bold flex items-center justify-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          Tailoring Analysis
+        </h3>
+        <p className="text-sm text-muted-foreground">How we optimized your resume for this specific role</p>
+      </div>
+      <div className="grid gap-3">
+        {analysis.map((point, index) => (
+          <Card key={index} className="bg-muted/30 border-l-4 border-l-primary">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="shrink-0">Requirement</Badge>
+                <p className="text-sm font-semibold">{point.requirement}</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <Badge variant="secondary" className="shrink-0">Implementation</Badge>
+                <p className="text-sm text-muted-foreground">{point.implementation}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEdit, onGenerate, onAcceptEdit }: ResumePreviewProps) {
   const [activeTab, setActiveTab] = React.useState("preview");
@@ -228,6 +279,10 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     });
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
       const canvas = await html2canvas(elementToCapture, {
         scale: 2,
         useCORS: true,
@@ -306,7 +361,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
     return (
       <div className={wrapperClasses}>
           <Tabs defaultValue="preview" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-5 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
+              <TabsList className="grid w-full grid-cols-1 h-auto md:h-12 md:grid-cols-6 rounded-t-xl rounded-b-none border-b bg-transparent p-2">
               <TabsTrigger value="preview" className="gap-2 text-base" disabled={!result.resume}>
                   <FileText /> Resume
               </TabsTrigger>
@@ -321,6 +376,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
               </TabsTrigger>
               <TabsTrigger value="suggestions" className="gap-2 text-base" disabled={!result.suggestions}>
                   <BookOpen /> Suggestions
+              </TabsTrigger>
+              <TabsTrigger value="tailoring" className="gap-2 text-base" disabled={!result.tailoring}>
+                  <Sparkles /> Tailoring
               </TabsTrigger>
               </TabsList>
               <div className="p-2 sm:p-4">
@@ -377,11 +435,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                   </TabsContent>
 
                   <TabsContent value="ai-editor">
-                    <AiEditor 
-                        result={result as any}
-                        resumeData={resumeData}
-                        onAcceptEdit={onAcceptEdit}
-                    />
+                    {isLoading ? (
+                      <AiEditorSkeleton />
+                    ) : (
+                      <AiEditor 
+                          result={result as any}
+                          resumeData={resumeData}
+                          onAcceptEdit={onAcceptEdit}
+                      />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="suggestions">
@@ -402,6 +464,12 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                       </Card>
                     )}
                   </TabsContent>
+
+                  <TabsContent value="tailoring">
+                    {result.tailoring && (
+                      <TailoringView analysis={result.tailoring} />
+                    )}
+                  </TabsContent>
               </div>
           </Tabs>
       </div>
@@ -415,4 +483,4 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   return <Placeholder />;
 }
 
-    
+

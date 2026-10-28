@@ -79,7 +79,7 @@ export default function EditorPage() {
 
         loadResume();
 
-    }, [resumeId, router, setCurrentResume, clearCurrentResume]);
+    }, [resumeId, router, setCurrentResume, clearCurrentResume, isUserLoading, user]);
     
 
     if (isLoading) {
