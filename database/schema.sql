@@ -49,4 +49,25 @@ CREATE INDEX IF NOT EXISTS resumes_expiry_idx
 CREATE INDEX IF NOT EXISTS resume_versions_resume_created_idx
     ON public.resume_versions (resume_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS public.ai_usage_records (
+    enforcement_key TEXT PRIMARY KEY,
+    generating_since TIMESTAMPTZ,
+    active_request_id TEXT,
+    last_request_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '31 days'
+);
+
+CREATE TABLE IF NOT EXISTS public.ai_usage_events (
+    request_id TEXT PRIMARY KEY,
+    enforcement_key TEXT NOT NULL REFERENCES public.ai_usage_records(enforcement_key) ON DELETE CASCADE,
+    status TEXT NOT NULL CHECK (status IN ('accepted', 'completed', 'failed')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS ai_usage_events_key_created_idx
+    ON public.ai_usage_events (enforcement_key, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS ai_usage_records_expiry_idx
+    ON public.ai_usage_records (expires_at);
+
 COMMIT;

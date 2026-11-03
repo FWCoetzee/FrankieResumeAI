@@ -47,6 +47,21 @@ async function createMemoryPool(): Promise<Pool> {
 
     CREATE INDEX IF NOT EXISTS resume_versions_resume_created_idx
       ON public.resume_versions (resume_id, created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS public.ai_usage_records (
+      enforcement_key TEXT PRIMARY KEY,
+      generating_since TIMESTAMPTZ,
+      active_request_id TEXT,
+      last_request_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '31 days'
+    );
+
+    CREATE TABLE IF NOT EXISTS public.ai_usage_events (
+      request_id TEXT PRIMARY KEY,
+      enforcement_key TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'accepted',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   return pool;
@@ -55,13 +70,23 @@ async function createMemoryPool(): Promise<Pool> {
 export async function getDb(): Promise<Pool> {
   if (!poolPromise) {
     poolPromise = (async () => {
-      if (process.env.POSTGRES_URL) {
-        return new Pool({
-          connectionString: process.env.POSTGRES_URL,
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        });
+      const databaseUrl = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
+      if (databaseUrl) {
+        let ssl: false | { rejectUnauthorized: boolean };
+        try {
+          const parsedUrl = new URL(databaseUrl);
+          const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(parsedUrl.hostname);
+          const explicitlyRequired = parsedUrl.searchParams.get('sslmode') === 'require';
+          ssl = !isLocalHost || explicitlyRequired || process.env.POSTGRES_SSL === 'true'
+            ? { rejectUnauthorized: process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED === 'true' }
+            : false;
+        } catch {
+          ssl = process.env.POSTGRES_SSL === 'true'
+            ? { rejectUnauthorized: process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED === 'true' }
+            : false;
+        }
+
+        return new Pool({ connectionString: databaseUrl, ssl });
       }
 
       const instanceConnectionName = process.env.CLOUD_SQL_CONNECTION_NAME;

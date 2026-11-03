@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
@@ -9,7 +8,7 @@ import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai
 import { analyzeTailoring } from '@/ai/flows/analyze-tailoring';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
-import { checkAnonymousGenerationLimit } from '@/lib/abuse-limit';
+import { beginGeneration, createEnforcementKey, finishGeneration } from '@/lib/abuse-limit';
 
 // This is a partial schema, as the full resume data will be sent.
 // We just validate that the 'sections' part exists.
@@ -34,22 +33,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
-    const limit = checkAnonymousGenerationLimit(ownerHash);
-    if (!limit.allowed) {
-        return NextResponse.json(
-            {
-                error: 'Too many resume generation requests. Please try again later.',
-                retryAfterSeconds: limit.retryAfterSeconds,
-            },
-            {
-                status: 429,
-                headers: {
-                    'Retry-After': String(limit.retryAfterSeconds ?? 60),
-                },
-            }
-        );
-    }
-
     const { resumeId: resumeIdParam } = await params;
     const resumeId = parseInt(resumeIdParam, 10);
     if (isNaN(resumeId)) {
@@ -65,12 +48,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     const { resumeData } = parsed.data as { resumeData: ResumeData };
 
     const db = await getDb();
-    
+    const enforcementKey = createEnforcementKey(ownerHash, request.headers.get('x-forwarded-for') ?? 'unknown', request.headers.get('user-agent') ?? 'unknown');
+    const limit = await beginGeneration(db, enforcementKey);
+    if (!limit.allowed) {
+        return NextResponse.json(
+            { error: limit.message, retryAfterSeconds: limit.retryAfterSeconds },
+            { status: limit.status, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+        );
+    }
+
     try {
         if (!(await verifyOwnership(resumeId, ownerHash))) {
+            await finishGeneration(db, enforcementKey, limit.requestId, false);
             return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
         }
-        
+
         const resumeRes = await db.query('SELECT current_version_id FROM resumes WHERE id = $1', [resumeId]);
         const sourceVersionId = resumeRes.rows[0].current_version_id;
 
@@ -140,6 +132,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         );
         
         await db.query('COMMIT');
+        await finishGeneration(db, enforcementKey, limit.requestId, true);
         
         return NextResponse.json({
             resume: resumeResult,
@@ -151,6 +144,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         });
 
     } catch (error) {
+        await finishGeneration(db, enforcementKey, limit.requestId, false);
         await db.query('ROLLBACK');
         console.error(`Failed to generate for resume ${resumeId}:`, error);
         if (error instanceof Error) {

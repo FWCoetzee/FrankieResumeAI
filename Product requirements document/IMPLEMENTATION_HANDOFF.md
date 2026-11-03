@@ -67,6 +67,31 @@ Across all documents, specify acceptance criteria that can be tested; use consis
 - Preserve the existing resume editor until its ownership model can be changed safely to the temporary anonymous session.
 - After the account-surface edit, run `npm run typecheck` immediately and update this progress section with the result.
 
+## Milestone 1 Completion Checkpoint
+
+### Verified Complete — Phase 1: Foundation
+
+- Anonymous session middleware issues a `__gr_session` UUID cookie with HttpOnly, SameSite=Lax, Secure-in-production, and 24-hour lifetime protections.
+- Existing anonymous-session cookies are renewed on matched application requests.
+- Anonymous cookie IDs are restricted to issued UUIDv4-shaped values.
+- Owner-bound resume create/read/update/delete flows query by `owner_hash`.
+- Active resume queries require `expires_at > NOW()` and exclude soft-deleted records.
+- Resume reads and edits renew the 24-hour inactivity expiry.
+- Expired and soft-deleted resumes can be removed through the secret-protected cleanup endpoint.
+- Unit tests, TypeScript validation, and the mocked integration smoke test pass.
+
+### Milestone 1 Exit Gate
+
+The anonymous user can create and edit a resume without a public account, and resume access is constrained by the anonymous owner hash. The implementation is ready to move to Phase 2 after deployment configuration supplies `ANONYMOUS_SESSION_SECRET` and `CLEANUP_SECRET`.
+
+### Validation Recorded
+
+- `npm run typecheck`: passed.
+- Anonymous-session unit suite: 7 tests passed.
+- Integration smoke test: passed.
+
+The implementation of Milestone 2 should now begin in Slice 2.1. The legacy payment and public-account surfaces remain outside this milestone and must not be included in this completion claim.
+
 ## Verified Checks
 
 - `npm run typecheck` passes.

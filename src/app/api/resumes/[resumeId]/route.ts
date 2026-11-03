@@ -1,13 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
-
-async function verifyOwnership(resumeId: number, ownerHash: string) {
-    const db = await getDb();
-    const res = await db.query('SELECT id FROM resumes WHERE id = $1 AND owner_hash = $2 AND expires_at > NOW()', [resumeId, ownerHash]);
-    return res.rows.length > 0;
-}
+import { touchOwnedResume, verifyOwnedActiveResume } from '@/lib/resume-owner';
 
 export async function GET(request: Request, { params }: { params: Promise<{ resumeId: string }> }) {
     const ownerHash = getAnonymousOwnerHashFromRequest(request);
@@ -23,9 +17,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
 
     const db = await getDb();
     try {
-        if (!(await verifyOwnership(resumeId, ownerHash))) {
+        if (!(await verifyOwnedActiveResume(db, resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
+        await touchOwnedResume(db, resumeId, ownerHash);
 
         const resumeRes = await db.query(
             `SELECT
@@ -49,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
         }
 
         const resume = resumeRes.rows[0];
-        const responseData = {
+        return NextResponse.json({
             resumeId: resume.resumeId,
             ownerId: resume.ownerHash,
             title: resume.title,
@@ -59,9 +54,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
             updatedAt: resume.updatedAt,
             sections: resume.sections,
             settings: resume.settings,
-        };
-
-        return NextResponse.json(responseData);
+        });
     } catch (error) {
         console.error(`Failed to fetch resume ${resumeId}:`, error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -82,17 +75,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ r
 
     const db = await getDb();
     try {
-        if (!(await verifyOwnership(resumeId, ownerHash))) {
+        if (!(await verifyOwnedActiveResume(db, resumeId, ownerHash))) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         await db.query(
-            'UPDATE resumes SET is_deleted = true, updated_at = NOW() WHERE id = $1',
-            [resumeId]
+            'UPDATE resumes SET is_deleted = true, updated_at = NOW() WHERE id = $1 AND owner_hash = $2',
+            [resumeId, ownerHash]
         );
 
         return NextResponse.json({ message: 'Resume deleted successfully' }, { status: 200 });
-
     } catch (error) {
         console.error(`Failed to delete resume ${resumeId}:`, error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
