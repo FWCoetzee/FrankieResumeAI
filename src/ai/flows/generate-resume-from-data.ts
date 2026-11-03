@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -10,7 +9,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { resolveWorkingModel } from '@/lib/model-resolver';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, generatedResumeSchema, type GeneratedResumeData, languageSchema } from '@/lib/schema';
@@ -138,10 +136,10 @@ const generateResumeFromDataFlow = ai.defineFlow(
      * @returns The generated and validated resume data.
      */
     async function generateWithFallback(payload: GenerateResumeFromDataInput): Promise<GeneratedResumeData> {
-      const primaryModelId = await resolveWorkingModel('flash');
-      const primaryModel = googleAI.model(primaryModelId);
-      const fallbackModelId = await resolveWorkingModel('pro');
-      const fallbackModel = googleAI.model(fallbackModelId);
+      const primaryModel = await resolveWorkingModel('flash');
+      const primaryModelId = primaryModel;
+      const fallbackModel = await resolveWorkingModel('pro');
+      const fallbackModelId = fallbackModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000; // Initial backoff in ms
@@ -149,7 +147,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
       while (attempt <= maxRetries) {
         attempt++;
         try {
-          console.log(`[LLM Router] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          console.log(`[LLM Router] Attempt ${attempt}: Trying primary model (${primaryModel}).`);
           const startTime = Date.now();
           
           const {output} = await ai.run(
@@ -192,7 +190,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
       // If the loop completes without returning, it means the primary model failed.
       // Now, try the fallback model.
       try {
-        console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel.name}).`);
+        console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel}).`);
         const startTime = Date.now();
         
         const {output} = await ai.run(

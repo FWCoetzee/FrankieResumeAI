@@ -1,7 +1,7 @@
-
 import { create } from 'zustand';
 import type { ResumeData, GeneratedResumeData, ResumeFormData } from '@/lib/schema';
 import type { GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
+import type { TailoringAnalysis } from '@/ai/flows/analyze-tailoring';
 import { buildReviewResumeData } from '@/lib/resume-form-helpers';
 
 export type GenerationResult = {
@@ -9,6 +9,7 @@ export type GenerationResult = {
   suggestions?: string;
   coverLetter?: string;
   linkedin?: GenerateLinkedInProfileOutput;
+  tailoring?: TailoringAnalysis;
   error?: string;
   savedResumeId?: number;
 };

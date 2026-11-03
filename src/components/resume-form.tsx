@@ -17,14 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
 import { useAutosave } from "@/hooks/use-autosave";
+import { useToast } from "@/hooks/use-toast";
 import { authFetch } from "@/lib/auth-fetch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Wand2, Loader2 } from "lucide-react";
 
 const AI_MODES = [
   { label: "Strengthen", value: "Strengthen", description: "Make it more impactful" },
@@ -370,19 +371,20 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 
                 <TabsContent value="personal_info" className="m-0 space-y-4">
                     <FormField name="sections.summary.content" control={form.control} render={({ field }) => {
-                        const impact = checkImpact(field.value);
+                        const summaryValue = field.value ?? "";
+                        const impact = checkImpact(summaryValue);
                         return (
                             <FormItem>
                                 <div className="flex justify-between items-center mb-2">
                                     <FormLabel>Professional Summary</FormLabel>
                                     <RefineField 
-                                        value={field.value} 
+                                        value={summaryValue} 
                                         onUpdate={(val) => field.onChange(val)} 
                                         label="Polish Summary" 
                                     />
                                 </div>
                                 <FormControl>
-                                    <Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={6} />
+                                    <Textarea {...field} value={summaryValue} placeholder="A brief summary of your career, skills, and goals..." rows={6} />
                                 </FormControl>
                                 {impact.isLowImpact && (
                                     <p className="text-[10px] text-amber-600 font-medium mt-1 flex items-center gap-1">

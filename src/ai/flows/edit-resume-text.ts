@@ -9,7 +9,6 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { resolveWorkingModel } from '@/lib/model-resolver';
 
@@ -78,8 +77,6 @@ const editResumeTextFlow = ai.defineFlow(
     async function generateWithFallback(payload: EditResumeTextInput): Promise<EditResumeTextOutput> {
       const primaryModelId = await resolveWorkingModel('flash');
       const fallbackModelId = await resolveWorkingModel('pro');
-      const primaryModel = googleAI.model(primaryModelId);
-      const fallbackModel = googleAI.model(fallbackModelId);
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -87,8 +84,8 @@ const editResumeTextFlow = ai.defineFlow(
       while (attempt <= maxRetries) {
         attempt++;
         try {
-          console.log(`[LLM Router - Edit] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
-          const response = await prompt(payload, { model: primaryModel });
+          console.log(`[LLM Router - Edit] Attempt ${attempt}: Trying primary model (${primaryModelId}).`);
+          const response = await prompt(payload, { model: primaryModelId });
           return response.text;
         } catch (error: any) {
           const isOverloaded = error.message && (error.message.includes('429') || error.message.includes('503'));
@@ -104,8 +101,8 @@ const editResumeTextFlow = ai.defineFlow(
       }
 
       try {
-        console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModel.name}).`);
-        const response = await prompt(payload, { model: fallbackModel });
+        console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModelId}).`);
+        const response = await prompt(payload, { model: fallbackModelId });
         return response.text;
       } catch (fallbackError: any) {
         console.error(`[LLM Router - Edit] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);

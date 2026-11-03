@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2, BookOpen, Sparkles } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
+import type { TailoringAnalysis } from '@/ai/flows/analyze-tailoring';
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
@@ -31,6 +32,7 @@ interface ResumePreviewProps {
     suggestions?: string; 
     coverLetter?: string;
     linkedin?: GenerateLinkedInProfileOutput;
+    tailoring?: TailoringAnalysis;
   } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
