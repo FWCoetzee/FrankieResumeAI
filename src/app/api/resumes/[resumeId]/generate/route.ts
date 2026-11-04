@@ -147,9 +147,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         await finishGeneration(db, enforcementKey, limit.requestId, false);
         await db.query('ROLLBACK');
         console.error(`Failed to generate for resume ${resumeId}:`, error);
-        if (error instanceof Error) {
-            return NextResponse.json({ error: `An unexpected error occurred: ${error.message}` }, { status: 500 });
-        }
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json(
+            { error: 'AI generation is temporarily unavailable. Please try again shortly.' },
+            { status: 503 }
+        );
     }
 }

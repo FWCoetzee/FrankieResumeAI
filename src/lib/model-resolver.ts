@@ -1,7 +1,7 @@
 import { ai } from '@/ai/genkit';
 
 const GOOGLE_MODELS = {
-  flash: ['gemini-3', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'],
+  flash: ['gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'],
   pro: ['gemini-2.5-pro', 'gemini-1.5-pro', 'gemini-1.5-pro-latest'],
 };
 
