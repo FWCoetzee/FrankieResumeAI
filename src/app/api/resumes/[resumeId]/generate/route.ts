@@ -8,7 +8,7 @@ import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai
 import { analyzeTailoring } from '@/ai/flows/analyze-tailoring';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
-import { beginGeneration, createEnforcementKey, finishGeneration } from '@/lib/abuse-limit';
+import { beginGeneration, createEnforcementKey, finishGeneration, getClientIp } from '@/lib/abuse-limit';
 
 // This is a partial schema, as the full resume data will be sent.
 // We just validate that the 'sections' part exists.
@@ -48,7 +48,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     const { resumeData } = parsed.data as { resumeData: ResumeData };
 
     const db = await getDb();
-    const enforcementKey = createEnforcementKey(ownerHash, request.headers.get('x-forwarded-for') ?? 'unknown', request.headers.get('user-agent') ?? 'unknown');
+    const enforcementKey = createEnforcementKey(ownerHash, getClientIp(request.headers), request.headers.get('user-agent') ?? 'unknown');
     const limit = await beginGeneration(db, enforcementKey);
     if (!limit.allowed) {
         return NextResponse.json(

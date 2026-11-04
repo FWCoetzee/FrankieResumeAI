@@ -3,20 +3,35 @@ import type { Pool } from 'pg';
 
 export type AbuseDecision =
   | { allowed: true; requestId: string }
-  | { allowed: false; status: 429 | 409; retryAfterSeconds: number; message: string };
+  | { allowed: false; status: 429 | 409 | 503; retryAfterSeconds: number; message: string };
 
 const WINDOWS = [
-  { name: 'burst', duration: "INTERVAL '10 minutes'", durationMs: 10 * 60 * 1000, limit: 3 },
-  { name: 'hour', duration: "INTERVAL '1 hour'", durationMs: 60 * 60 * 1000, limit: 3 },
-  { name: 'day', duration: "INTERVAL '1 day'", durationMs: 24 * 60 * 60 * 1000, limit: 10 },
-  { name: 'month', duration: "INTERVAL '31 days'", durationMs: 31 * 24 * 60 * 60 * 1000, limit: 30 },
+  { name: 'burst', durationMs: 10 * 60 * 1000, limit: 3 },
+  { name: 'hour', durationMs: 60 * 60 * 1000, limit: 3 },
+  { name: 'day', durationMs: 24 * 60 * 60 * 1000, limit: 10 },
+  { name: 'month', durationMs: 31 * 24 * 60 * 60 * 1000, limit: 30 },
 ] as const;
 
 const CONCURRENCY_TIMEOUT_MS = 5 * 60 * 1000;
 
+export function anonymizeIp(ip: string): string {
+  const normalized = ip.trim().toLowerCase().split('%')[0];
+  if (normalized.includes(':')) {
+    const segments = normalized.split(':');
+    return segments.slice(0, Math.min(4, segments.length)).join(':');
+  }
+  return normalized.replace(/\.\d{1,3}$/, '.0');
+}
+
+export function getClientIp(headers: Headers): string {
+  return headers.get('x-nf-client-connection-ip')?.trim()
+    || headers.get('x-real-ip')?.trim()
+    || 'unknown';
+}
+
 export function createEnforcementKey(sessionOwnerHash: string, ip: string, userAgent: string): string {
-  const anonymizedIp = ip.split(',')[0].trim().replace(/\.\d{1,3}$/, '.0');
-  return createHash('sha256').update(`${sessionOwnerHash}:${anonymizedIp}:${userAgent}`).digest('hex');
+  const normalizedUserAgent = userAgent.trim().slice(0, 255) || 'unknown';
+  return createHash('sha256').update(`${sessionOwnerHash}:${anonymizeIp(ip)}:${normalizedUserAgent}`).digest('hex');
 }
 
 export async function beginGeneration(db: Pool, enforcementKey: string): Promise<AbuseDecision> {
@@ -51,17 +66,39 @@ export async function beginGeneration(db: Pool, enforcementKey: string): Promise
       );
     }
 
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const globalRequestCap = Number.parseInt(process.env.GEMINI_MONTHLY_REQUEST_CAP ?? '', 10);
+    if (Number.isFinite(globalRequestCap) && globalRequestCap > 0) {
+      const globalUsage = await client.query(
+        `SELECT COUNT(*)::int AS count FROM public.ai_usage_events
+         WHERE created_at >= $1 AND status IN ('accepted', 'completed')`,
+        [monthStart]
+      );
+      if ((globalUsage.rows[0].count as number) >= Math.floor(globalRequestCap * 0.9)) {
+        await client.query('ROLLBACK');
+        return { allowed: false, status: 503, retryAfterSeconds: 3600, message: 'AI generation is temporarily unavailable. Please try again later.' };
+      }
+    }
     for (const window of WINDOWS) {
+      const threshold = window.name === 'month'
+        ? monthStart
+        : new Date(now.getTime() - window.durationMs);
       const result = await client.query(
         `SELECT COUNT(*)::int AS count,
                 COALESCE(MAX(created_at), NOW()) AS newest
          FROM public.ai_usage_events
-         WHERE enforcement_key = $1 AND created_at >= NOW() - ${window.duration}`,
-        [enforcementKey]
+         WHERE enforcement_key = $1 AND created_at >= $2`,
+        [enforcementKey, threshold]
       );
       const count = result.rows[0].count as number;
       if (count >= window.limit) {
-        const retryMs = new Date(result.rows[0].newest).getTime() + window.durationMs - Date.now();
+        const nextMonth = window.name === 'month'
+          ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+          : null;
+        const retryMs = nextMonth
+          ? nextMonth.getTime() - now.getTime()
+          : new Date(result.rows[0].newest).getTime() + window.durationMs - now.getTime();
         await client.query('ROLLBACK');
         return { allowed: false, status: 429, retryAfterSeconds: Math.max(60, Math.ceil(retryMs / 1000)), message: 'To ensure fair access for everyone, AI generation is temporarily limited for your session.' };
       }
