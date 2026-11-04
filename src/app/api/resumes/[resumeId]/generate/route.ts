@@ -146,7 +146,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     } catch (error) {
         await finishGeneration(db, enforcementKey, limit.requestId, false);
         await db.query('ROLLBACK');
-        console.error(`Failed to generate for resume ${resumeId}:`, error);
+        const providerMessage = error instanceof Error ? error.message : String(error);
+        const providerCategory = /401|403|api key|unauthenticated|permission denied/i.test(providerMessage)
+            ? 'authentication'
+            : /429|quota|resource exhausted/i.test(providerMessage)
+                ? 'quota'
+                : /404|not found|model/i.test(providerMessage)
+                    ? 'model'
+                    : 'provider-or-network';
+        console.error(`[AI generation] category=${providerCategory} resumeId=${resumeId}`, error);
         return NextResponse.json(
             { error: 'AI generation is temporarily unavailable. Please try again shortly.' },
             { status: 503 }
