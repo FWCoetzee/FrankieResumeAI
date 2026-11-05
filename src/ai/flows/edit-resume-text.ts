@@ -76,7 +76,6 @@ const editResumeTextFlow = ai.defineFlow(
   async (input) => {
     async function generateWithFallback(payload: EditResumeTextInput): Promise<EditResumeTextOutput> {
       const primaryModelId = await resolveWorkingModel('flash');
-      const fallbackModelId = await resolveWorkingModel('pro');
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -101,6 +100,7 @@ const editResumeTextFlow = ai.defineFlow(
       }
 
       try {
+        const fallbackModelId = await resolveWorkingModel('pro');
         console.log(`[LLM Router - Edit] Failover: Trying fallback model (${fallbackModelId}).`);
         const response = await prompt(payload, { model: fallbackModelId });
         return response.text;

@@ -91,8 +91,6 @@ const generateLinkedInProfileFlow = ai.defineFlow(
     async function generateWithFallback(payload: GenerateLinkedInProfileInput): Promise<GenerateLinkedInProfileOutput> {
       const primaryModel = await resolveWorkingModel('flash');
       const primaryModelId = primaryModel;
-      const fallbackModel = await resolveWorkingModel('pro');
-      const fallbackModelId = fallbackModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -121,6 +119,7 @@ const generateLinkedInProfileFlow = ai.defineFlow(
       }
 
       try {
+        const fallbackModel = await resolveWorkingModel('pro');
         console.log(`[LLM Router - LinkedIn] Failover: Trying fallback model (${fallbackModel}).`);
         const {output} = await ai.run(
             'fallbackModelGeneration',

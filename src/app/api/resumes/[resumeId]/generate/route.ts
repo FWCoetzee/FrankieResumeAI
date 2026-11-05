@@ -106,17 +106,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
 
         const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills?.join(', ')}.`;
 
-        const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
-            generateResumeFromData(aiPayload),
+        const resumeResult = await generateResumeFromData(aiPayload);
+        const [suggestionsResult, coverLetterResult, linkedInResult, tailoringAnalysisResult] = await Promise.allSettled([
             provideResumeSuggestions({ ...aiPayload, jobDescription: jobDescForAI } as ProvideResumeSuggestionsInput),
             generateCoverLetterFromData({ ...aiPayload, jobDescription: jobDescForAI } as GenerateCoverLetterFromDataInput),
-            generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput)
-        ]);
-
-        const tailoringAnalysis = await analyzeTailoring({
+            generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput),
+            analyzeTailoring({
             jobDescription: jobDescForAI,
             resume: resumeResult,
-        });
+            })
+        ]);
+
+        if (suggestionsResult.status === 'rejected') console.error('[AI generation] Suggestions generation failed', suggestionsResult.reason);
+        if (coverLetterResult.status === 'rejected') console.error('[AI generation] Cover letter generation failed', coverLetterResult.reason);
+        if (linkedInResult.status === 'rejected') console.error('[AI generation] LinkedIn generation failed', linkedInResult.reason);
+        if (tailoringAnalysisResult.status === 'rejected') console.error('[AI generation] Tailoring generation failed', tailoringAnalysisResult.reason);
 
         await db.query('BEGIN');
 
@@ -136,10 +140,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         
         return NextResponse.json({
             resume: resumeResult,
-            suggestions: suggestionsResult.suggestions,
-            coverLetter: coverLetterResult,
-            linkedin: linkedInResult,
-            tailoring: tailoringAnalysis,
+            suggestions: suggestionsResult.status === 'fulfilled' ? suggestionsResult.value.suggestions : undefined,
+            coverLetter: coverLetterResult.status === 'fulfilled' ? coverLetterResult.value : undefined,
+            linkedin: linkedInResult.status === 'fulfilled' ? linkedInResult.value : undefined,
+            tailoring: tailoringAnalysisResult.status === 'fulfilled' ? tailoringAnalysisResult.value : undefined,
             savedResumeId: resumeId,
         });
 

@@ -96,8 +96,6 @@ const generateCoverLetterFromDataFlow = ai.defineFlow(
     async function generateWithFallback(payload: GenerateCoverLetterFromDataInput): Promise<GenerateCoverLetterFromDataOutput> {
       const primaryModel = await resolveWorkingModel('flash');
       const primaryModelId = primaryModel;
-      const fallbackModel = await resolveWorkingModel('pro');
-      const fallbackModelId = fallbackModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -125,6 +123,7 @@ const generateCoverLetterFromDataFlow = ai.defineFlow(
       }
 
       try {
+        const fallbackModel = await resolveWorkingModel('pro');
         console.log(`[LLM Router - CoverLetter] Failover: Trying fallback model (${fallbackModel}).`);
         const response = await ai.run(
             'fallbackModelGeneration',

@@ -120,8 +120,6 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
     async function generateWithFallback(payload: ProvideResumeSuggestionsInput): Promise<ProvideResumeSuggestionsOutput> {
       const primaryModel = await resolveWorkingModel('flash');
       const primaryModelId = primaryModel;
-      const fallbackModel = await resolveWorkingModel('pro');
-      const fallbackModelId = fallbackModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -150,6 +148,7 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
       }
 
       try {
+        const fallbackModel = await resolveWorkingModel('pro');
         console.log(`[LLM Router - Suggestions] Failover: Trying fallback model (${fallbackModel}).`);
         const {output} = await ai.run(
             'fallbackModelGeneration',
