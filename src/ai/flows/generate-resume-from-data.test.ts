@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { GenerateResumeFromDataInputSchema } from './generate-resume-from-data';
+import { GenerateResumeFromDataInputSchema } from './generate-resume-from-data.schema';
 
 const validInput = {
   target_job_title: 'Software Engineer',

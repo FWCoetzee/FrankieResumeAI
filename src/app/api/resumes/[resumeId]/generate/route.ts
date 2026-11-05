@@ -3,9 +3,9 @@ import { getDb } from '@/lib/db';
 import { z } from 'zod';
 import {
     generateResumeFromData,
-    GenerateResumeFromDataInputSchema,
     type GenerateResumeFromDataInput,
 } from '@/ai/flows/generate-resume-from-data';
+import { GenerateResumeFromDataInputSchema } from '@/ai/flows/generate-resume-from-data.schema';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 import { beginGeneration, createEnforcementKey, finishGeneration, getClientIp } from '@/lib/abuse-limit';
