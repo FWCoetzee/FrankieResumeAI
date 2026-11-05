@@ -1,8 +1,7 @@
-import { ai } from '@/ai/genkit';
-
 const GOOGLE_MODELS = {
-  flash: ['gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-2.5-flash-lite'],
+  flash: ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-3-flash-preview'],
   pro: ['gemini-3.1-pro-preview', 'gemini-pro-latest'],
+  gemma: ['gemma-4-26b-a4b-it', 'gemma-4-31b-it'],
 };
 
 function csv(value: string | undefined): string[] {
@@ -17,8 +16,19 @@ function configuredProviders(): string[] {
   return explicit.length > 0 ? explicit.filter(provider => provider === 'google') : ['google'];
 }
 
-/** Resolve a provider-qualified Genkit model reference and verify it accepts a small probe. */
-export async function resolveWorkingModel(type: 'flash' | 'pro'): Promise<string> {
+const resolvedModels = new Map<'flash' | 'pro' | 'gemma', Promise<string>>();
+
+/** Resolve the preferred configured model without spending a generation request on probing. */
+export async function resolveWorkingModel(type: 'flash' | 'pro' | 'gemma'): Promise<string> {
+  const cached = resolvedModels.get(type);
+  if (cached) return cached;
+
+  const resolution = resolveModel(type);
+  resolvedModels.set(type, resolution);
+  return resolution;
+}
+
+async function resolveModel(type: 'flash' | 'pro' | 'gemma'): Promise<string> {
   const providers = configuredProviders();
   const candidates: string[] = [];
 
@@ -40,20 +50,10 @@ export async function resolveWorkingModel(type: 'flash' | 'pro'): Promise<string
     }
   }
 
-  for (const modelRef of candidates) {
-    try {
-      await ai.generate({ model: modelRef, prompt: 'ping' });
-      console.log(`[ModelResolver] Successfully resolved ${type} model to: ${modelRef}`);
-      return modelRef;
-    } catch (error: any) {
-      const message = String(error?.message ?? error);
-      if (/NOT_FOUND|404|429|503|model .* not found|unknown model/i.test(message)) {
-        console.warn(`[ModelResolver] ${modelRef} unavailable, trying next candidate...`);
-        continue;
-      }
-      throw error;
-    }
+  if (candidates.length === 0) {
+    throw new Error(`No AI provider is configured for type '${type}'.`);
   }
 
-  throw new Error(`Could not resolve a working AI model for type '${type}'.`);
+  console.log(`[ModelResolver] Using ${type} model: ${candidates[0]}`);
+  return candidates[0];
 }

@@ -214,8 +214,25 @@ const generateResumeFromDataFlow = ai.defineFlow(
         return validation.data;
       } catch (fallbackError: any) {
         console.error(`[LLM Router] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);
-        // This is a hard failure. The user will see an error.
-        throw new Error("The AI service is currently unavailable. Please try again later.");
+        try {
+          const gemmaModel = await resolveWorkingModel('gemma');
+          console.log(`[LLM Router] Failover: Trying Gemma fallback model (${gemmaModel}).`);
+          const {output} = await ai.run(
+            'gemmaFallbackGeneration',
+            () => prompt(payload, { model: gemmaModel })
+          );
+          if (!output) {
+            throw new Error("Gemma fallback returned empty output.");
+          }
+          const validation = generatedResumeSchema.safeParse(output);
+          if (!validation.success) {
+            throw new Error("Invalid output schema from Gemma fallback.");
+          }
+          return validation.data;
+        } catch (gemmaError: any) {
+          console.error(`[LLM Router] FATAL: Gemma fallback also failed. Error: ${gemmaError.message}`);
+          throw new Error("The AI service is currently unavailable. Please try again later.");
+        }
       }
     }
 

@@ -2,10 +2,6 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
 import { generateResumeFromData, type GenerateResumeFromDataInput } from '@/ai/flows/generate-resume-from-data';
-import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from '@/ai/flows/provide-resume-suggestions';
-import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from '@/ai/flows/generate-cover-letter-from-data';
-import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
-import { analyzeTailoring } from '@/ai/flows/analyze-tailoring';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
 import { beginGeneration, createEnforcementKey, finishGeneration, getClientIp } from '@/lib/abuse-limit';
@@ -104,23 +100,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             references: resumeData.sections.references?.map(ref => ({ name: ref.name, contact: ref.contact })) || [],
         };
 
-        const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills?.join(', ')}.`;
-
         const resumeResult = await generateResumeFromData(aiPayload);
-        const [suggestionsResult, coverLetterResult, linkedInResult, tailoringAnalysisResult] = await Promise.allSettled([
-            provideResumeSuggestions({ ...aiPayload, jobDescription: jobDescForAI } as ProvideResumeSuggestionsInput),
-            generateCoverLetterFromData({ ...aiPayload, jobDescription: jobDescForAI } as GenerateCoverLetterFromDataInput),
-            generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput),
-            analyzeTailoring({
-            jobDescription: jobDescForAI,
-            resume: resumeResult,
-            })
-        ]);
-
-        if (suggestionsResult.status === 'rejected') console.error('[AI generation] Suggestions generation failed', suggestionsResult.reason);
-        if (coverLetterResult.status === 'rejected') console.error('[AI generation] Cover letter generation failed', coverLetterResult.reason);
-        if (linkedInResult.status === 'rejected') console.error('[AI generation] LinkedIn generation failed', linkedInResult.reason);
-        if (tailoringAnalysisResult.status === 'rejected') console.error('[AI generation] Tailoring generation failed', tailoringAnalysisResult.reason);
 
         await db.query('BEGIN');
 
@@ -136,14 +116,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         );
         
         await db.query('COMMIT');
+
         await finishGeneration(db, enforcementKey, limit.requestId, true);
         
         return NextResponse.json({
             resume: resumeResult,
-            suggestions: suggestionsResult.status === 'fulfilled' ? suggestionsResult.value.suggestions : undefined,
-            coverLetter: coverLetterResult.status === 'fulfilled' ? coverLetterResult.value : undefined,
-            linkedin: linkedInResult.status === 'fulfilled' ? linkedInResult.value : undefined,
-            tailoring: tailoringAnalysisResult.status === 'fulfilled' ? tailoringAnalysisResult.value : undefined,
             savedResumeId: resumeId,
         });
 

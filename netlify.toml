@@ -3,4 +3,4 @@
   # ordinary documentation and bundled dependency text during secrets scanning.
   # Keep scanning enabled for all other environment variables and paths.
   SECRETS_SCAN_OMIT_KEYS = "NEON_BRANCH"
-  GEMINI_MONTHLY_REQUEST_CAP = "30"
+  GEMINI_MONTHLY_REQUEST_CAP = "20"

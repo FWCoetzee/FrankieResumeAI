@@ -8,5 +8,5 @@ const googleApiKey =
 
 export const ai = genkit({
   plugins: googleApiKey ? [googleAI({ apiKey: googleApiKey })] : [],
-  model: 'googleai/gemini-3-flash-preview',
+  model: 'googleai/gemini-flash-lite-latest',
 });
