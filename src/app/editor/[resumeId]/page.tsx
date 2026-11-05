@@ -40,6 +40,9 @@ export default function EditorPage() {
                             title: parsedData.title,
                             templateId: parsedData.templateId || 'modern',
                             status: 'DRAFT',
+                            fullName: parsedData.fullName || '',
+                            email: parsedData.email || '',
+                            website: parsedData.website || '',
                             sections: {
                                 summary: { content: parsedData.sections.summary?.content || '', lastEdited: new Date().toISOString() },
                                 experience: parsedData.sections.experience || [],

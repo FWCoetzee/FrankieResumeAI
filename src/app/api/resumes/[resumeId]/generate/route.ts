@@ -70,10 +70,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             resume_style: "Modern", // TODO: Capture this from the user
             language: "English", // TODO: Capture this from the user
             personal_info: {
-                full_name: "User",
-                email: "",
+                full_name: resumeData.fullName || "",
+                email: resumeData.email || "",
                 phone: resumeData.phone || "",
                 location: resumeData.location || "",
+                website: resumeData.website || "",
                 summary: resumeData.sections.summary?.content || "",
             },
             work_experience: resumeData.sections.experience?.map(exp => ({

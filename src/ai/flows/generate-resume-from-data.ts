@@ -25,6 +25,7 @@ const GenerateResumeFromDataInputSchema = z.object({
     email: z.string(),
     phone: z.string(),
     location: z.string().optional(),
+    website: z.string().optional(),
     summary: z.string().optional(),
   }),
   work_experience: z.array(
@@ -91,7 +92,7 @@ Resume Metadata:
 
 Raw Resume Data:
 - Name: {{{personal_info.full_name}}}
-- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}{{#if personal_info.location}}, {{{personal_info.location}}}{{/if}}
+- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}{{#if personal_info.location}}, {{{personal_info.location}}}{{/if}}{{#if personal_info.website}}, Website: {{{personal_info.website}}}{{/if}}
 - Original Summary: {{{personal_info.summary}}}
 - Original Experience:
 {{#each work_experience}}
