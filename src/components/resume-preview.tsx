@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Wand2, Download, Pencil, Bot, FileSignature, Linkedin, Loader2, BookOpen, Sparkles } from "lucide-react";
 import type { ResumeData, GeneratedResumeData } from "@/lib/schema";
 import { type GenerateLinkedInProfileOutput } from "@/ai/flows/generate-linkedin-profile";
+import type { TailoringAnalysis } from '@/ai/flows/analyze-tailoring';
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
@@ -123,6 +124,9 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading, onAcceptEdit 
         <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your documents.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-muted/50 rounded-md border">
+        <p className="rounded-md border bg-background px-4 py-3 text-sm text-muted-foreground">
+          To protect the service from abuse by malicious users and automated bots, AI generation is rate-limited. Please submit requests responsibly. If you believe you have been limited in error, report the issue here.
+        </p>
         
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold">{title}</h2>
@@ -328,6 +332,42 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const { toast } = useToast();
   const { profile } = useUserProfile();
 
+  const handleCardCheckout = async () => {
+    if (!resumeData?.resumeId) {
+      toast({
+        variant: "destructive",
+        title: "Payment unavailable",
+        description: "Save the resume before starting card payment.",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: resumeData.resumeId,
+          paymentMethod: 'card',
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.checkoutUrl) {
+        throw new Error(body.error || 'Card checkout could not be started.');
+      }
+
+      window.location.assign(body.checkoutUrl);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Card checkout failed",
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadPdf = async () => {
     if (!resumeData?.isPaid) {
       try {
@@ -483,6 +523,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                     {result.resume && (
                         <>
                         {profile && profile.plan === 'free' && <AdBanner className="mb-4" />}
+                        <p className="mb-4 rounded-md border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                          To protect the service from abuse by malicious users and automated bots, AI generation is rate-limited. Please submit requests responsibly. If you believe you have been limited in error, report the issue here.
+                        </p>
                         <div className="bg-gray-200 p-4 rounded-lg">
                           <div id="resume-content" className="overflow-y-auto bg-white rounded-lg shadow-inner mx-auto max-w-full aspect-[8.5/11]">
                               <TemplateRenderer 
@@ -494,6 +537,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         
                         <div className="mt-4 flex justify-end gap-2">
                           <Button onClick={onEdit} size="sm"><Pencil /> Edit Form</Button>
+                          <Button onClick={handleCardCheckout} size="sm" variant="outline" disabled={isDownloading}>
+                            <Download /> Pay by card
+                          </Button>
                           <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
                             {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
                             {isDownloading ? "Downloading..." : "Download PDF"}
@@ -588,5 +634,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
-

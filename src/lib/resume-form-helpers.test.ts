@@ -7,6 +7,9 @@ test('buildReviewResumeData preserves submission metadata needed for generation'
   const formData = {
     title: 'Senior Product Engineer',
     templateId: 'modern',
+    fullName: 'Alex Morgan',
+    email: 'alex@example.com',
+    website: 'alexmorgan.dev',
     phone: '+27 82 555 1234',
     location: 'Cape Town, South Africa',
     jobDescription: 'Build products for customers.',
@@ -28,6 +31,9 @@ test('buildReviewResumeData preserves submission metadata needed for generation'
   const resume = buildReviewResumeData(formData, null);
 
   assert.equal(resume.title, 'Senior Product Engineer');
+  assert.equal(resume.fullName, 'Alex Morgan');
+  assert.equal(resume.email, 'alex@example.com');
+  assert.equal(resume.website, 'alexmorgan.dev');
   assert.equal(resume.phone, '+27 82 555 1234');
   assert.equal(resume.location, 'Cape Town, South Africa');
   assert.equal(resume.jobDescription, 'Build products for customers.');

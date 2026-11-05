@@ -1,3 +1,9 @@
 {
-    "huggingface.billTo": "SkyNetCyberdyne"
+    "huggingface.billTo": "SkyNetCyberdyne",
+    "chat.tools.terminal.autoApprove": {
+        "/^node --env-file=\\.env -e \"console\\.log\\(process\\.env\\.GOOGLE_GENAI_API_KEY \\? 'GOOGLE_GENAI_API_KEY loaded from \\.env' : 'missing'\\); console\\.log\\(process\\.env\\.GEMINI_MONTHLY_REQUEST_CAP \\? 'GEMINI_MONTHLY_REQUEST_CAP configured' : 'GEMINI_MONTHLY_REQUEST_CAP not configured'\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
 }

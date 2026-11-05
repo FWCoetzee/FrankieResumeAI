@@ -17,11 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Trash2, Loader2, FilePlus2, Eraser, User, Settings, Briefcase, Star, GraduationCap, Lightbulb, BookUser, Award, Wand2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useResumeStore } from "@/hooks/use-resume-store";
 import { v4 as uuidv4 } from "uuid";
 import { useAutosave } from "@/hooks/use-autosave";
+import { useToast } from "@/hooks/use-toast";
 import { authFetch } from "@/lib/auth-fetch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Wand2 } from "lucide-react";
@@ -144,6 +146,9 @@ interface ResumeFormProps {
 const emptyValues: ResumeFormData = {
   title: "",
   templateId: "modern",
+  fullName: "",
+  email: "",
+  website: "",
   phone: "",
   location: "",
   jobDescription: "",
@@ -165,6 +170,9 @@ const emptyValues: ResumeFormData = {
 const sampleValues: ResumeFormData = {
   title: "Senior Frontend Engineer",
   templateId: "modern",
+  fullName: "Alex Morgan",
+  email: "alex.morgan@example.com",
+  website: "alexmorgan.dev",
   phone: "082 123 4567",
   location: "Johannesburg, South Africa",
   jobDescription: `We are looking for a Senior Frontend Engineer to join our team. The ideal candidate will have strong experience with React, TypeScript, and Next.js. Responsibilities include developing new user-facing features, building reusable components, and optimizing applications for maximum speed and scalability. Experience with state management libraries like Zustand or Redux is a plus.`,
@@ -280,6 +288,9 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
         const formData: ResumeFormData = {
             title: currentResume.title,
             templateId: currentResume.templateId,
+            fullName: currentResume.fullName || "",
+            email: currentResume.email || "",
+            website: currentResume.website || "",
             phone: currentResume.phone || "",
             location: currentResume.location || "",
             jobDescription: currentResume.jobDescription || "",
@@ -383,8 +394,14 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                 </TabsContent>
                 
                 <TabsContent value="personal_info" className="m-0 space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField name="fullName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input placeholder="e.g., Alex Morgan" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                      <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email Address</FormLabel><FormControl><Input type="email" placeholder="e.g., alex@example.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    </div>
+                    <FormField name="website" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Website Name</FormLabel><FormControl><Input placeholder="e.g., alexmorgan.dev" {...field} /></FormControl><FormDescription>Enter your portfolio, professional website, or website name.</FormDescription><FormMessage /></FormItem> )} />
                     <FormField name="sections.summary.content" control={form.control} render={({ field }) => {
-                        const impact = checkImpact(field.value);
+                        const summaryValue = field.value ?? "";
+                        const impact = checkImpact(summaryValue);
                         return (
                             <FormItem>
                                 <div className="flex justify-between items-center mb-2">
@@ -396,7 +413,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                                     />
                                 </div>
                                 <FormControl>
-                                    <Textarea placeholder="A brief summary of your career, skills, and goals..." {...field} rows={6} />
+                                    <Textarea {...field} value={summaryValue} placeholder="A brief summary of your career, skills, and goals..." rows={6} />
                                 </FormControl>
                                 {impact.isLowImpact && (
                                     <p className="text-[10px] text-amber-600 font-medium mt-1 flex items-center gap-1">

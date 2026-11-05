@@ -1,15 +1,19 @@
-
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { z } from 'zod';
-import { generateResumeFromData, type GenerateResumeFromDataInput } from '@/ai/flows/generate-resume-from-data';
-import { provideResumeSuggestions, type ProvideResumeSuggestionsInput } from '@/ai/flows/provide-resume-suggestions';
-import { generateCoverLetterFromData, type GenerateCoverLetterFromDataInput } from '@/ai/flows/generate-cover-letter-from-data';
-import { generateLinkedInProfile, type GenerateLinkedInProfileInput } from '@/ai/flows/generate-linkedin-profile';
-import { analyzeTailoring } from '@/ai/flows/analyze-tailoring';
+import {
+    generateResumeFromData,
+    GenerateResumeFromDataInputSchema,
+    type GenerateResumeFromDataInput,
+} from '@/ai/flows/generate-resume-from-data';
 import { type ResumeData } from '@/lib/schema';
 import { getAnonymousOwnerHashFromRequest } from '@/lib/anonymous-session';
-import { checkAnonymousGenerationLimit } from '@/lib/abuse-limit';
+import { beginGeneration, createEnforcementKey, finishGeneration, getClientIp } from '@/lib/abuse-limit';
+import {
+    classifyProviderError,
+    logGenerationCheck,
+    verifyGeneratedResume,
+} from '@/lib/generation-verification';
 
 // This is a partial schema, as the full resume data will be sent.
 // We just validate that the 'sections' part exists.
@@ -34,22 +38,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         return NextResponse.json({ error: 'Unauthorized: No anonymous session found.' }, { status: 401 });
     }
 
-    const limit = checkAnonymousGenerationLimit(ownerHash);
-    if (!limit.allowed) {
-        return NextResponse.json(
-            {
-                error: 'Too many resume generation requests. Please try again later.',
-                retryAfterSeconds: limit.retryAfterSeconds,
-            },
-            {
-                status: 429,
-                headers: {
-                    'Retry-After': String(limit.retryAfterSeconds ?? 60),
-                },
-            }
-        );
-    }
-
     const { resumeId: resumeIdParam } = await params;
     const resumeId = parseInt(resumeIdParam, 10);
     if (isNaN(resumeId)) {
@@ -65,12 +53,26 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
     const { resumeData } = parsed.data as { resumeData: ResumeData };
 
     const db = await getDb();
-    
+    if (!(await verifyOwnership(resumeId, ownerHash))) {
+        logGenerationCheck('ownership', 'failed', { resumeId });
+        return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
+    }
+    logGenerationCheck('ownership', 'passed', { resumeId });
+
+    const enforcementKey = createEnforcementKey(ownerHash, getClientIp(request.headers), request.headers.get('user-agent') ?? 'unknown');
+    const limit = await beginGeneration(db, enforcementKey);
+    if (!limit.allowed) {
+        logGenerationCheck('rate-limit', 'failed', { resumeId });
+        return NextResponse.json(
+            { error: limit.message, retryAfterSeconds: limit.retryAfterSeconds },
+            { status: limit.status, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+        );
+    }
+    logGenerationCheck('rate-limit', 'passed', { resumeId, requestId: limit.requestId });
+
+    let transactionStarted = false;
+    let providerCompleted = false;
     try {
-        if (!(await verifyOwnership(resumeId, ownerHash))) {
-            return NextResponse.json({ error: 'Forbidden: You do not own this resume.' }, { status: 403 });
-        }
-        
         const resumeRes = await db.query('SELECT current_version_id FROM resumes WHERE id = $1', [resumeId]);
         const sourceVersionId = resumeRes.rows[0].current_version_id;
 
@@ -82,10 +84,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             resume_style: "Modern", // TODO: Capture this from the user
             language: "English", // TODO: Capture this from the user
             personal_info: {
-                full_name: "User",
-                email: "",
+                full_name: resumeData.fullName || "",
+                email: resumeData.email || "",
                 phone: resumeData.phone || "",
                 location: resumeData.location || "",
+                website: resumeData.website || "",
                 summary: resumeData.sections.summary?.content || "",
             },
             work_experience: resumeData.sections.experience?.map(exp => ({
@@ -112,21 +115,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
             references: resumeData.sections.references?.map(ref => ({ name: ref.name, contact: ref.contact })) || [],
         };
 
-        const jobDescForAI = resumeData.jobDescription || `A generic role for a candidate with skills like ${resumeData.sections.skills?.join(', ')}.`;
+        const parsedPayload = GenerateResumeFromDataInputSchema.safeParse(aiPayload);
+        if (!parsedPayload.success) {
+            await finishGeneration(db, enforcementKey, limit.requestId, false);
+            logGenerationCheck('input-validation', 'failed', { resumeId, requestId: limit.requestId });
+            return NextResponse.json(
+                { error: 'Resume data exceeds the supported generation limits.', details: parsedPayload.error.flatten() },
+                { status: 400 }
+            );
+        }
+        logGenerationCheck('input-validation', 'passed', { resumeId, requestId: limit.requestId });
 
-        const [resumeResult, suggestionsResult, coverLetterResult, linkedInResult] = await Promise.all([
-            generateResumeFromData(aiPayload),
-            provideResumeSuggestions({ ...aiPayload, jobDescription: jobDescForAI } as ProvideResumeSuggestionsInput),
-            generateCoverLetterFromData({ ...aiPayload, jobDescription: jobDescForAI } as GenerateCoverLetterFromDataInput),
-            generateLinkedInProfile(aiPayload as GenerateLinkedInProfileInput)
-        ]);
+        const resumeResult = await generateResumeFromData(aiPayload);
+        logGenerationCheck('provider', 'passed', { resumeId, requestId: limit.requestId });
+        providerCompleted = true;
 
-        const tailoringAnalysis = await analyzeTailoring({
-            jobDescription: jobDescForAI,
-            resume: resumeResult,
-        });
+        if (!verifyGeneratedResume(resumeResult)) {
+            await finishGeneration(db, enforcementKey, limit.requestId, false);
+            logGenerationCheck('output-validation', 'failed', { resumeId, requestId: limit.requestId });
+            return NextResponse.json(
+                { error: 'The AI provider returned an invalid resume. Please try again.' },
+                { status: 502 }
+            );
+        }
+        logGenerationCheck('output-validation', 'passed', { resumeId, requestId: limit.requestId });
 
         await db.query('BEGIN');
+        transactionStarted = true;
 
         const newVersionRes = await db.query(
             'INSERT INTO resume_versions (resume_id, content, created_from_version_id) VALUES ($1, $2, $3) RETURNING id',
@@ -140,22 +155,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ res
         );
         
         await db.query('COMMIT');
+        transactionStarted = false;
+
+        await finishGeneration(db, enforcementKey, limit.requestId, true);
+        logGenerationCheck('database', 'passed', { resumeId, requestId: limit.requestId });
+        logGenerationCheck('completed', 'passed', { resumeId, requestId: limit.requestId });
         
         return NextResponse.json({
             resume: resumeResult,
-            suggestions: suggestionsResult.suggestions,
-            coverLetter: coverLetterResult,
-            linkedin: linkedInResult,
-            tailoring: tailoringAnalysis,
             savedResumeId: resumeId,
         });
 
     } catch (error) {
-        await db.query('ROLLBACK');
-        console.error(`Failed to generate for resume ${resumeId}:`, error);
-        if (error instanceof Error) {
-            return NextResponse.json({ error: `An unexpected error occurred: ${error.message}` }, { status: 500 });
+        await finishGeneration(db, enforcementKey, limit.requestId, false);
+        if (transactionStarted) {
+            await db.query('ROLLBACK');
         }
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        const providerMessage = error instanceof Error ? error.message : String(error);
+        const providerCategory = classifyProviderError(providerMessage);
+        logGenerationCheck(providerCompleted ? 'database' : 'provider', 'failed', { resumeId, requestId: limit.requestId });
+        console.error(`[AI generation] category=${providerCategory} resumeId=${resumeId} requestId=${limit.requestId}`);
+        return NextResponse.json(
+            { error: 'AI generation is temporarily unavailable. Please try again shortly.' },
+            { status: 503 }
+        );
     }
 }

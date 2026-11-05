@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import { createAnonymousSessionId, computeOwnerHash, getAnonymousSessionFromHeaders, refreshAnonymousSessionCookie } from './anonymous-session';
 
+const VALID_SESSION_ID = '123e4567-e89b-4d3a-a456-426614174000';
+
 test('createAnonymousSessionId returns a non-empty UUID-like session', () => {
   const value = createAnonymousSessionId();
   assert.equal(typeof value, 'string');
@@ -11,9 +13,8 @@ test('createAnonymousSessionId returns a non-empty UUID-like session', () => {
 });
 
 test('computeOwnerHash is stable for the same session and secret', () => {
-  const sessionId = '123e4567-e89b-12d3-a456-426614174000';
-  const hashA = computeOwnerHash(sessionId);
-  const hashB = computeOwnerHash(sessionId);
+  const hashA = computeOwnerHash(VALID_SESSION_ID);
+  const hashB = computeOwnerHash(VALID_SESSION_ID);
 
   assert.equal(hashA, hashB);
   assert.equal(hashA.length, 64);
@@ -21,20 +22,28 @@ test('computeOwnerHash is stable for the same session and secret', () => {
 
 test('getAnonymousSessionFromHeaders reads the session cookie and derives the owner hash', () => {
   const headers = new Headers({
-    cookie: '__gr_session=123e4567-e89b-12d3-a456-426614174000; other=value',
+    cookie: `__gr_session=${VALID_SESSION_ID}; other=value`,
   });
 
   const session = getAnonymousSessionFromHeaders(headers);
 
-  assert.equal(session.sessionId, '123e4567-e89b-12d3-a456-426614174000');
-  assert.equal(session.ownerHash, computeOwnerHash('123e4567-e89b-12d3-a456-426614174000'));
+  assert.equal(session.sessionId, VALID_SESSION_ID);
+  assert.equal(session.ownerHash, computeOwnerHash(VALID_SESSION_ID));
 });
 
 test('refreshAnonymousSessionCookie extends the cookie lifetime for active usage', () => {
   const response = new Response(JSON.stringify({ ok: true }));
-  const refreshed = refreshAnonymousSessionCookie(response, '123e4567-e89b-12d3-a456-426614174000');
+  const refreshed = refreshAnonymousSessionCookie(response, VALID_SESSION_ID);
 
   const setCookie = refreshed.headers.get('Set-Cookie') ?? '';
   assert.match(setCookie, /__gr_session=/i);
   assert.match(setCookie, /Max-Age=86400/i);
+});
+
+test('getAnonymousSessionFromHeaders rejects malformed session IDs', () => {
+  const headers = new Headers({
+    cookie: '__gr_session=forged-session-id; other=value',
+  });
+
+  assert.deepEqual(getAnonymousSessionFromHeaders(headers), {});
 });

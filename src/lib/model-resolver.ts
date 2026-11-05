@@ -1,56 +1,59 @@
-import { googleAI } from '@genkit-ai/google-genai';
-import { ai } from '@/ai/genkit';
-
-/**
- * A list of common Google AI model identifiers.
- * We include both aliases and specific versions to maximize compatibility.
- */
-const MODEL_CANDIDATES = {
-  flash: [
-    'gemini-3',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash-001',
-    'gemini-pro',
-  ],
-  pro: [
-    'gemini-2.5-pro',
-    'gemini-1.5-pro',
-    'gemini-1.5-pro-latest',
-    'gemini-1.5-pro-001',
-    'gemini-pro-vision',
-  ],
+const GOOGLE_MODELS = {
+  flash: ['gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-3-flash-preview'],
+  pro: ['gemini-3.1-pro-preview', 'gemini-pro-latest'],
+  gemma: ['gemma-4-26b-a4b-it', 'gemma-4-31b-it'],
 };
 
-/**
- * Attempts to resolve a working model from a list of candidates by 
- * performing a lightweight probe call.
- */
-export async function resolveWorkingModel(type: 'flash' | 'pro'): Promise<string> {
-  const candidates = MODEL_CANDIDATES[type];
-  
-  for (const modelId of candidates) {
-    try {
-      const model = googleAI.model(modelId);
-      
-      // Use ai.generate for a real API probe to verify model availability
-      await ai.generate({
-        model: model,
-        prompt: 'ping',
-      });
-      
-      console.log(`[ModelResolver] Successfully resolved ${type} model to: ${modelId}`);
-      return modelId;
-    } catch (e: any) {
-      // We only continue if it's a 404/NOT_FOUND error. 
-      if (e.message?.includes('NOT_FOUND') || e.message?.includes('404')) {
-        console.warn(`[ModelResolver] Model ${modelId} not found, trying next...`);
-        continue;
-      }
-      throw e;
+function csv(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function configuredProviders(): string[] {
+  const explicit = csv(process.env.AI_PROVIDERS).map((provider) => provider.toLowerCase());
+  return explicit.length > 0 ? explicit.filter(provider => provider === 'google') : ['google'];
+}
+
+const resolvedModels = new Map<'flash' | 'pro' | 'gemma', Promise<string>>();
+
+/** Resolve the preferred configured model without spending a generation request on probing. */
+export async function resolveWorkingModel(type: 'flash' | 'pro' | 'gemma'): Promise<string> {
+  const cached = resolvedModels.get(type);
+  if (cached) return cached;
+
+  const resolution = resolveModel(type);
+  resolvedModels.set(type, resolution);
+  return resolution;
+}
+
+async function resolveModel(type: 'flash' | 'pro' | 'gemma'): Promise<string> {
+  const providers = configuredProviders();
+  const candidates: string[] = [];
+
+  for (const provider of providers) {
+    if (provider === 'google') {
+      candidates.push(...GOOGLE_MODELS[type].map((model) => `googleai/${model}`));
+      continue;
+    }
+
+    if (provider === 'huggingface') {
+      const models = csv(process.env.HUGGINGFACE_MODELS);
+      candidates.push(...models.map((model) => `huggingface/${model}`));
+      continue;
+    }
+
+    if (provider === 'ollama') {
+      const models = csv(process.env.OLLAMA_MODELS ?? process.env.OLLAMA_MODEL ?? 'llama3.2');
+      candidates.push(...models.map((model) => `ollama/${model}`));
     }
   }
-  
-  throw new Error(`Could not resolve a working Google AI model for type: ${type}`);
+
+  if (candidates.length === 0) {
+    throw new Error(`No AI provider is configured for type '${type}'.`);
+  }
+
+  console.log(`[ModelResolver] Using ${type} model: ${candidates[0]}`);
+  return candidates[0];
 }

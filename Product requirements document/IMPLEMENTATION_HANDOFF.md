@@ -67,6 +67,79 @@ Across all documents, specify acceptance criteria that can be tested; use consis
 - Preserve the existing resume editor until its ownership model can be changed safely to the temporary anonymous session.
 - After the account-surface edit, run `npm run typecheck` immediately and update this progress section with the result.
 
+## Milestone 1 Completion Checkpoint
+
+### Verified Complete — Phase 1: Foundation
+
+- Anonymous session middleware issues a `__gr_session` UUID cookie with HttpOnly, SameSite=Lax, Secure-in-production, and 24-hour lifetime protections.
+- Existing anonymous-session cookies are renewed on matched application requests.
+- Anonymous cookie IDs are restricted to issued UUIDv4-shaped values.
+- Owner-bound resume create/read/update/delete flows query by `owner_hash`.
+- Active resume queries require `expires_at > NOW()` and exclude soft-deleted records.
+- Resume reads and edits renew the 24-hour inactivity expiry.
+- Expired and soft-deleted resumes can be removed through the secret-protected cleanup endpoint.
+- Unit tests, TypeScript validation, and the mocked integration smoke test pass.
+
+### Milestone 1 Exit Gate
+
+The anonymous user can create and edit a resume without a public account, and resume access is constrained by the anonymous owner hash. The implementation is ready to move to Phase 2 after deployment configuration supplies `ANONYMOUS_SESSION_SECRET` and `CLEANUP_SECRET`.
+
+### Validation Recorded
+
+- `npm run typecheck`: passed.
+- Anonymous-session unit suite: 7 tests passed.
+- Integration smoke test: passed.
+
+The implementation of Milestone 2 should now begin in Slice 2.1. The legacy payment and public-account surfaces remain outside this milestone and must not be included in this completion claim.
+
+## Milestone 2 Completion Checkpoint
+
+### Verified Complete — Phase 2: Protection
+
+- Anonymous identity keys combine the anonymous owner hash, anonymized IP subnet, and normalized user agent.
+- Usage records and events enforce burst, hourly, daily, and monthly limits.
+- Concurrent generation requests are locked and stale locks are released.
+- Accepted, completed, and failed usage accounting is implemented.
+- Provider failures remove failed attempts while successful attempts remain counted.
+- Generation API responses include `429`, `409`, or `503` states as applicable with `Retry-After`.
+- The preview and review screens display the required neutral anti-abuse notice.
+- The production database usage tables are present.
+- The configured monthly Gemini request circuit breaker is set to 30.
+
+### Validation Recorded
+
+- `npm run typecheck`: passed.
+- Anti-abuse unit suite: 5 tests passed.
+- Gemini provider check for `gemini-3-flash-preview`: passed with HTTP 200.
+
+## Phase 3 Provider Configuration Checkpoint
+
+### Verified
+
+- Gemini is the only configured AI provider for production resume generation.
+- `gemini-3-flash-preview` resolves successfully through the Genkit Google provider.
+- Structured resume generation completed successfully and returned data matching `generatedResumeSchema`.
+- Pro fallback resolution occurs only after Flash retries fail, preventing an unavailable Pro model from blocking Flash generation.
+- Runtime generation-stage verification now covers ownership, rate limits, input validation, provider completion, output validation, database persistence, and completion.
+- Provider failures are categorized as authentication, quota, model, timeout, or provider/network errors.
+- Generation verification logs include only stage, result, resume ID, and request ID; provider responses, credentials, prompts, and resume data are not logged.
+- Invalid provider output is rejected before database persistence and returned as a safe retryable client error.
+- Database transactions are rolled back when generation persistence fails, while abuse-limit accounting is finalized as failed or completed appropriately.
+
+### Phase 3 Verification Tests
+
+- `npm run typecheck`: passed.
+- Generation verification unit suite: 2 tests passed.
+- Generation-flow and limit verification suite: 10 tests passed.
+- Owner, rate-limit, provider, schema, transaction, and provider-error classification paths are covered.
+
+### Remaining Phase 3 Work
+
+- Replace the hardcoded resume intent, experience level, style, and language values in the generation route with values captured from the user.
+- Complete end-to-end preview verification against the current UI and database configuration.
+- Re-run the production build with enough time for Next.js compilation.
+- Complete final verification of real provider, database persistence, and preview rendering with production-like configuration.
+
 ## Verified Checks
 
 - `npm run typecheck` passes.

@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -10,53 +9,56 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { resolveWorkingModel } from '@/lib/model-resolver';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, generatedResumeSchema, type GeneratedResumeData, languageSchema } from '@/lib/schema';
 
 // The input remains the same raw data from the form.
-const GenerateResumeFromDataInputSchema = z.object({
-  target_job_title: z.string(),
+export const GenerateResumeFromDataInputSchema = z.object({
+  target_job_title: z.string().min(1).max(200),
   resume_intent: resumeIntentSchema,
   experience_level: experienceLevelSchema,
   resume_style: resumeStyleSchema,
   language: languageSchema,
   personal_info: z.object({
-    full_name: z.string(),
-    email: z.string(),
-    phone: z.string(),
-    location: z.string().optional(),
-    summary: z.string().optional(),
+    full_name: z.string().max(200),
+    email: z.string().max(320),
+    phone: z.string().max(50),
+    location: z.string().max(300).optional(),
+    website: z.string().max(500).optional(),
+    summary: z.string().max(5000).optional(),
   }),
   work_experience: z.array(
     z.object({
-      job_title: z.string(),
-      company: z.string(),
-      start_date: z.string().optional(),
-      end_date: z.string().optional(),
-      responsibilities: z.string().optional(),
-      achievements: z.string().optional(),
+      job_title: z.string().max(200),
+      company: z.string().max(200),
+      start_date: z.string().max(50).optional(),
+      end_date: z.string().max(50).optional(),
+      responsibilities: z.string().max(5000).optional(),
+      achievements: z.string().max(5000).optional(),
     })
-  ),
+  ).max(30),
   education: z.array(
     z.object({
-      degree: z.string(),
-      institution: z.string(),
-      start_year: z.string().optional(),
-      end_year: z.string().optional(),
+      degree: z.string().max(200),
+      institution: z.string().max(200),
+      start_year: z.string().max(50).optional(),
+      end_year: z.string().max(50).optional(),
     })
-  ),
-  skills: z.array(z.string()),
+  ).max(30),
+  skills: z.array(z.string().max(200)).max(100),
   projects: z.array(
     z.object({
-      title: z.string(),
-      description: z.string().optional(),
-      technologies: z.array(z.string()),
+      title: z.string().max(200),
+      description: z.string().max(5000).optional(),
+      technologies: z.array(z.string().max(200)).max(50),
     })
-  ),
-  certifications: z.array(z.string()),
-  references: z.array(z.object({ name: z.string(), contact: z.string() })),
+  ).max(30),
+  certifications: z.array(z.string().max(300)).max(50),
+  references: z.array(z.object({
+    name: z.string().max(200),
+    contact: z.string().max(320),
+  })).max(50),
 });
 
 export type GenerateResumeFromDataInput = z.infer<typeof GenerateResumeFromDataInputSchema>;
@@ -65,7 +67,11 @@ export type GenerateResumeFromDataInput = z.infer<typeof GenerateResumeFromDataI
 export type GenerateResumeFromDataOutput = GeneratedResumeData;
 
 export async function generateResumeFromData(input: GenerateResumeFromDataInput): Promise<GenerateResumeFromDataOutput> {
-  return generateResumeFromDataFlow(input);
+  const parsedInput = GenerateResumeFromDataInputSchema.safeParse(input);
+  if (!parsedInput.success) {
+    throw parsedInput.error;
+  }
+  return generateResumeFromDataFlow(parsedInput.data);
 }
 
 const prompt = ai.definePrompt({
@@ -93,7 +99,7 @@ Resume Metadata:
 
 Raw Resume Data:
 - Name: {{{personal_info.full_name}}}
-- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}{{#if personal_info.location}}, {{{personal_info.location}}}{{/if}}
+- Contact: {{{personal_info.email}}}, {{{personal_info.phone}}}{{#if personal_info.location}}, {{{personal_info.location}}}{{/if}}{{#if personal_info.website}}, Website: {{{personal_info.website}}}{{/if}}
 - Original Summary: {{{personal_info.summary}}}
 - Original Experience:
 {{#each work_experience}}
@@ -131,17 +137,14 @@ const generateResumeFromDataFlow = ai.defineFlow(
   async (input) => {
     /**
      * Generates a resume with a fallback mechanism.
-     * It first tries the primary, faster model (gemini-2.5-flash).
+     * It first tries the primary, faster Gemini Flash model.
      * If it fails due to overload or rate limiting, it retries with exponential backoff.
-     * If all retries fail, it falls back to a more powerful secondary model (gemini-1.5-pro).
+     * If all retries fail, it falls back to a more powerful Gemini Pro model.
      * @param payload The input data for the resume generation prompt.
      * @returns The generated and validated resume data.
      */
     async function generateWithFallback(payload: GenerateResumeFromDataInput): Promise<GeneratedResumeData> {
-      const primaryModelId = await resolveWorkingModel('flash');
-      const primaryModel = googleAI.model(primaryModelId);
-      const fallbackModelId = await resolveWorkingModel('pro');
-      const fallbackModel = googleAI.model(fallbackModelId);
+      const primaryModel = await resolveWorkingModel('flash');
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000; // Initial backoff in ms
@@ -149,7 +152,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
       while (attempt <= maxRetries) {
         attempt++;
         try {
-          console.log(`[LLM Router] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          console.log(`[LLM Router] Attempt ${attempt}: Trying primary model (${primaryModel}).`);
           const startTime = Date.now();
           
           const {output} = await ai.run(
@@ -192,7 +195,8 @@ const generateResumeFromDataFlow = ai.defineFlow(
       // If the loop completes without returning, it means the primary model failed.
       // Now, try the fallback model.
       try {
-        console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel.name}).`);
+        const fallbackModel = await resolveWorkingModel('pro');
+        console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel}).`);
         const startTime = Date.now();
         
         const {output} = await ai.run(
@@ -218,8 +222,25 @@ const generateResumeFromDataFlow = ai.defineFlow(
         return validation.data;
       } catch (fallbackError: any) {
         console.error(`[LLM Router] FATAL: Fallback model also failed. Error: ${fallbackError.message}`);
-        // This is a hard failure. The user will see an error.
-        throw new Error("The AI service is currently unavailable. Please try again later.");
+        try {
+          const gemmaModel = await resolveWorkingModel('gemma');
+          console.log(`[LLM Router] Failover: Trying Gemma fallback model (${gemmaModel}).`);
+          const {output} = await ai.run(
+            'gemmaFallbackGeneration',
+            () => prompt(payload, { model: gemmaModel })
+          );
+          if (!output) {
+            throw new Error("Gemma fallback returned empty output.");
+          }
+          const validation = generatedResumeSchema.safeParse(output);
+          if (!validation.success) {
+            throw new Error("Invalid output schema from Gemma fallback.");
+          }
+          return validation.data;
+        } catch (gemmaError: any) {
+          console.error(`[LLM Router] FATAL: Gemma fallback also failed. Error: ${gemmaError.message}`);
+          throw new Error("The AI service is currently unavailable. Please try again later.");
+        }
       }
     }
 

@@ -1,0 +1,6 @@
+[build.environment]
+  # Branch names are identifiers, not credentials. Common names can match
+  # ordinary documentation and bundled dependency text during secrets scanning.
+  # Keep scanning enabled for all other environment variables and paths.
+  SECRETS_SCAN_OMIT_KEYS = "NEON_BRANCH"
+  GEMINI_MONTHLY_REQUEST_CAP = "20"

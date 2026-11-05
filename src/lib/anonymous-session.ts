@@ -1,6 +1,8 @@
 export const ANONYMOUS_SESSION_COOKIE_NAME = '__gr_session';
 export const ANONYMOUS_SESSION_TTL_SECONDS = 60 * 60 * 24;
 
+const ANONYMOUS_SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function createStableHash(input: string): number {
   let hash = 2166136261;
 
@@ -59,6 +61,10 @@ export function getAnonymousSessionFromHeaders(headers: Headers): {
 
     const rawSessionId = decodeURIComponent(rest.join('=') ?? '');
     if (!rawSessionId) {
+      return {};
+    }
+
+    if (!ANONYMOUS_SESSION_ID_PATTERN.test(rawSessionId)) {
       return {};
     }
 

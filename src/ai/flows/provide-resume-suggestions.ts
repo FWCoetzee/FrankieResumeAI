@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -10,7 +9,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 import { resolveWorkingModel } from '@/lib/model-resolver';
 import { experienceLevelSchema, resumeIntentSchema, resumeStyleSchema, languageSchema } from '@/lib/schema';
@@ -120,10 +118,8 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
   },
   async input => {
     async function generateWithFallback(payload: ProvideResumeSuggestionsInput): Promise<ProvideResumeSuggestionsOutput> {
-      const primaryModelId = await resolveWorkingModel('flash');
-      const primaryModel = googleAI.model(primaryModelId);
-      const fallbackModelId = await resolveWorkingModel('pro');
-      const fallbackModel = googleAI.model(fallbackModelId);
+      const primaryModel = await resolveWorkingModel('flash');
+      const primaryModelId = primaryModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000;
@@ -131,7 +127,7 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
       while (attempt <= maxRetries) {
         attempt++;
         try {
-          console.log(`[LLM Router - Suggestions] Attempt ${attempt}: Trying primary model (${primaryModel.name}).`);
+          console.log(`[LLM Router - Suggestions] Attempt ${attempt}: Trying primary model (${primaryModel}).`);
           const {output} = await ai.run(
               'primaryModelGeneration',
               () => prompt(payload, { model: primaryModel })
@@ -152,7 +148,8 @@ const provideResumeSuggestionsFlow = ai.defineFlow(
       }
 
       try {
-        console.log(`[LLM Router - Suggestions] Failover: Trying fallback model (${fallbackModel.name}).`);
+        const fallbackModel = await resolveWorkingModel('pro');
+        console.log(`[LLM Router - Suggestions] Failover: Trying fallback model (${fallbackModel}).`);
         const {output} = await ai.run(
             'fallbackModelGeneration',
             () => prompt(payload, { model: fallbackModel })

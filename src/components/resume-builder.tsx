@@ -80,7 +80,7 @@ export function ResumeBuilder() {
       const resumeId = await ensureResumeExists();
       toast({
         title: "Generating your documents...",
-        description: "The AI is creating your tailored resume, suggestions, and cover letter.",
+        description: "The AI is creating and saving your tailored resume.",
       });
 
       const response = await authFetch(`/api/resumes/${resumeId}/generate`, {
@@ -134,7 +134,7 @@ export function ResumeBuilder() {
 
     toast({
       title: "Generating your documents...",
-      description: "The AI is working its magic. This may take a moment.",
+      description: "The AI is creating and saving your tailored resume.",
     });
 
     try {
