@@ -31,8 +31,10 @@ export async function analyzeTailoring(input: {
 const prompt = ai.definePrompt({
   name: 'analyzeTailoringPrompt',
   input: {
-    jobDescription: z.string(),
-    resume: z.any(), // Using any as GeneratedResumeData is a complex Zod schema
+    schema: z.object({
+      jobDescription: z.string(),
+      resume: z.any(),
+    }),
   },
   output: { schema: TailoringAnalysisSchema },
   prompt: `You are a Resume Strategy Analyst. Your goal is to provide transparency to the user by explaining exactly HOW you tailored their resume to a specific job description.
@@ -66,9 +68,12 @@ const analyzeTailoringFlow = ai.defineFlow(
       const modelId = await resolveWorkingModel('flash');
       const response = await ai.run(
         'analyzeTailoringGeneration',
-        () => prompt(input, { model: googleAI.model(modelId) })
+        async () => {
+            const result = await prompt(input, { model: googleAI.model(modelId) });
+            return result;
+        }
       );
-      return response.text;
+      return response as unknown as TailoringAnalysis;
     } catch (error) {
       console.error('Tailoring Analysis Error:', error);
       throw new Error('Failed to analyze resume tailoring.');

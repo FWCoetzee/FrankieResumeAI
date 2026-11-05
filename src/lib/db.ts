@@ -21,8 +21,21 @@ async function createMemoryPool(): Promise<Pool> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       expires_at TIMESTAMPTZ NOT NULL,
-      is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+      is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+      is_paid BOOLEAN NOT NULL DEFAULT FALSE
     );
+
+    CREATE TABLE IF NOT EXISTS public.payments (
+      id BIGSERIAL PRIMARY KEY,
+      resume_id BIGINT NOT NULL REFERENCES public.resumes(id) ON DELETE CASCADE,
+      provider TEXT NOT NULL,
+      transaction_id TEXT NOT NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      currency TEXT NOT NULL,
+      status TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
 
     CREATE TABLE IF NOT EXISTS public.resume_versions (
       id BIGSERIAL PRIMARY KEY,

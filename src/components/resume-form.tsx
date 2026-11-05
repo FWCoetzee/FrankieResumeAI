@@ -24,7 +24,9 @@ import { v4 as uuidv4 } from "uuid";
 import { useAutosave } from "@/hooks/use-autosave";
 import { authFetch } from "@/lib/auth-fetch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const AI_MODES = [
   { label: "Strengthen", value: "Strengthen", description: "Make it more impactful" },
@@ -145,6 +147,10 @@ const emptyValues: ResumeFormData = {
   phone: "",
   location: "",
   jobDescription: "",
+  language: "English",
+  intent: "Tech (ATS-Optimized)",
+  experienceLevel: "Mid-level",
+  style: "Modern",
   sections: {
     summary: { content: "" },
     experience: [],
@@ -162,6 +168,10 @@ const sampleValues: ResumeFormData = {
   phone: "082 123 4567",
   location: "Johannesburg, South Africa",
   jobDescription: `We are looking for a Senior Frontend Engineer to join our team. The ideal candidate will have strong experience with React, TypeScript, and Next.js. Responsibilities include developing new user-facing features, building reusable components, and optimizing applications for maximum speed and scalability. Experience with state management libraries like Zustand or Redux is a plus.`,
+  language: "English",
+  intent: "Tech (ATS-Optimized)",
+  experienceLevel: "Senior",
+  style: "Modern",
   sections: {
     summary: {
       content: "A passionate and experienced Senior Frontend Engineer with a proven track record of building and launching successful web applications. Expert in React, TypeScript, and Next.js, with a keen eye for detail and a dedication to creating exceptional user experiences. Seeking to leverage my skills to contribute to a mission-driven team."
@@ -273,6 +283,10 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
             phone: currentResume.phone || "",
             location: currentResume.location || "",
             jobDescription: currentResume.jobDescription || "",
+            language: currentResume.language || "English",
+            intent: currentResume.intent || "Tech (ATS-Optimized)",
+            experienceLevel: currentResume.experienceLevel || "Mid-level",
+            style: currentResume.style || "Modern",
             sections: {
                 summary: { content: currentResume.sections.summary?.content || "" },
                 experience: (currentResume.sections.experience || []).map(exp => ({
@@ -376,7 +390,7 @@ export function ResumeForm({ onGenerate, isLoading }: ResumeFormProps) {
                                 <div className="flex justify-between items-center mb-2">
                                     <FormLabel>Professional Summary</FormLabel>
                                     <RefineField 
-                                        value={field.value} 
+                                        value={field.value ?? ''} 
                                         onUpdate={(val) => field.onChange(val)} 
                                         label="Polish Summary" 
                                     />

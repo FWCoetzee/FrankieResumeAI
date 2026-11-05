@@ -14,6 +14,10 @@ export function buildReviewResumeData(
     phone: data.phone || existingResume?.phone || '',
     location: data.location || existingResume?.location || '',
     jobDescription: data.jobDescription || existingResume?.jobDescription || '',
+    language: data.language || existingResume?.language || 'English',
+    intent: data.intent || existingResume?.intent || 'Tech (ATS-Optimized)',
+    experienceLevel: data.experienceLevel || existingResume?.experienceLevel || 'Mid-level',
+    style: data.style || existingResume?.style || 'Modern',
     settings: existingResume?.settings || { fontSize: 10, spacing: 'normal' },
     isDeleted: false,
     sections: {

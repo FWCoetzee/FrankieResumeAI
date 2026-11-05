@@ -36,6 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
                 r.state as "status",
                 r.created_at as "createdAt",
                 r.updated_at as "updatedAt",
+                r.is_paid as "isPaid",
                 rv.content as sections,
                 rv.content -> 'settings' as settings
              FROM resumes r
@@ -57,6 +58,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ resu
             status: resume.status,
             createdAt: resume.createdAt,
             updatedAt: resume.updatedAt,
+            isPaid: resume.isPaid,
             sections: resume.sections,
             settings: resume.settings,
         };

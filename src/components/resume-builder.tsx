@@ -86,11 +86,25 @@ export function ResumeBuilder() {
       const response = await authFetch(`/api/resumes/${resumeId}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeData: currentResume }),
+        body: JSON.stringify({ 
+          resumeData: {
+            ...currentResume,
+            language: (currentResume as any).language || 'English',
+            intent: (currentResume as any).intent || 'Tech (ATS-Optimized)',
+            experienceLevel: (currentResume as any).experienceLevel || 'Mid-level',
+            style: (currentResume as any).style || 'Modern',
+          } 
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        if (response.status === 429) {
+          const retryAfter = errorData.retryAfterSeconds || 60;
+          throw new Error(`Too many requests. Please try again in ${retryAfter} seconds.`);
+        }
+        
         throw new Error(errorData.error || 'AI generation failed.');
       }
 

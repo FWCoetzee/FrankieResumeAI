@@ -19,6 +19,17 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { AdBanner } from "./ad-banner";
+import {
+  languageSchema,
+  resumeIntentSchema,
+  experienceLevelSchema,
+  resumeStyleSchema,
+} from "@/lib/schema";
+
+const LANGUAGES = languageSchema.options;
+const INTENTS = resumeIntentSchema.options;
+const LEVELS = experienceLevelSchema.options;
+const STYLES = resumeStyleSchema.options;
 
 const AiEditor = dynamic(() => import("./ai-editor").then((module) => module.AiEditor), {
   ssr: false,
@@ -31,6 +42,7 @@ interface ResumePreviewProps {
     suggestions?: string; 
     coverLetter?: string;
     linkedin?: GenerateLinkedInProfileOutput;
+    tailoring?: { requirement: string, implementation: string }[];
   } | null;
   isLoading: boolean;
   resumeData: ResumeData | null;
@@ -101,7 +113,7 @@ const AiEditorSkeleton = () => (
   </div>
 );
 
-const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeData: ResumeData, onEdit: () => void, onGenerate: () => void, isLoading: boolean }) => {
+const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading, onAcceptEdit }: { resumeData: ResumeData, onEdit: () => void, onGenerate: () => void, isLoading: boolean, onAcceptEdit: (fieldPath: string, newValue: string | string[]) => void }) => {
   const { title, sections } = resumeData;
 
   return (
@@ -179,8 +191,65 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
           </div>
         )}
 
+        <Separator />
+
+        <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-dashed">
+          <h3 className="font-semibold text-md flex items-center gap-2">
+            <Bot className="h-4 w-4 text-primary" />
+            AI Generation Settings
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase">Language</label>
+              <select 
+                className="w-full p-2 text-sm rounded-md border bg-background"
+                value={resumeData?.language || 'English'}
+                onChange={(e) => onAcceptEdit('language', e.target.value)}
+              >
+                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase">Intent</label>
+              <select 
+                className="w-full p-2 text-sm rounded-md border bg-background"
+                value={resumeData?.intent || 'Tech (ATS-Optimized)'}
+                onChange={(e) => onAcceptEdit('intent', e.target.value)}
+              >
+                {INTENTS.map(i => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase">Experience Level</label>
+              <select 
+                className="w-full p-2 text-sm rounded-md border bg-background"
+                value={resumeData?.experienceLevel || 'Mid-level'}
+                onChange={(e) => onAcceptEdit('experienceLevel', e.target.value)}
+              >
+                {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase">Resume Style</label>
+              <select 
+                className="w-full p-2 text-sm rounded-md border bg-background"
+                value={resumeData?.style || 'Modern'}
+                onChange={(e) => onAcceptEdit('style', e.target.value)}
+              >
+                {STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
       </CardContent>
        <CardFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-6">
+          <div className="w-full text-center sm:text-right mb-2">
+            <p className="text-[11px] text-muted-foreground flex items-center justify-center sm:justify-end gap-1">
+              <Bot className="h-3 w-3" />
+              AI generation is limited to 5 requests per hour.
+            </p>
+          </div>
           <Button onClick={onEdit} className="w-full sm:w-auto"><Pencil className="mr-2 h-4 w-4" /> Edit Information</Button>
           <Button onClick={onGenerate} disabled={isLoading} className="w-full sm:w-auto">
             <Bot className="mr-2 h-4 w-4" />
@@ -260,6 +329,34 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const { profile } = useUserProfile();
 
   const handleDownloadPdf = async () => {
+    if (!resumeData?.isPaid) {
+      try {
+        const response = await fetch('/api/payments/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            resumeId: resumeData?.resumeId,
+            region: 'INT' // In production, this would be dynamic
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Payment session could not be initialized.');
+        }
+
+        const { checkoutUrl } = await response.json();
+        window.location.href = checkoutUrl;
+        return;
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Payment Required",
+          description: "Please complete the one-time payment to download your PDF.",
+        });
+        return;
+      }
+    }
+
     const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
     const elementToCapture = document.getElementById(elementId);
 
@@ -404,6 +501,15 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         </div>
                         </>
                     )}
+                    {isReviewing && (
+                      <ReviewScreen 
+                        resumeData={resumeData} 
+                        onEdit={onEdit} 
+                        onGenerate={onGenerate} 
+                        isLoading={isLoading}
+                        onAcceptEdit={onAcceptEdit}
+                      />
+                    )}
                   </TabsContent>
 
                   <TabsContent value="cover-letter">
@@ -477,7 +583,7 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   }
 
   if (isReviewing && resumeData) {
-    return <ReviewScreen resumeData={resumeData} onEdit={onEdit} onGenerate={onGenerate} isLoading={isLoading} />;
+    return <ReviewScreen resumeData={resumeData} onEdit={onEdit} onGenerate={onGenerate} isLoading={isLoading} onAcceptEdit={onAcceptEdit} />;
   }
   
   return <Placeholder />;

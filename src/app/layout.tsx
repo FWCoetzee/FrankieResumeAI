@@ -3,7 +3,6 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AppLogo } from '@/components/icons';
-import { UserNav } from '@/components/user-nav';
 import { Providers } from '@/components/providers';
 import Link from 'next/link';
 export const metadata: Metadata = {
@@ -35,8 +34,6 @@ export default function RootLayout({
                   <Link href="/pricing" className="text-muted-foreground transition-colors hover:text-foreground">Pricing</Link>
                   <Link href="/#faq" className="text-muted-foreground transition-colors hover:text-foreground">FAQ</Link>
                 </nav>
-
-                <UserNav />
               </div>
             </header>
             <main>

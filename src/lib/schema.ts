@@ -82,6 +82,10 @@ export const resumeFormSchema = z.object({
   phone: z.string().optional(),
   location: z.string().optional(),
   jobDescription: z.string().optional(),
+  language: z.string().default("English"),
+  intent: z.string().default("Tech (ATS-Optimized)"),
+  experienceLevel: z.string().default("Mid-level"),
+  style: z.string().default("Modern"),
   sections: z.object({
     summary: resumeSectionSummarySchema.pick({ content: true }).optional(),
     experience: z.array(resumeSectionExperienceSchema).optional(),
@@ -104,6 +108,10 @@ export const resumeSchema = z.object({
   phone: z.string().optional(),
   location: z.string().optional(),
   jobDescription: z.string().optional(),
+  language: z.string().default("English"),
+  intent: z.string().default("Tech (ATS-Optimized)"),
+  experienceLevel: z.string().default("Mid-level"),
+  style: z.string().default("Modern"),
   sections: z.object({
     summary: resumeSectionSummarySchema.optional(),
     experience: z.array(resumeSectionExperienceSchema).optional(),
@@ -120,6 +128,7 @@ export const resumeSchema = z.object({
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
   isDeleted: z.boolean().default(false).optional(),
+  isPaid: z.boolean().default(false).optional(),
 });
 export type ResumeData = z.infer<typeof resumeSchema>;
 
