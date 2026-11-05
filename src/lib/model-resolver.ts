@@ -1,8 +1,8 @@
 import { ai } from '@/ai/genkit';
 
 const GOOGLE_MODELS = {
-  flash: ['gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'],
-  pro: ['gemini-2.5-pro', 'gemini-1.5-pro', 'gemini-1.5-pro-latest'],
+  flash: ['gemini-3-flash-preview', 'gemini-flash-latest', 'gemini-2.5-flash-lite'],
+  pro: ['gemini-3.1-pro-preview', 'gemini-pro-latest'],
 };
 
 function csv(value: string | undefined): string[] {
@@ -14,7 +14,7 @@ function csv(value: string | undefined): string[] {
 
 function configuredProviders(): string[] {
   const explicit = csv(process.env.AI_PROVIDERS).map((provider) => provider.toLowerCase());
-  return explicit.length > 0 ? explicit : ['google', 'huggingface', 'ollama'];
+  return explicit.length > 0 ? explicit.filter(provider => provider === 'google') : ['google'];
 }
 
 /** Resolve a provider-qualified Genkit model reference and verify it accepts a small probe. */
@@ -47,7 +47,7 @@ export async function resolveWorkingModel(type: 'flash' | 'pro'): Promise<string
       return modelRef;
     } catch (error: any) {
       const message = String(error?.message ?? error);
-      if (/NOT_FOUND|404|model .* not found|unknown model/i.test(message)) {
+      if (/NOT_FOUND|404|429|503|model .* not found|unknown model/i.test(message)) {
         console.warn(`[ModelResolver] ${modelRef} unavailable, trying next candidate...`);
         continue;
       }

@@ -129,17 +129,14 @@ const generateResumeFromDataFlow = ai.defineFlow(
   async (input) => {
     /**
      * Generates a resume with a fallback mechanism.
-     * It first tries the primary, faster model (gemini-2.5-flash).
+     * It first tries the primary, faster Gemini Flash model.
      * If it fails due to overload or rate limiting, it retries with exponential backoff.
-     * If all retries fail, it falls back to a more powerful secondary model (gemini-1.5-pro).
+     * If all retries fail, it falls back to a more powerful Gemini Pro model.
      * @param payload The input data for the resume generation prompt.
      * @returns The generated and validated resume data.
      */
     async function generateWithFallback(payload: GenerateResumeFromDataInput): Promise<GeneratedResumeData> {
       const primaryModel = await resolveWorkingModel('flash');
-      const primaryModelId = primaryModel;
-      const fallbackModel = await resolveWorkingModel('pro');
-      const fallbackModelId = fallbackModel;
       const maxRetries = 2;
       let attempt = 0;
       let backoff = 1000; // Initial backoff in ms
@@ -190,6 +187,7 @@ const generateResumeFromDataFlow = ai.defineFlow(
       // If the loop completes without returning, it means the primary model failed.
       // Now, try the fallback model.
       try {
+        const fallbackModel = await resolveWorkingModel('pro');
         console.log(`[LLM Router] Failover: Trying fallback model (${fallbackModel}).`);
         const startTime = Date.now();
         

@@ -92,6 +92,35 @@ The anonymous user can create and edit a resume without a public account, and re
 
 The implementation of Milestone 2 should now begin in Slice 2.1. The legacy payment and public-account surfaces remain outside this milestone and must not be included in this completion claim.
 
+## Milestone 2 Completion Checkpoint
+
+### Verified Complete — Phase 2: Protection
+
+- Anonymous identity keys combine the anonymous owner hash, anonymized IP subnet, and normalized user agent.
+- Usage records and events enforce burst, hourly, daily, and monthly limits.
+- Concurrent generation requests are locked and stale locks are released.
+- Accepted, completed, and failed usage accounting is implemented.
+- Provider failures remove failed attempts while successful attempts remain counted.
+- Generation API responses include `429`, `409`, or `503` states as applicable with `Retry-After`.
+- The preview and review screens display the required neutral anti-abuse notice.
+- The production database usage tables are present.
+- The configured monthly Gemini request circuit breaker is set to 30.
+
+### Validation Recorded
+
+- `npm run typecheck`: passed.
+- Anti-abuse unit suite: 5 tests passed.
+- Gemini provider check for `gemini-3-flash-preview`: passed with HTTP 200.
+
+## Phase 3 Provider Configuration Checkpoint
+
+### Verified
+
+- Gemini is the only configured AI provider for production resume generation.
+- `gemini-3-flash-preview` resolves successfully through the Genkit Google provider.
+- Structured resume generation completed successfully and returned data matching `generatedResumeSchema`.
+- Pro fallback resolution occurs only after Flash retries fail, preventing an unavailable Pro model from blocking Flash generation.
+
 ## Verified Checks
 
 - `npm run typecheck` passes.

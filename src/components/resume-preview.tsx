@@ -113,6 +113,9 @@ const ReviewScreen = ({ resumeData, onEdit, onGenerate, isLoading }: { resumeDat
         <CardDescription>This is a preview of the data that will be sent to the AI. Review it, then generate your documents.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 text-sm max-h-[60vh] overflow-y-auto p-6 bg-muted/50 rounded-md border">
+        <p className="rounded-md border bg-background px-4 py-3 text-sm text-muted-foreground">
+          To protect the service from abuse by malicious users and automated bots, AI generation is rate-limited. Please submit requests responsibly. If you believe you have been limited in error, report the issue here.
+        </p>
         
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold">{title}</h2>
@@ -388,6 +391,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                     {result.resume && (
                         <>
                         {profile && profile.plan === 'free' && <AdBanner className="mb-4" />}
+                        <p className="mb-4 rounded-md border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+                          To protect the service from abuse by malicious users and automated bots, AI generation is rate-limited. Please submit requests responsibly. If you believe you have been limited in error, report the issue here.
+                        </p>
                         <div className="bg-gray-200 p-4 rounded-lg">
                           <div id="resume-content" className="overflow-y-auto bg-white rounded-lg shadow-inner mx-auto max-w-full aspect-[8.5/11]">
                               <TemplateRenderer 
@@ -484,5 +490,4 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-
 
