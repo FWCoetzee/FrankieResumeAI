@@ -26,9 +26,6 @@ import { useAutosave } from "@/hooks/use-autosave";
 import { useToast } from "@/hooks/use-toast";
 import { authFetch } from "@/lib/auth-fetch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Wand2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 
 const AI_MODES = [
   { label: "Strengthen", value: "Strengthen", description: "Make it more impactful" },
