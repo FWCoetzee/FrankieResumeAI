@@ -1,5 +1,5 @@
 const GOOGLE_MODELS = {
-  flash: ['gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-3-flash-preview'],
+  flash: ['gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-3-flash-preview'],
   pro: ['gemini-3.1-pro-preview', 'gemini-pro-latest'],
   gemma: ['gemma-4-26b-a4b-it', 'gemma-4-31b-it'],
 };

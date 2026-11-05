@@ -62,6 +62,40 @@ async function createMemoryPool(): Promise<Pool> {
       status TEXT NOT NULL DEFAULT 'accepted',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS public.payment_transactions (
+      id TEXT PRIMARY KEY,
+      idempotency_key TEXT NOT NULL UNIQUE,
+      resume_id BIGINT NOT NULL REFERENCES public.resumes(id) ON DELETE CASCADE,
+      owner_hash TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      status TEXT NOT NULL,
+      amount DECIMAL NOT NULL,
+      currency TEXT NOT NULL,
+      provider_reference TEXT,
+      download_token_hash TEXT,
+      download_token_expires_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS payment_transactions_active_resume_owner_idx
+      ON public.payment_transactions (resume_id, owner_hash, provider)
+      WHERE status IN ('created', 'redirected', 'pending_verification');
+
+    CREATE UNIQUE INDEX IF NOT EXISTS payment_transactions_provider_reference_idx
+      ON public.payment_transactions (provider, provider_reference)
+      WHERE provider_reference IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS public.payment_webhook_events (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      transaction_id TEXT,
+      received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (provider, event_id)
+    );
   `);
 
   return pool;

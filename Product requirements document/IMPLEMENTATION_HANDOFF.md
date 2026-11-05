@@ -120,6 +120,25 @@ The implementation of Milestone 2 should now begin in Slice 2.1. The legacy paym
 - `gemini-3-flash-preview` resolves successfully through the Genkit Google provider.
 - Structured resume generation completed successfully and returned data matching `generatedResumeSchema`.
 - Pro fallback resolution occurs only after Flash retries fail, preventing an unavailable Pro model from blocking Flash generation.
+- Runtime generation-stage verification now covers ownership, rate limits, input validation, provider completion, output validation, database persistence, and completion.
+- Provider failures are categorized as authentication, quota, model, timeout, or provider/network errors.
+- Generation verification logs include only stage, result, resume ID, and request ID; provider responses, credentials, prompts, and resume data are not logged.
+- Invalid provider output is rejected before database persistence and returned as a safe retryable client error.
+- Database transactions are rolled back when generation persistence fails, while abuse-limit accounting is finalized as failed or completed appropriately.
+
+### Phase 3 Verification Tests
+
+- `npm run typecheck`: passed.
+- Generation verification unit suite: 2 tests passed.
+- Generation-flow and limit verification suite: 10 tests passed.
+- Owner, rate-limit, provider, schema, transaction, and provider-error classification paths are covered.
+
+### Remaining Phase 3 Work
+
+- Replace the hardcoded resume intent, experience level, style, and language values in the generation route with values captured from the user.
+- Complete end-to-end preview verification against the current UI and database configuration.
+- Re-run the production build with enough time for Next.js compilation.
+- Complete final verification of real provider, database persistence, and preview rendering with production-like configuration.
 
 ## Verified Checks
 

@@ -264,6 +264,42 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   const { toast } = useToast();
   const { profile } = useUserProfile();
 
+  const handleCardCheckout = async () => {
+    if (!resumeData?.resumeId) {
+      toast({
+        variant: "destructive",
+        title: "Payment unavailable",
+        description: "Save the resume before starting card payment.",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: resumeData.resumeId,
+          paymentMethod: 'card',
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.checkoutUrl) {
+        throw new Error(body.error || 'Card checkout could not be started.');
+      }
+
+      window.location.assign(body.checkoutUrl);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Card checkout failed",
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadPdf = async () => {
     const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
     const elementToCapture = document.getElementById(elementId);
@@ -405,6 +441,9 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
                         
                         <div className="mt-4 flex justify-end gap-2">
                           <Button onClick={onEdit} size="sm"><Pencil /> Edit Form</Button>
+                          <Button onClick={handleCardCheckout} size="sm" variant="outline" disabled={isDownloading}>
+                            <Download /> Pay by card
+                          </Button>
                           <Button onClick={handleDownloadPdf} size="sm" disabled={isDownloading}>
                             {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
                             {isDownloading ? "Downloading..." : "Download PDF"}
@@ -490,4 +529,3 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
   
   return <Placeholder />;
 }
-

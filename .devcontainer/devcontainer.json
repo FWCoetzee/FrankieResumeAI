@@ -6,6 +6,14 @@
 	"image": "mcr.microsoft.com/devcontainers/universal:6-linux",
 	"features": {
 		"ghcr.io/devcontainer-config/features/dot-config:5": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"HuggingFace.huggingface-vscode-chat",
+				"Ollama.ollama"
+			]
+		}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.

@@ -70,4 +70,41 @@ CREATE INDEX IF NOT EXISTS ai_usage_events_key_created_idx
 CREATE INDEX IF NOT EXISTS ai_usage_records_expiry_idx
     ON public.ai_usage_records (expires_at);
 
+CREATE TABLE IF NOT EXISTS public.payment_transactions (
+    id UUID PRIMARY KEY,
+    idempotency_key TEXT NOT NULL UNIQUE,
+    resume_id BIGINT NOT NULL REFERENCES public.resumes(id) ON DELETE CASCADE,
+    owner_hash TEXT NOT NULL,
+    provider TEXT NOT NULL CHECK (provider IN ('paypal', 'payfast', 'yoco', 'lemonsqueezy')),
+    status TEXT NOT NULL CHECK (status IN ('created', 'redirected', 'pending_verification', 'paid', 'exported', 'cancelled', 'failed', 'expired', 'paid_export_failed')),
+    amount NUMERIC(10, 2) NOT NULL,
+    currency TEXT NOT NULL CHECK (currency IN ('USD', 'ZAR')),
+    provider_reference TEXT,
+    download_token_hash TEXT,
+    download_token_expires_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS payment_transactions_active_resume_owner_idx
+    ON public.payment_transactions (resume_id, owner_hash, provider)
+    WHERE status IN ('created', 'redirected', 'pending_verification');
+
+CREATE UNIQUE INDEX IF NOT EXISTS payment_transactions_provider_reference_idx
+    ON public.payment_transactions (provider, provider_reference)
+    WHERE provider_reference IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS payment_transactions_owner_updated_idx
+    ON public.payment_transactions (owner_hash, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.payment_webhook_events (
+    id UUID PRIMARY KEY,
+    provider TEXT NOT NULL CHECK (provider IN ('paypal', 'payfast', 'yoco', 'lemonsqueezy')),
+    event_id TEXT NOT NULL,
+    transaction_id UUID,
+    received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (provider, event_id)
+);
+
 COMMIT;
