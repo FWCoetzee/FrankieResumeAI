@@ -110,5 +110,22 @@ export async function markPaymentPaid(
     [input.provider, tokenHash, input.providerReference, input.amount.toFixed(2), input.currency]
   );
   if (!result.rows[0]) return null;
-  return { transaction: result.rows[0], downloadToken };
+}
+export async function verifyDownloadToken(
+  db: Pick<Pool, 'query'>,
+  token: string
+): Promise<{ resumeId: number; ownerHash: string } | null> {
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  const result = await db.query(
+    `SELECT resume_id, owner_hash FROM public.payment_transactions
+     WHERE download_token_hash = $1
+       AND download_token_expires_at > NOW()
+     LIMIT 1`,
+    [tokenHash]
+  );
+  if (!result.rows[0]) return null;
+  return {
+    resumeId: result.rows[0].resume_id,
+    ownerHash: result.rows[0].owner_hash,
+  };
 }

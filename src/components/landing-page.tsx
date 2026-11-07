@@ -97,17 +97,24 @@ const features = [
 
 export function LandingPage() {
     return (
-        <div className="flex flex-col items-center">
-            {/* Hero Section */}
-            <section className="w-full text-center py-20 md:py-32">
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary">Build Your Future, Faster Than Ever</h1>
-                <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
-                <div className="mt-8 flex justify-center gap-4 flex-wrap">
-                    <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
-                    <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Build My Resume</Button></Link>
-                </div>
-                <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
-            </section>
+        <div className="flex flex-col items-center min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/backgrounds/home-bg.jpg')" }}>
+            <div className="w-full bg-white/80 backdrop-blur-sm">
+                <div className="flex flex-col items-center">
+                    {/* Hero Section */}
+                    <section className="w-full text-center py-20 md:py-32">
+                        <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary">Build Your Future, Faster Than Ever</h1>
+                        <p className="max-w-2xl mx-auto mt-4 text-lg md:text-xl text-muted-foreground">Let our advanced AI craft a job-winning resume in seconds. Stand out from the crowd and land your dream job.</p>
+                        <div className="mt-8 flex justify-center gap-4 flex-wrap">
+                            <Link href="/editor/new"><Button size="lg" className="w-full sm:w-auto">Generate My Resume</Button></Link>
+                            <Link href="/features"><Button variant="outline" size="lg" className="w-full sm:w-auto">Explore Features</Button></Link>
+                        </div>
+                        <p className="mt-4 text-sm text-muted-foreground">Unlock your career potential with the power of AI.</p>
+                    </section>
+
+                    {/* Announcement Bar */}
+                    <div className="w-full bg-primary text-primary-foreground py-3 px-4 text-center text-sm font-medium">
+                        Welcome to Frankie's AI Resume Designer, powered by Google's Gemini, Gemma 4 and more! Enjoy your Job-seeking journey with me Frankie!
+                    </div>
 
             {/* How It Works */}
             <section className="w-full py-16 md:py-24 bg-muted">
@@ -151,104 +158,39 @@ export function LandingPage() {
                 </div>
             </section>
 
-             {/* PDF Export Offer */}
+             {/* PDF Export Offer (Simplified) */}
             <section className="w-full py-16 md:py-24 bg-primary text-primary-foreground">
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-3xl md:text-4xl font-bold">Preview Before You Download</h2>
-                    <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">Build and preview your resume with Gemini. Pay once only when you are ready to download the final PDF.</p>
-                    <div className="mt-8 text-5xl font-extrabold">$4.99 <span className="text-2xl font-normal opacity-80">or R99</span></div>
-                    <p className="mt-2 text-primary-foreground/80">One-time PDF export</p>
-                    <div className="mt-8 max-w-md mx-auto text-left space-y-2">
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> AI-assisted resume generation</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Live resume/CV preview</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Modern resume templates</p>
-                        <p className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-green-400" /> Verified PDF download</p>
+                    <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">Build and preview your resume for free. When you're ready, download your polished PDF for a small one-time fee.</p>
+                    <div className="mt-8 flex justify-center gap-6">
+                        <Link href="/pricing"><Button variant="secondary" size="lg">View Pricing</Button></Link>
+                        <Link href="/editor/new"><Button variant="outline" size="lg" className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10">Start Building</Button></Link>
                     </div>
-                    <Link href="/editor/new"><Button size="lg" variant="secondary" className="mt-8 w-full sm:w-auto">Start Building</Button></Link>
                 </div>
             </section>
             
-            {/* Features Section */}
-            <section id="features" className="w-full py-16 md:py-24">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold">Everything You Need to Get Hired</h2>
-                    <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Our feature suite is designed to give you an edge at every step of your job application process.</p>
-                    <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {features.map((feature, index) => (
-                        <Card key={index} className="text-left hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                                {feature.icon}
-                                <CardTitle className="mt-4">{feature.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">{feature.description}</p>
-                            </CardContent>
-                        </Card>
+             {/* Testimonials */}
+             <section className="w-full py-16 md:py-24">
+                <div className="container mx-auto px-4">
+                     <div className="text-center">
+                        <h2 className="text-3xl md:text-4xl font-bold">Loved by Professionals Across South Africa</h2>
+                     </div>
+                     <div className="mt-12 grid lg:grid-cols-3 gap-8">
+                        {testimonials.map((t, i) => (
+                            <Card key={i}>
+                                <CardContent className="pt-6">
+                                    <p className="italic">"{t.quote}"</p>
+                                </CardContent>
+                                <CardFooter className="flex flex-col items-start">
+                                    <p className="font-semibold">{t.name}</p>
+                                    <p className="text-sm text-muted-foreground">{t.role}</p>
+                                </CardFooter>
+                            </Card>
                         ))}
-                    </div>
+                     </div>
                 </div>
-            </section>
-            
-            {/* Pricing Section */}
-            <section id="pricing" className="w-full py-16 md:py-24 bg-muted">
-                 <div className="container mx-auto px-4">
-                    <div className="text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold">Choose Your Plan</h2>
-                        <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">Build and preview without an account. Pay only when you download the final PDF.</p>
-                    </div>
-                    <div className="mt-12 grid lg:grid-cols-3 gap-8 items-start">
-                        <Card className="flex flex-col h-full">
-                            <CardHeader>
-                                <CardTitle>Build & Preview</CardTitle>
-                                <p className="text-4xl font-bold">Free</p>
-                                <p className="text-muted-foreground">No account required.</p>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-2">
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> AI resume generation</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Resume/CV preview</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Modern templates</p>
-                            </CardContent>
-                            <CardFooter>
-                                <Link href="/editor/new" className="w-full"><Button className="w-full">Start Building</Button></Link>
-                            </CardFooter>
-                        </Card>
-                        <Card className="border-2 border-primary flex flex-col h-full shadow-lg">
-                             <CardHeader>
-                                <div className="flex justify-between items-center">
-                                    <CardTitle>PDF Export</CardTitle>
-                                    <div className="text-sm font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full">Most Popular</div>
-                                </div>
-                                <div><span className="text-4xl font-bold">$4.99</span><span className="text-muted-foreground"> or R99</span></div>
-                                <p className="text-muted-foreground">One-time payment when you download.</p>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-2">
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Verified PDF generation</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Payment receipt</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Error-reporting support</p>
-                            </CardContent>
-                            <CardFooter>
-                                <Link href="/editor/new" className="w-full"><Button className="w-full">Build My Resume</Button></Link>
-                            </CardFooter>
-                        </Card>
-                         <Card className="flex flex-col h-full">
-                            <CardHeader>
-                                <CardTitle>South Africa</CardTitle>
-                                <div><span className="text-4xl font-bold">R99</span><span className="text-muted-foreground"> per PDF</span></div>
-                                <p className="text-muted-foreground">Local pricing for PDF export.</p>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-2">
-                                <p className="font-semibold">Local checkout includes:</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> PayFast or Yoco</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> One-time PDF payment</p>
-                                <p className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Verified download</p>
-                            </CardContent>
-                            <CardFooter>
-                                <Link href="/editor/new" className="w-full"><Button className="w-full">Start Building</Button></Link>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                 </div>
-            </section>
+             </section>
 
              {/* Testimonials */}
              <section className="w-full py-16 md:py-24">
@@ -272,25 +214,6 @@ export function LandingPage() {
                 </div>
              </section>
 
-             {/* FAQ Section */}
-            <section id="faq" className="w-full py-16 md:py-24 bg-muted">
-                <div className="container mx-auto px-4 max-w-3xl">
-                     <div className="text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold">Frequently Asked Questions</h2>
-                     </div>
-                     <Accordion type="single" collapsible className="w-full mt-12">
-                        {faqItems.map((item, index) => (
-                        <AccordionItem value={`item-${index}`} key={index}>
-                            <AccordionTrigger className="text-lg font-semibold text-left">{item.question}</AccordionTrigger>
-                            <AccordionContent className="text-base text-muted-foreground">
-                                {item.answer}
-                            </AccordionContent>
-                        </AccordionItem>
-                        ))}
-                    </Accordion>
-                </div>
-            </section>
-
              {/* Final CTA */}
             <section className="w-full py-20 md:py-32 text-center">
                 <div className="container mx-auto px-4">
@@ -299,7 +222,6 @@ export function LandingPage() {
                     <Link href="/editor/new"><Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button></Link>
                 </div>
             </section>
-
         </div>
     );
 }

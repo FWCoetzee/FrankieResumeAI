@@ -10,6 +10,13 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const currentSession = getAnonymousSessionFromHeaders(request.headers);
 
+  // Protect Admin routes
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    // In a full implementation, this would check for an admin session cookie or header.
+    // For this MVP, we ensure it's at least matched by the middleware.
+    // The actual authorization happens at the API level via CLEANUP_SECRET.
+  }
+
   if (!currentSession.sessionId) {
     const freshSessionId = createAnonymousSessionId();
 
@@ -38,5 +45,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/editor/:path*', '/'],
+  matcher: ['/api/:path*', '/editor/:path*', '/admin/:path*', '/'],
 };

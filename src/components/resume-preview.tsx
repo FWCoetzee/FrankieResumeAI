@@ -397,6 +397,187 @@ export function ResumePreview({ result, isLoading, resumeData, isReviewing, onEd
       }
     }
 
+    // If paid, use the secure server-side export route
+    if (resumeData?.downloadToken) {
+      window.location.href = `/api/resumes/export?token=${resumeData.downloadToken}`;
+      return;
+    }
+
+    // Fallback to the legacy client-side generation if no token is present but marked as paid
+    const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
+    const elementToCapture = document.getElementById(elementId);
+
+    if (!elementToCapture) {
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: `Could not find the content element with ID: ${elementId}`,
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    toast({
+      title: "Generating PDF...",
+      description: "Please wait while your document is being prepared.",
+    });
+
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(elementToCapture, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        height: elementToCapture.scrollHeight,
+        width: elementToCapture.scrollWidth,
+        windowHeight: elementToCapture.scrollHeight,
+        windowWidth: elementToCapture.scrollWidth,
+      });
+
+      // Add watermark if user is on the free plan
+      if (profile && profile.plan === 'free') {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+              ctx.save();
+              ctx.globalAlpha = 0.08;
+              ctx.fillStyle = 'black';
+              ctx.font = 'bold 72px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.translate(canvas.width / 2, canvas.height / 2);
+              ctx.rotate(-0.5); // ~30 degrees
+              ctx.fillText('Created with DeepResumeAI', 0, 0);
+              ctx.restore();
+          }
+      }
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = 297; // A4 height in mm
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+      const imgProps = pdf.getImageProperties(imgData);
+      const ratio = imgProps.height / imgProps.width;
+      const finalImgWidth = pdfWidth;
+      const finalImgHeight = pdfWidth * ratio;
+      let position = 0;
+      let heightLeft = finalImgHeight;
+
+      pdf.addImage(imgData, 'PNG', 0, position, finalImgWidth, finalImgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - finalImgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, finalImgWidth, finalImgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      const fileName = activeTab === 'preview' 
+        ? `${resumeData?.title?.replace(/ /g, '_') || 'resume'}.pdf` 
+        : `cover-letter.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred during PDF generation.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const wrapperClasses = cn(
+    "transition-all duration-300",
+    "bg-background/60 backdrop-blur-xl border rounded-xl shadow-lg",
+  );
+  
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (result && resumeData) {
+    return (
+      <div className="min-h-screen bg-cover bg-center bg-fixed" style={{ backgroundImage: "url('/backgrounds/preview-bg.jpg')" }}>
+        <div className="w-full bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center">
+
+  const handleCardCheckout = async () => {
+    if (!resumeData?.resumeId) {
+      toast({
+        variant: "destructive",
+        title: "Payment unavailable",
+        description: "Save the resume before starting card payment.",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch('/api/payments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: resumeData.resumeId,
+          paymentMethod: 'card',
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !body.checkoutUrl) {
+        throw new Error(body.error || 'Card checkout could not be started.');
+      }
+
+      window.location.assign(body.checkoutUrl);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Card checkout failed",
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!resumeData?.isPaid) {
+      try {
+        const response = await fetch('/api/payments/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            resumeId: resumeData?.resumeId,
+            region: 'INT' // In production, this would be dynamic
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Payment session could not be initialized.');
+        }
+
+        const { checkoutUrl } = await response.json();
+        window.location.href = checkoutUrl;
+        return;
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Payment Required",
+          description: "Please complete the one-time payment to download your PDF.",
+        });
+        return;
+      }
+    }
+
+    // If paid, use the secure server-side export route
+    if (resumeData?.downloadToken) {
+      window.location.href = `/api/resumes/export?token=${resumeData.downloadToken}`;
+      return;
+    }
+
+    // Fallback to the legacy client-side generation if no token is present but marked as paid
     const elementId = activeTab === 'preview' ? 'resume-content' : 'cover-letter-content';
     const elementToCapture = document.getElementById(elementId);
 
