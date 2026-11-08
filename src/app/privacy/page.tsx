@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
           <ul className="list-disc ml-6 space-y-2 mt-2">
             <li><strong>Anonymous Sessions:</strong> We use browser-based identifiers to allow you to build your resume without creating an account.</li>
             <li><strong>Resume Data:</strong> We store the resume content you provide so you can edit it during your session. This data is automatically deleted after a set period of inactivity.</li>
-            <li><strong>Payment Information:</strong> We do not store credit card details. All payments are handled securely via our third-party providers (PayPal, Lemon Squeezy, PayFast, and Yoco).</li>
+            <li><strong>Payment Information:</strong> We do not store credit card details. All payments are handled securely via our third-party providers (PayPal, Lemon Squeezy, and PayFast).</li>
           </ul>
         </div>
 

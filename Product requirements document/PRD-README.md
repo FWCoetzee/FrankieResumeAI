@@ -20,9 +20,9 @@ Welcome to the FrankieResumeAI PRD! This document is organized into focused sect
 - **Architecture:** Next.js 15 + Firebase + Genkit with Google Gemini
 - **Hosting:** Netlify only
 - **Access model:** Visitors build with Gemini and preview the resume/CV anonymously without user accounts or subscription sign-up; PDF download requires verified payment.
-- **Payment providers:** PayPal, Lemon Squeezy, PayFast, and Yoco
+- **Payment providers:** PayPal, Lemon Squeezy, and PayFast
 - **Recommended launch price:** USD $4.99 internationally and ZAR R99 in South Africa, charged once per PDF export.
-- **Payment routing:** PayFast primary and Yoco alternative for South Africa; PayPal primary and Lemon Squeezy alternative internationally.
+- **Payment routing:** PayFast primary for South Africa; PayPal primary and Lemon Squeezy alternative internationally.
 - **Preview notice:** The preview page displays a visible AI rate-limit notice explaining that limits protect the service from malicious users and automated bots, with a link to report an incorrect limit.
 - **Admin dashboard:** A creator-only dashboard for Franklin Coetzee, accessed through Google, GitHub, or X.com social login and protected by server-side authorization.
 - **Accounts:** No public user accounts or end-user login; only Franklin Coetzee has an authenticated admin account.

@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import dynamic from "next/dynamic";
+import * as React from "react";import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";

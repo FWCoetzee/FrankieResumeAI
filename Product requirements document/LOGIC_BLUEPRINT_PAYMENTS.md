@@ -1,7 +1,7 @@
 # Logic Blueprint: Payment & PDF Export State Machine
 
 ## 1. Goal
-To provide a secure, idempotent payment workflow across four providers (PayPal, PayFast, Yoco, Lemon Squeezy) that grants access to a PDF download without requiring a user account.
+To provide a secure, idempotent payment workflow across three providers (PayPal, PayFast, Lemon Squeezy) that grants access to a PDF download without requiring a user account.
 
 ## 2. The Payment Transaction Document
 The source of truth for anonymous purchases.
@@ -10,7 +10,7 @@ The source of truth for anonymous purchases.
 - `transactionId`: Unique ID (pre-generated).
 - `resumeId`: Reference to the resume being purchased.
 - `ownerHash`: SHA-256 hash of the session (ownership check).
-- `provider`: `paypal` | `payfast` | `yoco` | `lemonsqueezy`.
+- `provider`: `paypal` | `payfast` | `lemonsqueezy`.
 - `status`: `CREATED` | `PENDING` | `COMPLETED` | `FAILED` | `EXPIRED`.
 - `amount`: Decimal.
 - `currency`: `USD` | `ZAR`.
@@ -20,7 +20,7 @@ The source of truth for anonymous purchases.
 
 ### Step 1: Initialization (`POST /api/payments/create`)
 1.  **Geo-Routing:** Detect IP location to set currency (ZAR for ZA, USD fallback).
-2.  **Provider Selection:** Route to PayFast/Yoco (ZA) or PayPal/LemonSqueezy (Intl).
+2.  **Provider Selection:** Route to PayFast (ZA) or PayPal/LemonSqueezy (Intl).
 3.  **Idempotency Check:** If `PENDING` exists for this `resumeId` + `ownerHash`, return existing session.
 4.  **Doc Creation:** Create Firestore doc in `CREATED` state.
 

@@ -19,7 +19,7 @@ Frankie Resume AI is an **AI-powered resume builder** targeting businesses and o
 
 **Trust and compliance pages:** The site must publish Privacy and Terms pages before launch. These pages must explain anonymous resume-session handling, Gemini processing, payment-provider processing, retention and deletion periods, support reporting, and the independent status of Frankie Resume AI.
 
-**Business Focus:** Target businesses and organizations first while keeping AI-assisted resume creation and preview accessible without user accounts or subscription sign-up. The MVP supports the same single-resume workflow for B2B and B2C visitors; organization accounts, team workspaces, bulk generation, and enterprise billing are future features. Monetize PDF export through one-time payments via PayPal, Lemon Squeezy, PayFast, or Yoco.
+**Business Focus:** Target businesses and organizations first while keeping AI-assisted resume creation and preview accessible without user accounts or subscription sign-up. The MVP supports the same single-resume workflow for B2B and B2C visitors; organization accounts, team workspaces, bulk generation, and enterprise billing are future features. Monetize PDF export through one-time payments via PayPal, Lemon Squeezy, or PayFast.
 
 **Success Definition:** MVP launch with a frictionless build-and-preview experience, verified payment before every PDF download, successful PDF delivery, and a clear error-reporting path when payment or download fails.
 
@@ -46,12 +46,12 @@ Frankie Resume AI is an **AI-powered resume builder** targeting businesses and o
 ### 4. **Monetization: Payment-Gated PDF Export (No Subscription Wall)**
 - Resume building with Gemini and resume/CV preview are available anonymously without a user account or subscription sign-up
 - The **Download as PDF** action takes the user to a payment gateway
-- Supported payment providers: PayPal, Lemon Squeezy, PayFast, and Yoco
+- Supported payment providers: PayPal, Lemon Squeezy, and PayFast
 - PDF download begins only after payment has been verified successfully
 - If payment verification or PDF generation fails, provide a link for the user to report the error
 - Recommended launch price: USD $4.99 for international visitors and ZAR R99 for South African visitors, charged once per PDF export
 - Display the applicable local price before checkout; use USD as the fallback when the visitor's market cannot be determined
-- Provider routing: PayFast is the primary South African option with Yoco as the local alternative; PayPal is the primary international option with Lemon Squeezy as the international alternative
+- Provider routing: PayFast is the primary South African option; PayPal is the primary international option with Lemon Squeezy as the international alternative
 - If the selected provider is unavailable, show an explicit provider error and allow the visitor to choose another configured provider without creating a duplicate charge
 - Review pricing after the first 100 paid exports using payment conversion, provider fees, refund rate, and support volume
 - Payment return pages are not proof of payment; the server must verify the provider webhook or provider API response

@@ -254,12 +254,12 @@ All limits are enforced by the server before calling Gemini. Client-side counter
 
 ### 7. Payment and PDF Export Layer
 
-**Payment providers:** PayPal, Lemon Squeezy, PayFast, and Yoco
+**Payment providers:** PayPal, Lemon Squeezy, and PayFast
 
 **Payment configuration:**
 - Configure two regional PDF export prices for the MVP: USD $4.99 internationally and ZAR R99 for South African visitors.
 - Use USD as the fallback when the visitor's market cannot be determined, and show the final amount and currency before checkout.
-- Route South African checkouts to PayFast by default, with Yoco available as the local alternative.
+- Route South African checkouts to PayFast by default.
 - Route international checkouts to PayPal by default, with Lemon Squeezy available as the international alternative.
 - Keep all four providers configured behind one payment adapter interface; provider availability must not change the amount, currency, or payment-verification rules.
 - Review the prices after the first 100 paid exports using conversion, provider fees, refunds, and support volume.
@@ -325,7 +325,7 @@ Terminal states are `cancelled`, `failed`, `expired`, and `paid_export_failed`.
    ↓
 2. User selects Download as PDF
    ↓
-3. API creates a payment session with PayPal, Lemon Squeezy, PayFast, or Yoco
+3. API creates a payment session with PayPal, Lemon Squeezy, or PayFast
    ↓
 4. User completes payment at the selected gateway
    ↓

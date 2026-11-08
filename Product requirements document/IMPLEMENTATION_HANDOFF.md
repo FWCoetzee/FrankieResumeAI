@@ -34,7 +34,7 @@ Across all documents, specify acceptance criteria that can be tested; use consis
 - Visitors build and preview one resume through a temporary anonymous session.
 - PDF export requires one-time verified payment.
 - Launch price: USD $4.99 internationally or ZAR R99 in South Africa.
-- South Africa routing: PayFast primary, Yoco alternative.
+- South Africa routing: PayFast primary.
 - International routing: PayPal primary, Lemon Squeezy alternative.
 - Gemini is the only AI provider.
 - Netlify is the only hosting and deployment platform.
@@ -50,7 +50,7 @@ Across all documents, specify acceptance criteria that can be tested; use consis
 - Product requirements were reconciled across the PRD, architecture, and SEO documents.
 - Anonymous-session, payment, admin, B2B-scope, privacy, retention, and optimization requirements are documented.
 - Regional PDF pricing is documented as USD $4.99 internationally and ZAR R99 in South Africa.
-- Payment routing is documented as PayFast/Yoco for South Africa and PayPal/Lemon Squeezy internationally.
+- Payment routing is documented as PayFast for South Africa and PayPal/Lemon Squeezy internationally.
 - `src/components/landing-page.tsx` was aligned with anonymous build/preview and one-time PDF export messaging.
 - Obsolete landing-page lifetime, subscription, `R199`, and unlimited-generation claims were removed.
 
