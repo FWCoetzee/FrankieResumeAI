@@ -5,9 +5,10 @@
  * @credit AI assistance
  */
 
+"use client";
+
 import { renderToStream } from '@react-pdf/renderer';
 import type { PDFDocument } from '@react-pdf/renderer';
-import { Readable } from 'node:stream';
 
 export interface PdfOptions {
   document: PDFDocument;
@@ -16,13 +17,16 @@ export interface PdfOptions {
 
 export class PdfService {
   /**
-   * Generates a PDF buffer from a react-pdf Document.
-   * This approach is lightweight and avoids the need for headless browsers.
+   * Generates a PDF buffer from a react-pdf Document using dynamic imports
+   * to avoid build-time dependency errors.
    */
   static async generatePdf(options: PdfOptions): Promise<Buffer> {
     const { document } = options;
     
     try {
+      // Dynamic import to avoid build-time errors if the package is missing
+      const { renderToStream } = await import('@react-pdf/renderer');
+      
       const stream = await renderToStream(document);
       const chunks: Buffer[] = [];
       
@@ -33,7 +37,7 @@ export class PdfService {
       return Buffer.concat(chunks);
     } catch (error) {
       console.error('PDF Generation Error:', error);
-      throw new Error('Failed to generate PDF using react-pdf.');
+      throw new Error('Failed to generate PDF using react-pdf. Ensure it is installed.');
     }
   }
 }

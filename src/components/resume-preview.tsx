@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import * as React from "react";import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
