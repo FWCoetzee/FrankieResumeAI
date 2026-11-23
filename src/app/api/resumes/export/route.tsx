@@ -11,6 +11,8 @@ import { verifyDownloadToken } from '@/lib/payments/store';
 import { PdfService } from '@/lib/pdf/pdf-service';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
+export const runtime = 'nodejs';
+
 // Simple internal template for PDF generation
 const ResumePdfTemplate = ({ data }: { data: any }) => (
   <Document>
@@ -83,7 +85,7 @@ export async function GET(request: Request) {
     );
 
     // 5. Return the PDF
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="resume_${resumeId}.pdf"`,

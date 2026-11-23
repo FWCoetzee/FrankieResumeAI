@@ -221,6 +221,8 @@ export function LandingPage() {
                     <Link href="/editor/new"><Button size="lg" className="mt-8 w-full sm:w-auto">Generate Your AI Resume Now</Button></Link>
                 </div>
             </section>
+                </div>
+            </div>
         </div>
     );
 }
